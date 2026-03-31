@@ -25,14 +25,14 @@
                 <span class="text-white font-bold text-lg">C</span>
             </div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clarix</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Project Management Platform</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Task Management Platform</p>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm px-8 py-8">
             {{ $slot }}
         </div>
 
-        <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">&copy; {{ date('Y') }} Clarix. Internal use only.</p>
+        <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">&copy; {{ date('Y') }} Clarix .Created By  <a href="https://codesnextdoor.com/" target="_blank">Code Next Door</a> .</p>
     </div>
 </div>
 

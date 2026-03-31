@@ -100,6 +100,3 @@
     @endif
 
 </div>
-    @endif
-
-</div>

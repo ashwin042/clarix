@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +12,7 @@ use Livewire\WithPagination;
 
 class RoleUserManagement extends Component
 {
-    use WithPagination;
+    use WithPagination, WithDeleteConfirmation;
 
     public string $managedRole; // 'admin', 'pm', or 'writer'
     public string $search = '';
@@ -110,16 +111,19 @@ class RoleUserManagement extends Component
         $this->reset(['name', 'email_username', 'password', 'unit_id', 'editingId']);
     }
 
-    public function delete(User $user): void
+    public function confirmDelete(): void
     {
+        $user = User::findOrFail($this->deletingId);
         if ($user->id === auth()->id()) {
             $this->dispatch('notify', message: 'You cannot delete your own account.', type: 'error');
+            $this->cancelDelete();
             return;
         }
         if ($user->role !== $this->managedRole) {
             abort(403);
         }
         $user->delete();
+        $this->cancelDelete();
         $this->dispatch('notify', message: ucfirst($this->managedRole) . ' deleted.', type: 'success');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tasks;
 
+use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
@@ -13,6 +14,7 @@ use Livewire\WithPagination;
 
 class ManageTasks extends Component
 {
+    use WithPagination, WithFileUploads, WithDeleteConfirmation;
     use WithPagination, WithFileUploads;
 
     public string $search = '';
@@ -171,9 +173,11 @@ class ManageTasks extends Component
         $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'priority', 'status', 'deadline', 'credit_amount', 'newFiles', 'editingId']);
     }
 
-    public function delete(Task $task): void
+    public function confirmDelete(): void
     {
+        $task = Task::findOrFail($this->deletingId);
         $task->delete();
+        $this->cancelDelete();
         $this->dispatch('notify', message: 'Task deleted.', type: 'success');
     }
 

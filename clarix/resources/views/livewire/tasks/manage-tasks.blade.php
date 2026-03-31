@@ -113,8 +113,7 @@
                                         class="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
                                     @endif
                                     @if(auth()->user()->isAdmin())
-                                    <button wire:click="delete({{ $task->id }})"
-                                        wire:confirm="Delete this task?"
+                                    <button wire:click="openDeleteModal({{ $task->id }}, '{{ $task->task_code }} - {{ $task->title }}')"
                                         class="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
                                     @endif
                                 </div>
@@ -252,7 +251,7 @@
             </div>
 
             @if(!$editingId)
-            <div
+            <div wire:ignore
                 x-data="{
                     dragging: false,
                     fileObjects: [],
@@ -283,39 +282,41 @@
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         this.$nextTick(() => { this._syncing = false; });
                     }
-                }"
-                x-on:dragover.prevent="dragging = true"
-                x-on:dragleave.prevent="dragging = false"
-                x-on:drop.prevent="dragging = false; addFiles($event.dataTransfer.files)"
-                :class="dragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 bg-gray-50 dark:bg-gray-900'"
-                class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors"
-                x-on:click="$refs.fileInput.click()">
-                <svg class="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Drop files here or <span class="text-indigo-600 font-medium">browse</span></p>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Max 10 MB per file</p>
-                <input x-ref="fileInput" type="file" multiple class="hidden" wire:model="newFiles"
-                    @change="addFiles($event.target.files)">
+                }">
+                <div
+                    x-on:dragover.prevent="dragging = true"
+                    x-on:dragleave.prevent="dragging = false"
+                    x-on:drop.prevent="dragging = false; addFiles($event.dataTransfer.files)"
+                    :class="dragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 bg-gray-50 dark:bg-gray-900'"
+                    class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors"
+                    x-on:click="$refs.fileInput.click()">
+                    <svg class="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Drop files here or <span class="text-indigo-600 font-medium">browse</span></p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Max 10 MB per file</p>
+                    <input x-ref="fileInput" type="file" multiple class="hidden" wire:model="newFiles"
+                        @change="if (!_syncing) addFiles($event.target.files)">
+                </div>
+                {{-- Selected files preview --}}
+                <template x-if="fileObjects.length > 0">
+                    <ul class="mt-2 space-y-1">
+                        <template x-for="(f, i) in fileObjects" :key="i">
+                            <li class="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span class="truncate text-gray-700 dark:text-gray-300" x-text="f.name"></span>
+                                </div>
+                                <div class="flex items-center gap-2 ml-2 shrink-0">
+                                    <span class="text-gray-400 dark:text-gray-500" x-text="formatSize(f.size)"></span>
+                                    <button type="button" @click.stop="removeFile(i)"
+                                        class="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors p-0.5 rounded hover:bg-red-50">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
             </div>
-            {{-- Selected files preview --}}
-            <template x-if="fileObjects.length > 0">
-                <ul class="mt-2 space-y-1">
-                    <template x-for="(f, i) in fileObjects" :key="i">
-                        <li class="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span class="truncate text-gray-700 dark:text-gray-300" x-text="f.name"></span>
-                            </div>
-                            <div class="flex items-center gap-2 ml-2 shrink-0">
-                                <span class="text-gray-400 dark:text-gray-500" x-text="formatSize(f.size)"></span>
-                                <button type="button" @click.stop="removeFile(i)"
-                                    class="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors p-0.5 rounded hover:bg-red-50">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                </button>
-                            </div>
-                        </li>
-                    </template>
-                </ul>
-            </template>
             @error('newFiles.*') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             @endif
 
@@ -331,4 +332,10 @@
             </div>
         </form>
     </x-livewire-modal>
+
+    <x-delete-confirm-modal
+        title="Delete Task"
+        :description="'You are about to delete: ' . $deletingName"
+        :consequences="['Delete all associated files', 'Remove all writer assignments', 'This action cannot be undone']"
+    />
 </div>

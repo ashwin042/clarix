@@ -52,8 +52,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <button wire:click="openEdit({{ $unit->id }})"
                                         class="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
-                                    <button wire:click="delete({{ $unit->id }})"
-                                        wire:confirm="Delete this unit? This cannot be undone."
+                                    <button wire:click="openDeleteModal({{ $unit->id }}, '{{ $unit->name }}')"
                                         class="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
                                 </div>
                             </td>
@@ -96,4 +95,10 @@
             </div>
         </form>
     </x-livewire-modal>
+
+    <x-delete-confirm-modal
+        title="Delete Unit"
+        :description="'You are about to delete: ' . $deletingName"
+        :consequences="['Remove all users assigned to this unit', 'Affect all related tasks and data']"
+    />
 </div>

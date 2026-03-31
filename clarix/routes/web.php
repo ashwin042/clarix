@@ -10,6 +10,8 @@ use App\Http\Controllers\TaskNoteController;
 use App\Livewire\Issues\IssueList;
 use App\Livewire\Issues\IssueDetail;
 use App\Livewire\Issues\AdminIssues;
+use App\Livewire\Finance\ManagePayments;
+use App\Livewire\Finance\FinancialDashboard;
 use App\Livewire\NotificationPage;
 use App\Livewire\Admin\AuthorizationPanel;
 use App\Livewire\Admin\ManageUnits;
@@ -41,6 +43,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin issues panel
     Route::middleware(['role:admin'])->get('/admin/issues', AdminIssues::class)->name('admin.issues.index');
+
+    // Finance (admin only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/finance', FinancialDashboard::class)->name('admin.finance');
+        Route::get('/admin/payments', ManagePayments::class)->name('admin.payments');
+    });
 
     // Task sub-resources (still handled by traditional controllers)
     Route::post('tasks/{task}/files', [TaskFileController::class, 'store'])->name('tasks.files.store');

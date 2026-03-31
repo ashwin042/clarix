@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Unit;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
@@ -9,7 +10,7 @@ use Livewire\WithPagination;
 
 class ManageUnits extends Component
 {
-    use WithPagination;
+    use WithPagination, WithDeleteConfirmation;
 
     public string $search = '';
     public bool $showModal = false;
@@ -56,9 +57,11 @@ class ManageUnits extends Component
         $this->reset(['name', 'editingId']);
     }
 
-    public function delete(Unit $unit): void
+    public function confirmDelete(): void
     {
+        $unit = Unit::findOrFail($this->deletingId);
         $unit->delete();
+        $this->cancelDelete();
         $this->dispatch('notify', message: 'Unit deleted.', type: 'success');
     }
 
