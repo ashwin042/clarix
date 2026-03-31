@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        font-family: 'Inter', sans-serif;
+    }
+    html.dark {
+        color-scheme: dark;
+    }
+    /* Global dark mode for form elements */
+    .dark input, .dark textarea, .dark select {
+        background-color: rgb(31 41 55) !important; /* gray-800 */
+        border-color: rgb(75 85 99) !important; /* gray-600 */
+        color: rgb(229 231 235) !important; /* gray-200 */
+    }
+    .dark input::placeholder, .dark textarea::placeholder {
+        color: rgb(156 163 175) !important; /* gray-400 */
+    }
+    .dark input:focus, .dark textarea:focus, .dark select:focus {
+        border-color: rgb(99 102 241) !important; /* indigo-500 */
+        --tw-ring-color: rgb(99 102 241) !important;
+    }
+    .dark input:disabled, .dark textarea:disabled, .dark select:disabled {
+        background-color: rgb(17 24 39) !important; /* gray-900 */
+        color: rgb(156 163 175) !important;
+    }
+}
