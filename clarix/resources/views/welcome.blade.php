@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Clarix — Project Management, Reimagined</title>
+    <title>Clarix: Project Management, Reimagined</title>
     <meta name="description" content="Clarix brings your tasks, team roles, credit tracking and financial reporting into one clean portal. No more spreadsheets. No more chaos.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap" rel="stylesheet"/>
@@ -173,9 +173,10 @@
 
             <div class="hidden md:flex items-center">
                 <a href="{{ route('login') }}"
-                   class="btn-primary text-white text-[14.5px] font-semibold px-5 py-2.5 rounded-xl inline-flex items-center gap-2">
+                   class="btn-primary text-white text-[14px] font-semibold px-5 rounded-xl inline-flex items-center gap-2"
+                   style="height:40px; line-height:1;">
                     Get started free
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
                 </a>
@@ -398,7 +399,7 @@
                 Some more Clarix features
             </h2>
             <p class="text-gray-500 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-                Every tool your team needs — from task creation to final payout.
+                Every tool your team needs, from task creation to final payout.
             </p>
         </div>
 
@@ -632,7 +633,7 @@
                     'text'     => 'text-blue-700',
                 ],
                 [
-                    'quote'    => 'We tracked sprint progress in a shared Google Sheet that was always outdated. Clarix replaced it overnight. Our delivery speed went up by 40% in the first month — the data was just always there.',
+                    'quote'    => 'We tracked sprint progress in a shared Google Sheet that was always outdated. Clarix replaced it overnight. Our delivery speed went up by 40% in the first month. The data was just always there.',
                     'name'     => 'Rahul Karki',
                     'role'     => 'Team Lead',
                     'company'  => 'WriteRight Media',
