@@ -104,4 +104,30 @@ class TaskDetailRoleRestrictionsTest extends TestCase
         Livewire::test(TaskDetail::class, ['task' => $task])
             ->assertSee('Assigned To');
     }
+
+    public function test_credit_amount_displays_decimal_values(): void
+    {
+        $unit  = $this->makeUnit();
+        $admin = $this->makeAdmin();
+        $pm    = $this->makePm($unit);
+
+        foreach (['0.20', '0.50', '0.40'] as $amount) {
+            $task = Task::create([
+                'title'         => 'Test Task',
+                'task_code'     => 'CR_' . str_replace('.', '', $amount),
+                'unit_id'       => $unit->id,
+                'created_by'    => $admin->id,
+                'pm_id'         => $pm->id,
+                'priority'      => 'medium',
+                'status'        => 'pending',
+                'deadline'      => now()->addDays(7),
+                'credit_amount' => $amount,
+            ]);
+
+            $this->actingAs($admin);
+
+            Livewire::test(TaskDetail::class, ['task' => $task])
+                ->assertSee($amount);
+        }
+    }
 }

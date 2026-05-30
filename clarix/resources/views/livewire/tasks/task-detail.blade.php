@@ -61,7 +61,7 @@
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Credit Amount</dt>
-                        <dd class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ number_format($task->credit_amount) }}</dd>
+                        <dd class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ number_format($task->credit_amount, 2) }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Code</dt>
