@@ -52,7 +52,7 @@
                         <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->pm?->name ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Assigned To</dt>
+                        <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Assigned Supervisor</dt>
                         <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->assignedAdmin?->name ?? '—' }}</dd>
                     </div>
                     <div>

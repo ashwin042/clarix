@@ -89,7 +89,7 @@ class TaskDetailRoleRestrictionsTest extends TestCase
 
         Livewire::test(TaskDetail::class, ['task' => $task])
             ->assertSee($assignedAdmin->name)
-            ->assertSee('Assigned To');
+            ->assertSee('Assigned Supervisor');
     }
 
     public function test_unassigned_task_shows_assigned_to_label(): void
@@ -102,7 +102,7 @@ class TaskDetailRoleRestrictionsTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(TaskDetail::class, ['task' => $task])
-            ->assertSee('Assigned To');
+            ->assertSee('Assigned Supervisor');
     }
 
     public function test_credit_amount_displays_decimal_values(): void

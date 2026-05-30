@@ -126,7 +126,7 @@
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Code</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task Title</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
-                                <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned To</th>
+                                <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned Supervisor</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Completed</th>
                                 <th class="px-6 py-2.5 text-right text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider pr-6">Credits</th>
                             </tr>
@@ -187,7 +187,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Unit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned Supervisor</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Completed</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider pr-6">Credits</th>
                         </tr>
