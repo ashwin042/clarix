@@ -153,36 +153,36 @@
 
 {{-- ══════════════════ NAVBAR ══════════════════ --}}
 <nav id="navbar" class="navbar fixed top-0 left-0 right-0 z-50">
-    <div class="max-w-7xl mx-auto px-5 sm:px-8">
-        <div class="flex items-center justify-between h-[60px]">
+    <div class="max-w-7xl mx-auto px-6 sm:px-10">
+        <div class="flex items-center justify-between h-[74px]">
 
-            <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            <a href="/" class="flex items-center gap-3 flex-shrink-0">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                      style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
-                    <span class="text-white font-black text-sm leading-none select-none">C</span>
+                    <span class="text-white font-black text-base leading-none select-none">C</span>
                 </div>
-                <span class="font-bold text-gray-900 text-[17px] tracking-tight">Clarix</span>
+                <span class="font-bold text-gray-900 text-[19px] tracking-tight">Clarix</span>
             </a>
 
-            <div class="hidden md:flex items-center gap-7">
-                <a href="#features"     class="text-[13.5px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Features</a>
-                <a href="#use-cases"    class="text-[13.5px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Use Cases</a>
-                <a href="#pricing"      class="text-[13.5px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Pricing</a>
-                <a href="#testimonials" class="text-[13.5px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Testimonials</a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features"     class="text-[15px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Features</a>
+                <a href="#use-cases"    class="text-[15px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Use Cases</a>
+                <a href="#pricing"      class="text-[15px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Pricing</a>
+                <a href="#testimonials" class="text-[15px] text-gray-500 hover:text-violet-700 font-medium transition-colors">Testimonials</a>
             </div>
 
             <div class="hidden md:flex items-center">
                 <a href="{{ route('login') }}"
-                   class="btn-primary text-white text-[13.5px] font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5">
+                   class="btn-primary text-white text-[14.5px] font-semibold px-5 py-2.5 rounded-xl inline-flex items-center gap-2">
                     Get started free
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
                 </a>
             </div>
 
             <button id="menu-btn" onclick="toggleMenu()"
-                    class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-violet-50 hover:text-violet-700 transition-colors">
+                    class="md:hidden p-2.5 rounded-xl text-gray-500 hover:bg-violet-50 hover:text-violet-700 transition-colors">
                 <svg id="icon-open"  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
@@ -205,7 +205,7 @@
 </nav>
 
 {{-- ══════════════════ HERO ══════════════════ --}}
-<section class="hero-bg relative overflow-hidden" style="min-height:100vh; padding-top:60px;">
+<section class="hero-bg relative overflow-hidden" style="min-height:100vh; padding-top:74px;">
     <div class="dot-grid absolute inset-0 opacity-50 pointer-events-none"></div>
     <div class="absolute top-20 -left-40 w-96 h-96 rounded-full blur-3xl pointer-events-none"
          style="background:rgba(167,139,250,.18)"></div>
