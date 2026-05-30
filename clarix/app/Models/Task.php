@@ -17,6 +17,7 @@ class Task extends Model
         'unit_id',
         'created_by',
         'pm_id',
+        'assigned_admin_id',
         'priority',
         'status',
         'deadline',
@@ -43,6 +44,11 @@ class Task extends Model
     public function pm(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pm_id');
+    }
+
+    public function assignedAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_admin_id');
     }
 
     public function assignments(): HasMany
