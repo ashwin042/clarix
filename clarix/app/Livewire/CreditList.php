@@ -36,8 +36,13 @@ class CreditList extends Component
     private function baseQuery()
     {
         $user  = auth()->user();
-        $query = Task::with(['unit', 'creator'])
+        $query = Task::with(['unit', 'creator', 'assignedAdmin'])
             ->where('status', 'completed');
+
+        // Writer can only see tasks they are assigned to
+        if ($user->isWriter()) {
+            $query->whereHas('assignments', fn ($q) => $q->where('writer_id', $user->id));
+        }
 
         // PM can only see their own unit
         if ($user->isPm()) {
@@ -83,6 +88,16 @@ class CreditList extends Component
                 $pmQuery->where('unit_id', $this->filterUnit);
             }
             $pms = $pmQuery->get();
+        }
+
+        // Writers always see a flat list — no unit grouping
+        if ($user->isWriter()) {
+            $tasks = $this->baseQuery()
+                ->orderBy('updated_at', 'desc')
+                ->paginate(25);
+
+            return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tasks'))
+                ->layout('layouts.app', ['pageTitle' => 'Credit List']);
         }
 
         if ($this->viewMode === 'grouped') {
