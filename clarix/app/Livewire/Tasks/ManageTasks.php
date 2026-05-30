@@ -6,16 +6,13 @@ use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\TaskFile;
 use App\Notifications\NewTaskCreatedNotification;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class ManageTasks extends Component
 {
-    use WithPagination, WithFileUploads, WithDeleteConfirmation;
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithDeleteConfirmation;
 
     public string $search = '';
     public string $filterStatus = '';
@@ -36,8 +33,7 @@ class ManageTasks extends Component
     public string $status = 'pending';
     public string $deadline = '';
     public string $credit_amount = '0';
-    public array $newFiles = [];
-
+    public string $assigned_admin_id = '';
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingFilterStatus(): void { $this->resetPage(); }
     public function updatingFilterPriority(): void { $this->resetPage(); }
@@ -60,11 +56,10 @@ class ManageTasks extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
+        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
         $this->priority = 'medium';
         $this->status = 'pending';
         $this->credit_amount = '0';
-        $this->newFiles = [];
 
         if (auth()->user()->isPm()) {
             $this->unit_id = (string) auth()->user()->unit_id;
@@ -87,6 +82,7 @@ class ManageTasks extends Component
         $this->status        = $task->status;
         $this->deadline      = $task->deadline->format('Y-m-d');
         $this->credit_amount = (string) $task->credit_amount;
+        $this->assigned_admin_id = (string) ($task->assigned_admin_id ?? '');
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -127,9 +123,16 @@ class ManageTasks extends Component
             'status'        => 'required|in:pending,in_progress,submitted,verified,completed',
             'deadline'      => 'required|date',
             'credit_amount' => 'required|numeric|min:0',
-            'newFiles'      => 'nullable|array',
-            'newFiles.*'    => 'file|max:10240',
-            'important_notes'   => 'nullable|string|max:5000',
+            'important_notes'    => 'nullable|string|max:5000',
+            'assigned_admin_id'  => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    if ($value && User::find($value)?->role !== 'admin') {
+                        $fail('The selected user must be an admin.');
+                    }
+                },
+            ],
         ]);
 
         $data = [
@@ -137,8 +140,9 @@ class ManageTasks extends Component
             'task_code'     => $this->task_code,
             'important_notes'   => $this->important_notes ?: null,
             'unit_id'       => $this->unit_id,
-            'pm_id'         => $this->pm_id,
-            'priority'      => $this->priority,
+            'pm_id'             => $this->pm_id,
+            'assigned_admin_id' => $this->assigned_admin_id ?: null,
+            'priority'          => $this->priority,
             'status'        => $this->status,
             'deadline'      => $this->deadline,
             'credit_amount' => $this->credit_amount,
@@ -149,16 +153,6 @@ class ManageTasks extends Component
             $this->dispatch('notify', message: 'Task updated.', type: 'success');
         } else {
             $task = Task::create($data + ['created_by' => auth()->id()]);
-            foreach ($this->newFiles as $file) {
-                $path = $file->store('tasks/' . $task->id, 'local');
-                $task->files()->create([
-                    'file_path'     => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size'     => $file->getSize(),
-                    'mime_type'     => $file->getMimeType(),
-                    'uploaded_by'   => auth()->id(),
-                ]);
-            }
             $this->dispatch('notify', message: 'Task created.', type: 'success');
 
             // Notify all admins
@@ -170,7 +164,7 @@ class ManageTasks extends Component
         }
 
         $this->showModal = false;
-        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'priority', 'status', 'deadline', 'credit_amount', 'newFiles', 'editingId']);
+        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
     }
 
     public function confirmDelete(): void
@@ -186,7 +180,7 @@ class ManageTasks extends Component
         $user = auth()->user();
         abort_unless($user->hasPermission('tasks.view'), 403);
 
-        $query = Task::with(['unit', 'creator', 'pm', 'assignments'])
+        $query = Task::with(['unit', 'creator', 'pm', 'assignments.writer', 'assignedAdmin'])
             ->when($user->isPm(), fn ($q) => $q->where('unit_id', $user->unit_id))
             ->when($user->isWriter(), fn ($q) => $q->whereHas('assignments', fn ($a) => $a->where('writer_id', $user->id)))
             ->when($this->search, fn ($q) => $q->where(function ($q) {
@@ -200,6 +194,8 @@ class ManageTasks extends Component
 
         $tasks = $query->paginate(15);
 
+        $adminUsers = User::where('role', 'admin')->orderBy('name')->get();
+
         $units = $user->isAdmin()
             ? Unit::orderBy('name')->get()
             : Unit::where('id', $user->unit_id)->get();
@@ -209,7 +205,7 @@ class ManageTasks extends Component
             ? User::where('role', 'pm')->where('unit_id', $this->unit_id)->orderBy('name')->get()
             : collect();
 
-        return view('livewire.tasks.manage-tasks', compact('tasks', 'units', 'pmsForUnit'))
+        return view('livewire.tasks.manage-tasks', compact('tasks', 'units', 'pmsForUnit', 'adminUsers'))
             ->layout('layouts.app', ['pageTitle' => 'Tasks']);
     }
 }
