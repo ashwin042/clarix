@@ -7,13 +7,11 @@ use App\Models\TaskAssignment;
 use App\Models\TaskNote;
 use App\Models\User;
 use App\Notifications\TaskStatusUpdatedNotification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 class TaskDetail extends Component
 {
-    use WithFileUploads;
-
     public Task $task;
 
     // Assignment modal
@@ -22,15 +20,17 @@ class TaskDetail extends Component
 
     // File upload
     public bool $showUploadModal = false;
-    public array $pendingFiles = [];
-    public string $uploadNote = '';
 
     // Note form
     public string $note = '';
 
     public function mount(Task $task): void
     {
-        $this->task = $task->load(['unit', 'creator', 'pm', 'assignments.writer', 'files.uploader', 'notes.author']);
+        $this->task = $task->load(['unit', 'creator', 'pm', 'assignedAdmin', 'assignments.writer', 'files.uploader', 'notes.author']);
+
+        if (session()->has('success')) {
+            $this->dispatch('notify', message: session('success'), type: 'success');
+        }
     }
 
     // ── Assignments ──────────────────────────────────────────────────────────
@@ -83,49 +83,14 @@ class TaskDetail extends Component
 
     public function openUploadModal(): void
     {
-        $this->pendingFiles = [];
-        $this->uploadNote = '';
         $this->resetErrorBag();
         $this->showUploadModal = true;
-    }
-
-    public function uploadFiles(): void
-    {
-        $this->validate([
-            'pendingFiles'   => 'required|array|min:1',
-            'pendingFiles.*' => 'file|max:10240',
-        ]);
-
-        foreach ($this->pendingFiles as $file) {
-            $path = $file->store('tasks/' . $this->task->id, 'local');
-
-            $this->task->files()->create([
-                'file_path'     => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'file_size'     => $file->getSize(),
-                'mime_type'     => $file->getMimeType(),
-                'uploaded_by'   => auth()->id(),
-            ]);
-        }
-
-        if ($this->uploadNote) {
-            $this->task->notes()->create([
-                'note'       => $this->uploadNote,
-                'created_by' => auth()->id(),
-            ]);
-        }
-
-        $this->task->refresh();
-        $this->showUploadModal = false;
-        $this->pendingFiles = [];
-        $this->uploadNote = '';
-        $this->dispatch('notify', message: 'Files uploaded.', type: 'success');
     }
 
     public function deleteFile(int $fileId): void
     {
         $file = $this->task->files()->findOrFail($fileId);
-        \Illuminate\Support\Facades\Storage::disk('local')->delete($file->file_path);
+        Storage::disk('r2')->delete($file->file_path);
         $file->delete();
         $this->task->refresh();
         $this->dispatch('notify', message: 'File deleted.', type: 'success');
@@ -151,7 +116,7 @@ class TaskDetail extends Component
 
     public function updateTaskStatus(string $status): void
     {
-        if (!auth()->user()->isAdmin() && !auth()->user()->isPm()) {
+        if (!auth()->user()->isAdmin()) {
             abort(403);
         }
         $this->task->update(['status' => $status]);
@@ -178,7 +143,7 @@ class TaskDetail extends Component
                 ->get()
             : collect();
 
-        $this->task->load(['unit', 'creator', 'assignments.writer', 'files.uploader', 'notes' => fn ($q) => $q->with('author')->latest()]);
+        $this->task->load(['unit', 'creator', 'assignedAdmin', 'assignments.writer', 'files.uploader', 'notes' => fn ($q) => $q->with('author')->latest()]);
 
         return view('livewire.tasks.task-detail', compact('availableWriters'))
             ->layout('layouts.app', ['pageTitle' => $this->task->task_code]);
