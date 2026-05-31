@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clarix Landing Page — Design Mockup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #0f172a; }
+
+  /* ── Frame wrapper ── */
+  .frame-label {
+    background: #1e293b; color: #94a3b8; font-size: 11px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; padding: 8px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .frame-label span { background: #334155; color: #e2e8f0; border-radius: 4px; padding: 2px 8px; font-size: 10px; }
+  .page-wrapper {
+    max-width: 960px; margin: 0 auto; background: white;
+    box-shadow: 0 0 0 1px #e2e8f0, 0 20px 60px rgba(0,0,0,.12);
+    border-radius: 0 0 12px 12px; overflow: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 60px;
+    border-bottom: 1px solid #f1f5f9;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #0f172a; letter-spacing: -.02em; }
+  .logo-icon { width: 28px; height: 28px; background: #4f46e5; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 13px; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-link { font-size: 13.5px; color: #64748b; font-weight: 500; text-decoration: none; }
+  .nav-cta { background: #4f46e5; color: white; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 7px; text-decoration: none; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center; padding: 96px 60px 88px;
+    background: white;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #eef2ff; color: #4f46e5; font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 28px;
+    border: 1px solid #e0e7ff; letter-spacing: .02em;
+  }
+  .hero-badge::before { content: ''; width: 6px; height: 6px; background: #4f46e5; border-radius: 50%; }
+  h1 {
+    font-size: 52px; font-weight: 800; line-height: 1.08; letter-spacing: -.04em;
+    color: #0f172a; max-width: 700px; margin: 0 auto 20px;
+  }
+  h1 em { font-style: normal; color: #4f46e5; }
+  .hero-sub {
+    font-size: 17px; color: #64748b; line-height: 1.65; max-width: 500px;
+    margin: 0 auto 40px; font-weight: 400;
+  }
+  .hero-actions { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .btn-primary {
+    background: #4f46e5; color: white; font-size: 14px; font-weight: 600;
+    padding: 11px 24px; border-radius: 8px; text-decoration: none;
+    box-shadow: 0 1px 3px rgba(79,70,229,.3), 0 4px 12px rgba(79,70,229,.2);
+  }
+  .btn-secondary {
+    color: #475569; font-size: 14px; font-weight: 500;
+    padding: 11px 20px; border-radius: 8px; text-decoration: none;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── PRODUCT PREVIEW ── */
+  .product-preview {
+    margin: 0 40px 0; border-radius: 10px 10px 0 0;
+    border: 1px solid #e2e8f0; border-bottom: none;
+    overflow: hidden; background: #f8fafc;
+  }
+  .preview-bar { background: #f1f5f9; padding: 10px 16px; display: flex; gap: 6px; border-bottom: 1px solid #e2e8f0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #fca5a5; } .dot-y { background: #fde68a; } .dot-g { background: #86efac; }
+  .preview-body { display: flex; height: 180px; }
+  .preview-sidebar { width: 140px; background: white; border-right: 1px solid #f1f5f9; padding: 12px 10px; flex-shrink: 0; }
+  .sidebar-item { height: 24px; border-radius: 5px; margin-bottom: 4px; background: #f1f5f9; }
+  .sidebar-item.active { background: #eef2ff; }
+  .preview-main { flex: 1; padding: 16px; }
+  .preview-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .preview-card { flex: 1; height: 56px; background: white; border-radius: 8px; border: 1px solid #f1f5f9; padding: 10px; }
+  .card-line { height: 8px; border-radius: 4px; background: #f1f5f9; margin-bottom: 6px; }
+  .card-line.short { width: 60%; background: #e0e7ff; }
+  .preview-table { background: white; border-radius: 8px; border: 1px solid #f1f5f9; overflow: hidden; }
+  .table-row { display: flex; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #f8fafc; align-items: center; }
+  .table-row:last-child { border-bottom: none; }
+  .tl { height: 8px; border-radius: 4px; background: #e2e8f0; }
+  .badge { height: 16px; width: 50px; border-radius: 100px; background: #dcfce7; flex-shrink: 0; }
+  .badge.amber { background: #fef3c7; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-sep { height: 1px; background: #f1f5f9; margin: 0 40px; }
+
+  /* ── FEATURES ── */
+  .features { padding: 72px 40px; background: white; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #4f46e5; margin-bottom: 10px; }
+  .section-title { font-size: 30px; font-weight: 800; letter-spacing: -.03em; color: #0f172a; margin-bottom: 10px; }
+  .section-sub { font-size: 15px; color: #64748b; line-height: 1.6; max-width: 480px; margin-bottom: 48px; }
+  .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .feature-card {
+    padding: 24px; border-radius: 12px; border: 1px solid #f1f5f9;
+    background: #fafafa; transition: all .2s;
+  }
+  .feature-icon {
+    width: 40px; height: 40px; border-radius: 10px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fi-blue { background: #eff6ff; }
+  .fi-violet { background: #f5f3ff; }
+  .fi-green { background: #f0fdf4; }
+  .fi-amber { background: #fffbeb; }
+  .feature-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .feature-desc { font-size: 13px; color: #64748b; line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .how { padding: 72px 40px; background: #fafafa; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 0; }
+  .step { text-align: center; }
+  .step-num {
+    width: 40px; height: 40px; border-radius: 50%; background: white;
+    border: 1.5px solid #e2e8f0; font-size: 15px; font-weight: 800; color: #4f46e5;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .step-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+  .step-desc { font-size: 13px; color: #64748b; line-height: 1.65; }
+  .step-arrow {
+    display: flex; align-items: center; justify-content: center;
+    padding-top: 20px; color: #cbd5e1; font-size: 20px;
+  }
+
+  /* ── STATS ── */
+  .stats { padding: 64px 40px; background: white; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 40px; }
+  .stat-card { text-align: center; padding: 24px; border-radius: 12px; background: #fafafa; border: 1px solid #f1f5f9; }
+  .stat-num { font-size: 32px; font-weight: 800; color: #0f172a; letter-spacing: -.04em; margin-bottom: 4px; }
+  .stat-num em { color: #4f46e5; font-style: normal; }
+  .stat-label { font-size: 12.5px; color: #64748b; font-weight: 500; }
+
+  /* ── FOOTER ── */
+  footer { background: #0f172a; padding: 48px 40px 32px; }
+  .footer-top { display: flex; justify-content: space-between; margin-bottom: 32px; }
+  .footer-brand { max-width: 220px; }
+  .footer-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: white; margin-bottom: 10px; }
+  .footer-tagline { font-size: 13px; color: #64748b; line-height: 1.6; }
+  .footer-links h4 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+  .footer-link { display: block; font-size: 13px; color: #475569; margin-bottom: 8px; }
+  .footer-bottom { border-top: 1px solid #1e293b; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-copy { font-size: 12px; color: #334155; }
+
+  /* ── APPROVE CTA ── */
+  .approve-bar {
+    background: #1e293b; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .approve-text { color: #94a3b8; font-size: 13px; }
+  .approve-actions { display: flex; gap: 10px; }
+  .btn-approve {
+    background: #4f46e5; color: white; border: none; padding: 8px 20px;
+    border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+    data-choice: "approve";
+  }
+  .btn-revise {
+    background: #334155; color: #cbd5e1; border: none; padding: 8px 16px;
+    border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="frame-label">
+  Clarix Landing Page — Design Mockup
+  <span>Light / Linear-style</span>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-icon">C</div>
+      Clarix
+    </div>
+    <div class="nav-links">
+      <a href="#" class="nav-link">Features</a>
+      <a href="#" class="nav-link">How it works</a>
+      <a href="#" class="nav-link">About</a>
+      <a href="#" class="nav-cta">Sign in →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Project Management, Reimagined</div>
+    <h1>The workspace where <em>great work</em> gets done</h1>
+    <p class="hero-sub">Clarix keeps your team aligned — tasks, credits, roles, and progress in one clean, fast portal built for modern project teams.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Get started free →</a>
+      <a href="#" class="btn-secondary">Sign in to your account</a>
+    </div>
+  </div>
+
+  <!-- PRODUCT PREVIEW (wireframe) -->
+  <div class="product-preview">
+    <div class="preview-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-sidebar">
+        <div class="sidebar-item" style="width:80%;height:18px;background:#e0e7ff;margin-bottom:12px;"></div>
+        <div class="sidebar-item active"></div>
+        <div class="sidebar-item"></div>
+        <div class="sidebar-item"></div>
+        <div class="sidebar-item" style="width:70%"></div>
+        <div style="height:12px"></div>
+        <div class="sidebar-item" style="height:8px;width:50%;background:#cbd5e1;"></div>
+        <div class="sidebar-item"></div>
+        <div class="sidebar-item"></div>
+      </div>
+      <div class="preview-main">
+        <div class="preview-row">
+          <div class="preview-card"><div class="card-line short"></div><div class="card-line" style="width:40%"></div></div>
+          <div class="preview-card"><div class="card-line short" style="background:#dcfce7"></div><div class="card-line" style="width:30%"></div></div>
+          <div class="preview-card"><div class="card-line short" style="background:#fef3c7"></div><div class="card-line" style="width:50%"></div></div>
+        </div>
+        <div class="preview-table">
+          <div class="table-row" style="background:#f8fafc;"><div class="tl" style="width:20%;background:#cbd5e1"></div><div class="tl" style="flex:1;background:#cbd5e1"></div><div class="tl" style="width:15%;background:#cbd5e1"></div></div>
+          <div class="table-row"><div class="tl" style="width:20%"></div><div class="tl" style="flex:1"></div><div class="badge"></div></div>
+          <div class="table-row"><div class="tl" style="width:20%"></div><div class="tl" style="flex:1"></div><div class="badge amber"></div></div>
+          <div class="table-row"><div class="tl" style="width:20%"></div><div class="tl" style="flex:1"></div><div class="badge"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-sep" style="margin: 0;"></div>
+
+  <!-- FEATURES -->
+  <div class="features">
+    <div class="section-label">Features</div>
+    <div class="section-title">Everything your team needs</div>
+    <p class="section-sub">Built for project managers, writers, and admins — every role gets the tools that matter to them.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon fi-blue">
+          <svg width="18" height="18" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-title">Task Management</div>
+        <div class="feature-desc">Create, assign, and track tasks with priorities, deadlines, and status workflows. Never lose sight of what matters.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-violet">
+          <svg width="18" height="18" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <div class="feature-title">Team Collaboration</div>
+        <div class="feature-desc">Units, assignments, and threaded issue reporting keep everyone connected — from PMs to writers.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-green">
+          <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div class="feature-title">Role-Based Access</div>
+        <div class="feature-desc">Admins, Project Managers, and Writers — each role sees exactly what they need, nothing more.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-amber">
+          <svg width="18" height="18" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <div class="feature-title">Project Tracking</div>
+        <div class="feature-desc">Credit tracking, financial dashboards, and completion rates give leadership the full picture in real time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how">
+    <div class="section-label">How it works</div>
+    <div class="section-title">Up and running in minutes</div>
+    <p class="section-sub">Three simple steps to bring your whole team onto one platform.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Create your workspace</div>
+        <div class="step-desc">An admin sets up units, invites team members, and assigns roles in just a few clicks.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Assign tasks</div>
+        <div class="step-desc">Project managers create tasks, set deadlines, attach files, and assign writers with full context.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Track & deliver</div>
+        <div class="step-desc">Writers submit work, PMs review, admins track credits and payments — all in one place.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="section-label" style="text-align:center">Built for teams who deliver</div>
+    <div class="section-title" style="text-align:center;max-width:none">Trusted by productive teams</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num"><em>3</em> roles</div>
+        <div class="stat-label">Admin · PM · Writer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><em>100%</em></div>
+        <div class="stat-label">Visibility into every task</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><em>0</em></div>
+        <div class="stat-label">Missed deadlines when you use Clarix</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><em>1</em> place</div>
+        <div class="stat-label">For tasks, credits & reports</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon">C</div>
+          Clarix
+        </div>
+        <p class="footer-tagline">The project management portal built for content and creative teams.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="#" class="footer-link">Features</a>
+        <a href="#" class="footer-link">How it works</a>
+        <a href="#" class="footer-link">Sign in</a>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="#" class="footer-link">About</a>
+        <a href="#" class="footer-link">Contact</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Clarix. Created by <span style="color:#64748b">Code Next Door</span>.</div>
+      <div class="footer-copy" style="color:#1e293b">Built with ♥ using Laravel & Tailwind</div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Selection buttons -->
+<div class="approve-bar">
+  <div class="approve-text">Does this design direction work for you? Click a button or reply in the terminal.</div>
+  <div class="approve-actions">
+    <button class="btn-approve" onclick="sendChoice('approve', 'Approve this design direction')" style="background:#4f46e5;color:white;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+      ✓ Looks great, build it
+    </button>
+    <button class="btn-revise" onclick="sendChoice('revise', 'I want changes')" style="background:#334155;color:#cbd5e1;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;">
+      ✎ Request changes
+    </button>
+  </div>
+</div>
+
+<script>
+function sendChoice(choice, text) {
+  fetch('/event', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({type:'click', choice, text, timestamp: Date.now()})
+  }).catch(() => {});
+  document.querySelectorAll('.btn-approve, .btn-revise').forEach(b => b.style.opacity = '.5');
+  event.target.style.opacity = '1';
+  event.target.style.outline = '2px solid #818cf8';
+}
+</script>
+
+</body>
+</html>

@@ -4,8 +4,8 @@
 
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Welcome back, {{ auth()->user()->name }}</h2>
-                <p class="text-sm text-gray-500 mt-0.5">Manage your unit's tasks and track progress.</p>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Welcome back, {{ auth()->user()->name }}</h2>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage your unit's tasks and track progress.</p>
             </div>
             <div class="flex gap-3">
                 <a href="{{ route('tasks.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
@@ -14,7 +14,7 @@
                     </svg>
                     View Tasks
                 </a>
-                <a href="{{ route('credits.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="{{ route('credits.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                     </svg>

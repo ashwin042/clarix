@@ -3,8 +3,8 @@
     {{-- Page Header --}}
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Authorization Panel</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">Control what each role can see and do. Changes apply instantly.</p>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">Authorization Panel</h2>
+            <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Control what each role can see and do. Changes apply instantly.</p>
         </div>
         <div class="flex items-center gap-2">
             <div wire:loading class="flex items-center gap-1.5 text-xs text-indigo-600 font-medium">
@@ -22,8 +22,8 @@
     </div>
 
     {{-- Legend --}}
-    <div class="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-3 shadow-sm">
-        <span class="font-medium text-gray-700 dark:text-gray-300">Legend:</span>
+    <div class="flex items-center gap-6 text-xs text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800/60 rounded-xl px-5 py-3 shadow-sm">
+        <span class="font-medium text-gray-700 dark:text-slate-300">Legend:</span>
         <span class="flex items-center gap-1.5">
             <span class="inline-flex w-5 h-5 rounded bg-indigo-600 items-center justify-center">
                 <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -31,20 +31,20 @@
             Allowed
         </span>
         <span class="flex items-center gap-1.5">
-            <span class="inline-block w-5 h-5 rounded border-2 border-gray-300 bg-white dark:bg-gray-800"></span>
+            <span class="inline-block w-5 h-5 rounded border-2 border-gray-300 bg-white dark:bg-slate-900"></span>
             Denied
         </span>
-        <span class="text-gray-400 dark:text-gray-500">|</span>
+        <span class="text-gray-400 dark:text-slate-500">|</span>
         <span>Clicking a checkbox saves instantly — no confirmation needed.</span>
         <span class="ml-auto text-rose-500 font-medium">Hard rules enforced regardless: PM unit-scoping, writer identity masking, writer upload restriction.</span>
     </div>
 
     {{-- Permission Matrix per Role --}}
     @foreach($roles as $role)
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
 
         {{-- Role Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg {{ $role === 'pm' ? 'bg-blue-100' : 'bg-amber-100' }} flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {{ $role === 'pm' ? 'text-blue-600' : 'text-amber-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -56,8 +56,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ $roleLabels[$role] }}</h3>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">{{ $roleLabels[$role] }}</h3>
+                    <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">
                         {{ collect($matrix[$role] ?? [])->filter()->count() }} of {{ collect($matrix[$role] ?? [])->count() }} permissions enabled
                     </p>
                 </div>
@@ -79,23 +79,23 @@
         {{-- Modules --}}
         @foreach($modules as $moduleKey => $moduleLabel)
             @if(!empty($modulePermissions[$moduleKey]))
-            <div class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+            <div class="border-b border-gray-100 dark:border-slate-800/60 last:border-0">
 
                 {{-- Module label row --}}
-                <div class="flex items-center gap-2 px-6 py-2.5 bg-gray-50 dark:bg-gray-900/50">
+                <div class="flex items-center gap-2 px-6 py-2.5 bg-gray-50 dark:bg-slate-950/60">
                     <div class="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $moduleLabel }}</span>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{{ $moduleLabel }}</span>
                 </div>
 
                 {{-- Permission rows --}}
                 <div class="divide-y divide-gray-50">
                     @foreach($modulePermissions[$moduleKey] as $permName => $permData)
                     <div wire:key="{{ $role }}-{{ $permName }}"
-                        class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:bg-gray-900/70 transition-colors group">
+                        class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:bg-slate-950/70 transition-colors group">
 
                         <div class="flex items-center gap-3 min-w-0">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $permData['label'] }}</span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{ $permName }}</span>
+                            <span class="text-sm text-gray-700 dark:text-slate-300">{{ $permData['label'] }}</span>
+                            <span class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400 font-mono bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{ $permName }}</span>
                         </div>
 
                         {{-- Toggle --}}
@@ -113,7 +113,7 @@
                                 </span>
                             @else
                                 {{-- Denied state --}}
-                                <span class="flex items-center justify-center w-7 h-7 rounded-lg border-2 border-gray-300 bg-white dark:bg-gray-800 group-hover:border-indigo-400 transition-colors">
+                                <span class="flex items-center justify-center w-7 h-7 rounded-lg border-2 border-gray-300 bg-white dark:bg-slate-900 group-hover:border-indigo-400 transition-colors">
                                     <svg class="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>

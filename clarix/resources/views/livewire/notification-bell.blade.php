@@ -1,6 +1,6 @@
 <div x-data="{ open: false }" class="relative" wire:poll.3s="refreshNotifications">
     {{-- Bell Button --}}
-    <button @click="open = !open" class="relative p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+    <button @click="open = !open" class="relative p-1.5 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -15,21 +15,21 @@
     {{-- Dropdown --}}
     <div x-show="open" @click.outside="open = false" x-transition:enter="ease-out duration-150"
         x-transition:enter-start="opacity-0 scale-95 -translate-y-1" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+        class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-xl dark:shadow-2xl dark:shadow-black/40 border border-gray-200 dark:border-slate-700/60 z-50 overflow-hidden"
         style="display: none;">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notifications</h3>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800/60">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">Notifications</h3>
             @if($unreadCount > 0)
-                <button wire:click="markAllRead" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                <button wire:click="markAllRead" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
                     Mark all read
                 </button>
             @endif
         </div>
 
         {{-- List --}}
-        <div class="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-700/50">
+        <div class="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-slate-800/60">
             @forelse($notifications as $notification)
                 @php
                     $data = $notification->data;
@@ -42,25 +42,25 @@
                         default => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
                     };
                     $iconColor = match($data['type'] ?? '') {
-                        'task_created' => 'text-blue-500 bg-blue-50',
-                        'task_status_updated' => 'text-amber-500 bg-amber-50',
-                        'issue_created' => 'text-red-500 bg-red-50',
-                        'issue_resolved' => 'text-green-500 bg-green-50',
-                        default => 'text-gray-500 bg-gray-50',
+                        'task_created' => 'text-blue-500 bg-blue-50 dark:bg-blue-500/10',
+                        'task_status_updated' => 'text-amber-500 bg-amber-50 dark:bg-amber-500/10',
+                        'issue_created' => 'text-red-500 bg-red-50 dark:bg-red-500/10',
+                        'issue_resolved' => 'text-green-500 bg-green-50 dark:bg-green-500/10',
+                        default => 'text-slate-500 bg-gray-50 dark:bg-slate-800',
                     };
                 @endphp
                 <button
                     wire:click="markAsRead('{{ $notification->id }}')"
                     wire:key="notif-{{ $notification->id }}"
-                    class="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors {{ $isUnread ? 'bg-indigo-50/40 dark:bg-indigo-900/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
+                    class="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors {{ $isUnread ? 'bg-indigo-50/40 dark:bg-indigo-500/8 hover:bg-indigo-50 dark:hover:bg-indigo-500/15' : 'hover:bg-gray-50 dark:hover:bg-slate-800/40' }}">
                     <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center {{ $iconColor }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $typeIcon !!}</svg>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm {{ $isUnread ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300' }} truncate">
+                        <p class="text-sm {{ $isUnread ? 'font-semibold text-gray-900 dark:text-slate-100' : 'text-gray-700 dark:text-slate-300' }} truncate">
                             {{ $data['message'] ?? 'Notification' }}
                         </p>
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
                     </div>
                     @if($isUnread)
                         <span class="shrink-0 mt-1.5 w-2 h-2 rounded-full bg-indigo-500"></span>
@@ -68,18 +68,18 @@
                 </button>
             @empty
                 <div class="py-8 text-center">
-                    <svg class="mx-auto w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto w-8 h-8 text-gray-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
-                    <p class="text-sm text-gray-400 dark:text-gray-500">No notifications yet</p>
+                    <p class="text-sm text-gray-400 dark:text-slate-500">No notifications yet</p>
                 </div>
             @endforelse
         </div>
 
         {{-- Footer --}}
-        <div class="border-t border-gray-100 dark:border-gray-700">
+        <div class="border-t border-gray-100 dark:border-slate-800/60">
             <a href="{{ route('notifications') }}" @click="open = false"
-                class="block px-4 py-2.5 text-center text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                class="block px-4 py-2.5 text-center text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                 View all notifications
             </a>
         </div>

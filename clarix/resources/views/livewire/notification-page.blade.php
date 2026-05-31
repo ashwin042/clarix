@@ -1,12 +1,12 @@
 <div>
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">{{ $unreadCount }} unread</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Notifications</h1>
+            <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{{ $unreadCount }} unread</p>
         </div>
         @if($unreadCount > 0)
             <button wire:click="markAllRead"
-                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Mark all as read
             </button>
@@ -17,14 +17,14 @@
     <div class="flex items-center gap-2 mb-5">
         @foreach(['' => 'All', 'unread' => 'Unread', 'read' => 'Read'] as $value => $label)
             <button wire:click="$set('filter', '{{ $value }}')"
-                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {{ $filter === $value ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200' }}">
+                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {{ $filter === $value ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700' }}">
                 {{ $label }}
             </button>
         @endforeach
     </div>
 
     {{-- Notification list --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden divide-y divide-gray-100 dark:divide-slate-800/60">
         @forelse($notifications as $notification)
             @php
                 $data = $notification->data;
@@ -39,11 +39,11 @@
                 };
 
                 $iconColor = match($type) {
-                    'task_created' => 'text-blue-500 bg-blue-50',
-                    'task_status_updated' => 'text-amber-500 bg-amber-50',
-                    'issue_created' => 'text-red-500 bg-red-50',
-                    'issue_resolved' => 'text-green-500 bg-green-50',
-                    default => 'text-gray-500 dark:text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900',
+                    'task_created' => 'text-blue-500 bg-blue-50 dark:bg-blue-500/10',
+                    'task_status_updated' => 'text-amber-500 bg-amber-50 dark:bg-amber-500/10',
+                    'issue_created' => 'text-red-500 bg-red-50 dark:bg-red-500/10',
+                    'issue_resolved' => 'text-green-500 bg-green-50 dark:bg-green-500/10',
+                    default => 'text-slate-500 bg-gray-50 dark:bg-slate-800',
                 };
                 $typeIcon = match($type) {
                     'task_created' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
@@ -54,26 +54,26 @@
                 };
             @endphp
             <a href="{{ $link }}" wire:click="markAsRead('{{ $notification->id }}')"
-                class="flex items-center gap-4 px-5 py-4 transition-colors {{ $isUnread ? 'bg-indigo-50/30 hover:bg-indigo-50' : 'hover:bg-gray-50 dark:bg-gray-900' }}">
+                class="flex items-center gap-4 px-5 py-4 transition-colors {{ $isUnread ? 'bg-indigo-50/30 dark:bg-indigo-500/8 hover:bg-indigo-50 dark:hover:bg-indigo-500/15' : 'hover:bg-gray-50 dark:hover:bg-slate-800/40' }}">
                 <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center {{ $iconColor }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">{!! $typeIcon !!}</svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm {{ $isUnread ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300' }}">
+                    <p class="text-sm {{ $isUnread ? 'font-semibold text-gray-900 dark:text-slate-100' : 'text-gray-700 dark:text-slate-300' }}">
                         {{ $data['message'] ?? 'Notification' }}
                     </p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
+                    <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
                 </div>
                 @if($isUnread)
                     <span class="shrink-0 w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
                 @endif
             </a>
         @empty
-            <div class="py-16 text-center dark:text-gray-400 dark:text-gray-500">
-                <svg class="mx-auto w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="py-16 text-center">
+                <svg class="mx-auto w-12 h-12 text-gray-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                 </svg>
-                <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">No notifications found.</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400">No notifications found.</p>
             </div>
         @endforelse
     </div>

@@ -11,19 +11,19 @@
     }
     /* Global dark mode for form elements */
     .dark input, .dark textarea, .dark select {
-        background-color: rgb(31 41 55) !important; /* gray-800 */
-        border-color: rgb(75 85 99) !important; /* gray-600 */
-        color: rgb(229 231 235) !important; /* gray-200 */
+        background-color: rgb(15 23 42) !important; /* slate-900 */
+        border-color: rgb(30 41 59) !important; /* slate-800 */
+        color: rgb(226 232 240) !important; /* slate-200 */
     }
     .dark input::placeholder, .dark textarea::placeholder {
-        color: rgb(156 163 175) !important; /* gray-400 */
+        color: rgb(100 116 139) !important; /* slate-500 */
     }
     .dark input:focus, .dark textarea:focus, .dark select:focus {
         border-color: rgb(99 102 241) !important; /* indigo-500 */
         --tw-ring-color: rgb(99 102 241) !important;
     }
     .dark input:disabled, .dark textarea:disabled, .dark select:disabled {
-        background-color: rgb(17 24 39) !important; /* gray-900 */
-        color: rgb(156 163 175) !important;
+        background-color: rgb(2 6 23) !important; /* slate-950 */
+        color: rgb(100 116 139) !important; /* slate-500 */
     }
 }

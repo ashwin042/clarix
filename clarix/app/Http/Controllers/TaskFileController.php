@@ -12,7 +12,7 @@ class TaskFileController extends Controller
     public function store(UploadTaskFilesRequest $request, Task $task)
     {
         foreach ($request->file('files') as $file) {
-            $path = $file->store('task-files/' . $task->id, 'private');
+            $path = $file->store('task-files/' . $task->task_code, 'r2');
 
             $task->files()->create([
                 'file_path'     => $path,
@@ -20,6 +20,13 @@ class TaskFileController extends Controller
                 'file_size'     => $file->getSize(),
                 'mime_type'     => $file->getMimeType(),
                 'uploaded_by'   => auth()->id(),
+            ]);
+        }
+
+        if ($note = $request->input('upload_note')) {
+            $task->notes()->create([
+                'note'       => $note,
+                'created_by' => auth()->id(),
             ]);
         }
 
@@ -40,14 +47,14 @@ class TaskFileController extends Controller
             abort(403);
         }
 
-        return Storage::disk('local')->download($file->file_path, $file->original_name);
+        return Storage::disk('r2')->download($file->file_path, $file->original_name);
     }
 
     public function destroy(Task $task, TaskFile $file)
     {
         $this->authorize('uploadFiles', $task);
 
-        Storage::disk('local')->delete($file->file_path);
+        Storage::disk('r2')->delete($file->file_path);
         $file->delete();
 
         return redirect()->route('tasks.show', $task)->with('success', 'File deleted.');

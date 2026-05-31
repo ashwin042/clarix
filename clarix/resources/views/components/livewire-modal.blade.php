@@ -27,7 +27,7 @@ $widthClass = match ($maxWidth) {
         x-transition:leave="ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
+        class="fixed inset-0 bg-gray-900/70 dark:bg-black/70 backdrop-blur-sm"
         @click="show = false"
     ></div>
 
@@ -40,12 +40,12 @@ $widthClass = match ($maxWidth) {
         x-transition:leave="ease-in duration-150"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full {{ $widthClass }} max-h-[90vh] flex flex-col z-10 overflow-hidden"
+        class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl dark:shadow-black/50 dark:ring-1 dark:ring-white/5 w-full {{ $widthClass }} max-h-[90vh] flex flex-col z-10 overflow-hidden"
     >
         @if($title)
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
-                <button @click="show = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800/60 flex-shrink-0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-slate-100">{{ $title }}</h3>
+                <button @click="show = false" class="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-slate-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
