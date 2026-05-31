@@ -153,11 +153,13 @@ Placed in the page header of `credit-list.blade.php` alongside the existing titl
 
 ## Access Control Summary
 
-| Role | Export scope |
-|---|---|
-| Admin | All completed tasks; optional unit/PM filters applied |
-| PM | Tasks in their own unit only |
-| Writer | Tasks assigned to them only |
+| Role | Export scope | Format |
+|---|---|---|
+| Admin | All completed tasks; optional unit/PM filters applied | Grouped or unified per `viewMode` param |
+| PM | Tasks in their own unit only | Grouped or unified per `viewMode` param |
+| Writer | Tasks assigned to them only | Always unified (writers cannot access grouped view) |
+
+Writers bypass the `viewMode` param entirely in `CreditListExport`, matching the Livewire component behaviour where writers never see the grouped view toggle.
 
 ---
 
