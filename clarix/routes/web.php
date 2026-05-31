@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TaskAssignmentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CreditExportController;
 use App\Http\Controllers\TaskFileController;
 use App\Http\Controllers\TaskNoteController;
 use App\Livewire\Issues\IssueList;
@@ -23,7 +24,12 @@ use App\Livewire\Tasks\ManageTasks;
 use App\Livewire\Tasks\TaskDetail;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('welcome');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -33,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tasks', ManageTasks::class)->name('tasks.index');
     Route::get('/tasks/{task}', TaskDetail::class)->name('tasks.show');
     Route::get('/credits', CreditList::class)->name('credits.index');
+    Route::get('/credits/export', CreditExportController::class)->name('credits.export');
 
     // Issues
     Route::get('/issues', IssueList::class)->name('issues.index');
@@ -48,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/finance', FinancialDashboard::class)->name('admin.finance');
         Route::get('/admin/payments', ManagePayments::class)->name('admin.payments');
+        Route::get('/admin/deletion-requests', \App\Livewire\Admin\DeletionRequests::class)->name('admin.deletion-requests');
     });
 
     // Task sub-resources (still handled by traditional controllers)
