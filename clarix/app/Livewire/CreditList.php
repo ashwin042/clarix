@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
-use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\CreditQueryBuilder;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -35,36 +35,13 @@ class CreditList extends Component
 
     private function baseQuery()
     {
-        $user  = auth()->user();
-        $query = Task::with(['unit', 'creator', 'assignedAdmin'])
-            ->where('status', 'completed');
-
-        // Writer can only see tasks they are assigned to
-        if ($user->isWriter()) {
-            $query->whereHas('assignments', fn ($q) => $q->where('writer_id', $user->id));
-        }
-
-        // PM can only see their own unit
-        if ($user->isPm()) {
-            $query->where('unit_id', $user->unit_id);
-        }
-
-        // Admin filters
-        if ($user->isAdmin() && $this->filterUnit) {
-            $query->where('unit_id', $this->filterUnit);
-        }
-        if ($user->isAdmin() && $this->filterPm) {
-            $query->where('created_by', $this->filterPm);
-        }
-
-        if ($this->dateFrom) {
-            $query->whereDate('updated_at', '>=', $this->dateFrom);
-        }
-        if ($this->dateTo) {
-            $query->whereDate('updated_at', '<=', $this->dateTo);
-        }
-
-        return $query;
+        return (new CreditQueryBuilder())->build(
+            auth()->user(),
+            $this->dateFrom,
+            $this->dateTo,
+            $this->filterUnit,
+            $this->filterPm,
+        );
     }
 
     public function render()
