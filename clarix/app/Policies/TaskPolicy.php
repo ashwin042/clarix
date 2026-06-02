@@ -55,6 +55,15 @@ class TaskPolicy
         };
     }
 
+    public function uploadCompletedFile(User $user, Task $task): bool
+    {
+        return match ($user->role) {
+            'admin'  => true,
+            'writer' => $task->assignments()->where('writer_id', $user->id)->exists(),
+            default  => false,
+        };
+    }
+
     public function assign(User $user, Task $task): bool
     {
         return $user->isAdmin();
