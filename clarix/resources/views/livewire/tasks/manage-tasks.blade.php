@@ -59,7 +59,6 @@
                                 @endif
                             </div>
                         </th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Unit</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">PM</th>
                         @if(auth()->user()->isAdmin())
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
@@ -75,6 +74,7 @@
                         </th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Credits</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Writers</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Files</th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>
@@ -87,7 +87,6 @@
                                     <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ $task->task_code }}</p>
                                 </div>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->unit->name }}</td>
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '—' }}</td>
                             @if(auth()->user()->isAdmin())
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>

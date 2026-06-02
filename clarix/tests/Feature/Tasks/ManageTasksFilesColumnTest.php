@@ -73,4 +73,28 @@ class ManageTasksFilesColumnTest extends TestCase
                 return $tasks->first()->relationLoaded('files');
             });
     }
+
+    public function test_unit_column_header_is_absent(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $unit = $this->makeUnit();
+        $pm = $this->makePm($unit);
+        $task = $this->makeTask($unit, $pm);
+        $this->actingAs($admin);
+
+        Livewire::test(ManageTasks::class)
+            ->assertDontSeeHtml('tracking-wider">Unit</th>');
+    }
+
+    public function test_files_column_header_is_present(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $unit = $this->makeUnit();
+        $pm = $this->makePm($unit);
+        $task = $this->makeTask($unit, $pm);
+        $this->actingAs($admin);
+
+        Livewire::test(ManageTasks::class)
+            ->assertSeeHtml('tracking-wider">Files</th>');
+    }
 }
