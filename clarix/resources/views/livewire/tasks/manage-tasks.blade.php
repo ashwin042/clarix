@@ -46,7 +46,7 @@
     </div>
 
     {{-- Table --}}
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-visible">
         @if($tasks->count())
             <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-800/60">
                 <thead class="bg-gray-50 dark:bg-slate-950/60">

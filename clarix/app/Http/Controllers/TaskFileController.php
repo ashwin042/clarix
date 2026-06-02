@@ -35,6 +35,8 @@ class TaskFileController extends Controller
 
     public function download(Task $task, TaskFile $file)
     {
+        abort_if($file->task_id !== $task->id, 404);
+
         $user = auth()->user();
 
         if ($user->role === 'admin') {
