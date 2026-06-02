@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Task sub-resources (still handled by traditional controllers)
     Route::post('tasks/{task}/files', [TaskFileController::class, 'store'])->name('tasks.files.store');
+    Route::post('tasks/{task}/completed-files', [TaskFileController::class, 'storeCompleted'])->name('tasks.completed-files.store');
     Route::get('tasks/{task}/files/{file}/download', [TaskFileController::class, 'download'])->name('tasks.files.download');
     Route::delete('tasks/{task}/files/{file}', [TaskFileController::class, 'destroy'])->name('tasks.files.destroy');
 
