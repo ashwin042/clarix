@@ -180,7 +180,7 @@ class ManageTasks extends Component
         $user = auth()->user();
         abort_unless($user->hasPermission('tasks.view'), 403);
 
-        $query = Task::with(['unit', 'creator', 'pm', 'assignments.writer', 'assignedAdmin'])
+        $query = Task::with(['unit', 'creator', 'pm', 'assignments.writer', 'assignedAdmin', 'files'])
             ->when($user->isPm(), fn ($q) => $q->where('unit_id', $user->unit_id))
             ->when($user->isWriter(), fn ($q) => $q->whereHas('assignments', fn ($a) => $a->where('writer_id', $user->id)))
             ->when($this->search, fn ($q) => $q->where(function ($q) {
