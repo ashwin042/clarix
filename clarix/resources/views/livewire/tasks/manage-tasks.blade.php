@@ -135,12 +135,13 @@
                                             x-transition:enter="ease-out duration-150"
                                             x-transition:enter-start="opacity-0 scale-95"
                                             x-transition:enter-end="opacity-100 scale-100"
-                                            class="absolute left-0 top-8 z-20 w-64 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-lg overflow-hidden"
+                                            style="background-color: white;"
+                                            class="absolute left-0 top-8 z-50 w-64 rounded-xl border border-gray-200 dark:border-slate-700 shadow-xl dark:shadow-slate-900/60 dark:bg-slate-900"
                                         >
-                                            <div class="px-3 py-2 border-b border-gray-100 dark:border-slate-800/60">
+                                            <div class="px-3 py-2 border-b border-gray-100 dark:border-slate-800/60 rounded-t-xl bg-white dark:bg-slate-900">
                                                 <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Files</p>
                                             </div>
-                                            <ul class="divide-y divide-gray-100 dark:divide-slate-800/60 max-h-48 overflow-y-auto">
+                                            <ul class="divide-y divide-gray-100 dark:divide-slate-800/60 max-h-48 overflow-y-auto bg-white dark:bg-slate-900">
                                                 @foreach($task->files as $file)
                                                 <li class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                                                     <div class="flex items-center gap-2 min-w-0">
@@ -159,6 +160,20 @@
                                                 </li>
                                                 @endforeach
                                             </ul>
+                                            @can('uploadFiles', $task)
+                                            <div class="px-3 py-2 border-t border-gray-100 dark:border-slate-800/60 rounded-b-xl bg-white dark:bg-slate-900">
+                                                <button
+                                                    type="button"
+                                                    @click="open = false; $dispatch('open-upload-modal', { uploadUrl: '{{ route('tasks.files.store', $task) }}' })"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                    </svg>
+                                                    Upload more files
+                                                </button>
+                                            </div>
+                                            @endcan
                                         </div>
                                     </div>
                                 @else
