@@ -356,6 +356,117 @@
         </form>
     </x-livewire-modal>
 
+    {{-- Shared inline upload modal (triggered from Files column) --}}
+    <div
+        x-data="{
+            show: false,
+            uploadUrl: '',
+            dragging: false,
+            fileObjects: [],
+            formatSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / 1048576).toFixed(1) + ' MB';
+            },
+            addFiles(fileList) {
+                Array.from(fileList).forEach(f => {
+                    const exists = this.fileObjects.find(e => e.name === f.name && e.size === f.size);
+                    if (!exists) this.fileObjects.push(f);
+                });
+                this.syncInput();
+            },
+            removeFile(index) {
+                this.fileObjects.splice(index, 1);
+                this.syncInput();
+            },
+            syncInput() {
+                const dT = new DataTransfer();
+                this.fileObjects.forEach(f => dT.items.add(f));
+                this.$refs.fileInput.files = dT.files;
+            },
+            reset() {
+                this.fileObjects = [];
+                if (this.$refs.fileInput) this.$refs.fileInput.value = '';
+            },
+            handleDrop(e) {
+                this.dragging = false;
+                if (e.dataTransfer?.files.length) this.addFiles(e.dataTransfer.files);
+            }
+        }"
+        x-on:open-upload-modal.window="uploadUrl = $event.detail.uploadUrl; fileObjects = []; show = true"
+        x-on:keydown.escape.window="show = false; reset()"
+        x-show="show"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display: none;"
+    >
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="show = false; reset()"></div>
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800/60">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-slate-100">Upload Files</h3>
+                <button @click="show = false; reset()" class="text-gray-400 dark:text-slate-500 hover:text-gray-600 p-1 hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form :action="uploadUrl" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Files <span class="text-gray-400 dark:text-slate-500 font-normal">(max 10 MB each)</span></label>
+                    <div
+                        class="relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+                        :class="dragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 hover:border-indigo-300 hover:bg-gray-50 dark:bg-slate-950/50'"
+                        @dragover.prevent="dragging = true"
+                        @dragleave.prevent="dragging = false"
+                        @drop.prevent="handleDrop($event)"
+                        @click="$refs.fileInput.click()"
+                    >
+                        <svg class="mx-auto w-8 h-8 text-gray-400 dark:text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <p class="text-sm text-gray-600 dark:text-slate-400">Drag & drop files here, or <span class="text-indigo-600 font-medium">browse</span></p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Multiple files supported</p>
+                        <input
+                            x-ref="fileInput"
+                            type="file"
+                            name="files[]"
+                            multiple
+                            class="sr-only"
+                            @change="addFiles($event.target.files)"
+                        >
+                    </div>
+                    <template x-if="fileObjects.length > 0">
+                        <ul class="mt-2 space-y-1">
+                            <template x-for="(f, i) in fileObjects" :key="i">
+                                <li class="flex items-center justify-between text-xs bg-gray-50 dark:bg-slate-950/50 border border-gray-200 dark:border-slate-800/60 rounded-lg px-3 py-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span class="truncate text-gray-700 dark:text-slate-300" x-text="f.name"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2 ml-2 shrink-0">
+                                        <span class="text-gray-400 dark:text-slate-500" x-text="formatSize(f.size)"></span>
+                                        <button type="button" @click.stop="removeFile(i)"
+                                            class="text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors p-0.5 rounded hover:bg-red-50">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit"
+                        class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Upload
+                    </button>
+                    <button type="button" @click="show = false; reset()"
+                        class="flex-1 py-2.5 border border-gray-300 text-gray-700 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <x-delete-confirm-modal
         title="Delete Task"
         :description="'You are about to delete: ' . $deletingName"
