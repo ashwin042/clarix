@@ -97,4 +97,29 @@ class ManageTasksFilesColumnTest extends TestCase
         Livewire::test(ManageTasks::class)
             ->assertSeeHtml('tracking-wider">Files</th>');
     }
+
+    public function test_file_name_appears_in_html_when_task_has_files(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+        $task = $this->makeTask($unit, $pm);
+        $this->makeFile($task, $pm);
+
+        $this->actingAs($pm);
+
+        Livewire::test(ManageTasks::class)
+            ->assertSee('report.pdf');
+    }
+
+    public function test_upload_dispatch_present_for_pm_with_no_files(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+        $this->makeTask($unit, $pm);
+
+        $this->actingAs($pm);
+
+        Livewire::test(ManageTasks::class)
+            ->assertSeeHtml('open-upload-modal');
+    }
 }
