@@ -20,13 +20,20 @@ class TaskDetail extends Component
 
     // File upload
     public bool $showUploadModal = false;
+    public bool $showCompletedUploadModal = false;
 
     // Note form
     public string $note = '';
 
     public function mount(Task $task): void
     {
-        $this->task = $task->load(['unit', 'creator', 'pm', 'assignedAdmin', 'assignments.writer', 'files.uploader', 'notes.author']);
+        $this->task = $task->load([
+            'unit', 'creator', 'pm', 'assignedAdmin',
+            'assignments.writer',
+            'regularFiles.uploader',
+            'completedFiles.uploader',
+            'notes.author',
+        ]);
 
         if (session()->has('success')) {
             $this->dispatch('notify', message: session('success'), type: 'success');
@@ -87,9 +94,15 @@ class TaskDetail extends Component
         $this->showUploadModal = true;
     }
 
+    public function openCompletedUploadModal(): void
+    {
+        $this->resetErrorBag();
+        $this->showCompletedUploadModal = true;
+    }
+
     public function deleteFile(int $fileId): void
     {
-        $file = $this->task->files()->findOrFail($fileId);
+        $file = $this->task->regularFiles()->findOrFail($fileId);
         Storage::disk('r2')->delete($file->file_path);
         $file->delete();
         $this->task->refresh();
@@ -143,7 +156,13 @@ class TaskDetail extends Component
                 ->get()
             : collect();
 
-        $this->task->load(['unit', 'creator', 'assignedAdmin', 'assignments.writer', 'files.uploader', 'notes' => fn ($q) => $q->with('author')->latest()]);
+        $this->task->load([
+            'unit', 'creator', 'assignedAdmin',
+            'assignments.writer',
+            'regularFiles.uploader',
+            'completedFiles.uploader',
+            'notes' => fn ($q) => $q->with('author')->latest(),
+        ]);
 
         return view('livewire.tasks.task-detail', compact('availableWriters'))
             ->layout('layouts.app', ['pageTitle' => $this->task->task_code]);
