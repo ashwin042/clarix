@@ -68,6 +68,16 @@ class Task extends Model
         return $this->hasMany(TaskFile::class);
     }
 
+    public function regularFiles(): HasMany
+    {
+        return $this->hasMany(TaskFile::class)->regular();
+    }
+
+    public function completedFiles(): HasMany
+    {
+        return $this->hasMany(TaskFile::class)->completed();
+    }
+
     public function notes(): HasMany
     {
         return $this->hasMany(TaskNote::class)->latest();

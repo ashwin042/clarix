@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +15,15 @@ class TaskFile extends Model
         'file_size',
         'mime_type',
         'uploaded_by',
+        'is_completed_file',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_completed_file' => 'boolean',
+        ];
+    }
 
     public function task(): BelongsTo
     {
@@ -24,6 +33,16 @@ class TaskFile extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function scopeRegular(Builder $query): Builder
+    {
+        return $query->where('is_completed_file', false);
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('is_completed_file', true);
     }
 
     public function getFileSizeFormattedAttribute(): string
