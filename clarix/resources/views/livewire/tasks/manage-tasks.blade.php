@@ -455,7 +455,8 @@
                 </div>
                 <div class="flex gap-3">
                     <button type="submit"
-                        class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        :disabled="!uploadUrl || fileObjects.length === 0"
+                        class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         Upload
                     </button>
                     <button type="button" @click="show = false; reset()"
