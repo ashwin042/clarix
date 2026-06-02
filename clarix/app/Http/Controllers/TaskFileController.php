@@ -30,7 +30,7 @@ class TaskFileController extends Controller
             ]);
         }
 
-        return redirect()->route('tasks.show', $task)->with('success', 'Files uploaded.');
+        return redirect()->back()->with('success', 'Files uploaded.');
     }
 
     public function download(Task $task, TaskFile $file)
