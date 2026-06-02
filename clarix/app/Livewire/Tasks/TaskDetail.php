@@ -7,6 +7,7 @@ use App\Models\TaskAssignment;
 use App\Models\TaskNote;
 use App\Models\User;
 use App\Notifications\TaskStatusUpdatedNotification;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
@@ -103,6 +104,17 @@ class TaskDetail extends Component
     public function deleteFile(int $fileId): void
     {
         $file = $this->task->regularFiles()->findOrFail($fileId);
+        Storage::disk('r2')->delete($file->file_path);
+        $file->delete();
+        $this->task->refresh();
+        $this->dispatch('notify', message: 'File deleted.', type: 'success');
+    }
+
+    public function deleteCompletedFile(int $fileId): void
+    {
+        Gate::authorize('uploadCompletedFile', $this->task);
+
+        $file = $this->task->completedFiles()->findOrFail($fileId);
         Storage::disk('r2')->delete($file->file_path);
         $file->delete();
         $this->task->refresh();
