@@ -74,4 +74,17 @@ class TaskFileControllerRedirectTest extends TestCase
             ])
             ->assertRedirect(route('tasks.show', $task));
     }
+
+    public function test_store_redirects_to_task_index_when_no_referrer_is_set(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+        $task = $this->makeTask($unit, $pm);
+
+        $this->actingAs($pm)
+            ->post(route('tasks.files.store', $task), [
+                'files' => [UploadedFile::fake()->create('report.pdf', 100)],
+            ])
+            ->assertRedirect(route('tasks.index'));
+    }
 }
