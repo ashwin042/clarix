@@ -82,6 +82,10 @@ class TaskDetail extends Component
             abort(403);
         }
 
+        if ($status === 'ready_for_review') {
+            abort(403);
+        }
+
         $assignment->update(['status' => $status]);
         $this->task->refresh();
         $this->dispatch('notify', message: 'Status updated.', type: 'success');
@@ -144,7 +148,20 @@ class TaskDetail extends Component
         if (!auth()->user()->isAdmin()) {
             abort(403);
         }
-        $this->task->update(['status' => $status]);
+        $updateData = ['status' => $status];
+        if ($status === 'completed') {
+            $updateData['completed_at'] = now();
+        } elseif ($this->task->completed_at !== null) {
+            $updateData['completed_at'] = null;
+        }
+        $this->task->update($updateData);
+
+        if ($status === 'completed') {
+            TaskAssignment::where('task_id', $this->task->id)
+                ->where('status', 'ready_for_review')
+                ->update(['status' => 'completed']);
+        }
+
         $this->task->refresh();
 
         // Notify the PM
