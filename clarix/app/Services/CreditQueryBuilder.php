@@ -35,11 +35,11 @@ class CreditQueryBuilder
         }
 
         if ($dateFrom) {
-            $query->whereDate('updated_at', '>=', $dateFrom);
+            $query->whereDate('completed_at', '>=', $dateFrom);
         }
 
         if ($dateTo) {
-            $query->whereDate('updated_at', '<=', $dateTo);
+            $query->whereDate('completed_at', '<=', $dateTo);
         }
 
         return $query;

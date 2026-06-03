@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Services\CreditQueryBuilder;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CreditQueryBuilderTest extends TestCase
@@ -102,9 +101,8 @@ class CreditQueryBuilderTest extends TestCase
     public function test_admin_filter_by_date_from(): void
     {
         $admin = $this->makeAdmin();
-        $task  = $this->makeTask();
-        $old   = $this->makeTask();
-        DB::table('tasks')->where('id', $old->id)->update(['updated_at' => '2024-01-15 00:00:00']);
+        $task  = $this->makeTask(['completed_at' => now()]);
+        $old   = $this->makeTask(['completed_at' => '2024-01-15 00:00:00']);
 
         $results = (new CreditQueryBuilder())
             ->build($admin, dateFrom: '2026-01-01')
@@ -117,9 +115,8 @@ class CreditQueryBuilderTest extends TestCase
     public function test_admin_filter_by_date_to(): void
     {
         $admin = $this->makeAdmin();
-        $task  = $this->makeTask();
-        DB::table('tasks')->where('id', $task->id)->update(['updated_at' => '2024-06-01 00:00:00']);
-        $this->makeTask(); // recent, excluded
+        $task  = $this->makeTask(['completed_at' => '2024-06-01 00:00:00']);
+        $this->makeTask(['completed_at' => now()]); // recent, excluded
 
         $results = (new CreditQueryBuilder())
             ->build($admin, dateTo: '2024-12-31')
