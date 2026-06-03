@@ -77,6 +77,64 @@
                         placeholder="Optional instructions..."></textarea>
                 </div>
 
+                {{-- Files (optional) --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+                        Files <span class="text-gray-400 dark:text-slate-500 font-normal">(optional)</span>
+                    </label>
+
+                    {{-- Drop zone / file input --}}
+                    <label class="flex flex-col items-center justify-center w-full border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg py-6 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors">
+                        <svg class="w-8 h-8 text-gray-400 dark:text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        <p class="text-sm text-gray-500 dark:text-slate-400">Click to browse or drag & drop</p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Any file type · max 10 MB each</p>
+                        <input type="file" wire:model="uploads" multiple class="hidden">
+                    </label>
+
+                    {{-- Upload progress --}}
+                    <div wire:loading wire:target="uploads" class="mt-2 flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        Uploading…
+                    </div>
+
+                    {{-- Queued file list --}}
+                    @if(count($uploads))
+                        <ul class="mt-3 space-y-1.5">
+                            @foreach($uploads as $i => $upload)
+                                <li class="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-slate-800/60 rounded-lg text-sm">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span class="truncate text-gray-800 dark:text-slate-200 font-medium">{{ $upload->getClientOriginalName() }}</span>
+                                        <span class="text-xs text-gray-400 dark:text-slate-500 shrink-0">
+                                            @php
+                                                $bytes = $upload->getSize();
+                                                echo $bytes < 1048576
+                                                    ? round($bytes / 1024, 1) . ' KB'
+                                                    : round($bytes / 1048576, 1) . ' MB';
+                                            @endphp
+                                        </span>
+                                    </div>
+                                    <button type="button" wire:click="removeUpload({{ $i }})"
+                                        class="ml-3 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    @error('uploads.*') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
                 {{-- Priority + Deadline + Credits --}}
                 <div class="grid grid-cols-3 gap-4">
                     <div>
