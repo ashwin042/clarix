@@ -1,6 +1,6 @@
 <div class="space-y-6">
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
 
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 flex items-start justify-between">
             <div>
@@ -35,14 +35,16 @@
             </div>
         </div>
 
+        <livewire:dashboard.credits-card role="admin" />
+
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 flex items-start justify-between">
             <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Credits Earned</p>
-                <p class="text-3xl font-bold text-amber-600 mt-1">{{ number_format($stats['totalCredits']) }}</p>
-                <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">From completed tasks</p>
+                <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Completed Tasks</p>
+                <p class="text-3xl font-bold text-green-600 mt-1">{{ $stats['completedTasks'] }}</p>
+                <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Across all units</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
         </div>
 

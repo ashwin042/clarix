@@ -19,12 +19,10 @@ class AdminStats extends Component
         $pendingTasks    = Task::whereIn('status', ['pending', 'in_progress'])->count();
         $totalUnits      = Unit::count();
         $totalUsers      = User::count();
-        $totalCredits    = Task::where('status', 'completed')->sum('credit_amount');
-
         // Completion rate
         $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
 
-        $stats = compact('totalUsers', 'totalTasks', 'completedTasks', 'pendingTasks', 'totalUnits', 'totalCredits', 'completionRate');
+        $stats = compact('totalUsers', 'totalTasks', 'completedTasks', 'pendingTasks', 'totalUnits', 'completionRate');
 
         // Donut chart: task status breakdown
         $statusCounts = Task::select('status', DB::raw('count(*) as count'))
