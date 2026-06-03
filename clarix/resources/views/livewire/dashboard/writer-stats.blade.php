@@ -1,7 +1,7 @@
 <div class="space-y-6">
 
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
 
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 flex items-start justify-between">
             <div>
@@ -36,6 +36,19 @@
             </div>
         </div>
 
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 flex items-start justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Completed Tasks</p>
+                <p class="text-3xl font-bold text-green-600 mt-1">{{ $stats['completed'] }}</p>
+                <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Tasks finished</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 13l4 4L19 7"/></svg>
+            </div>
+        </div>
+
+        <livewire:dashboard.credits-card role="writer" />
+
     </div>
 
     {{-- Task table --}}
@@ -49,6 +62,7 @@
                 <tr class="bg-gray-50 dark:bg-slate-950/60 border-b border-gray-100 dark:border-slate-800/60">
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Task Code</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Deadline</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                 </tr>
@@ -69,13 +83,16 @@
                     <td class="px-5 py-3">
                         <a href="{{ route('tasks.show', $assignment->task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $assignment->task->title }}</a>
                     </td>
+                    <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
+                        {{ $assignment->task->assignedAdmin?->name ?? '—' }}
+                    </td>
                     <td class="px-5 py-3 whitespace-nowrap">
                         @if($assignment->task->deadline)
                             <span class="text-xs {{ $overdue ? 'text-red-600 font-semibold' : 'text-gray-500 dark:text-slate-400' }}">
                                 {{ $overdue ? '⚠ ' : '' }}{{ $assignment->task->deadline->format('d M Y') }}
                             </span>
                         @else
-                            <span class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">—</span>
+                            <span class="text-xs text-gray-400 dark:text-slate-500">—</span>
                         @endif
                     </td>
                     <td class="px-5 py-3">
@@ -97,6 +114,49 @@
         <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Your assigned tasks will appear here.</p>
     </div>
 
+    @endif
+
+    {{-- Recently Completed Tasks --}}
+    @if($completedAssignments->count())
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-slate-800/60">
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-slate-200">Recently Completed Tasks</h3>
+        </div>
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-slate-950/60 border-b border-gray-100 dark:border-slate-800/60">
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Task Code</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Deadline</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-slate-800/60">
+                @foreach($completedAssignments as $assignment)
+                <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td class="px-5 py-3 text-xs font-mono text-gray-400 dark:text-slate-500 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
+                    <td class="px-5 py-3">
+                        <a href="{{ route('tasks.show', $assignment->task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $assignment->task->title }}</a>
+                    </td>
+                    <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
+                        {{ $assignment->task->assignedAdmin?->name ?? '—' }}
+                    </td>
+                    <td class="px-5 py-3 whitespace-nowrap">
+                        @if($assignment->task->deadline)
+                            <span class="text-xs text-gray-500 dark:text-slate-400">{{ $assignment->task->deadline->format('d M Y') }}</span>
+                        @else
+                            <span class="text-xs text-gray-400 dark:text-slate-500">—</span>
+                        @endif
+                    </td>
+                    <td class="px-5 py-3">
+                        <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Completed</span>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
     @endif
 
 </div>
