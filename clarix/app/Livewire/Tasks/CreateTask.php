@@ -6,9 +6,12 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\NewTaskCreatedNotification;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreateTask extends Component
 {
+    use WithFileUploads;
+
     public string $title = '';
     public string $task_code = '';
     public string $important_notes = '';
@@ -18,6 +21,7 @@ class CreateTask extends Component
     public string $deadline = '';
     public string $credit_amount = '0';
     public string $assigned_admin_id = '';
+    public array  $uploads = [];
 
     public function mount(): void
     {
@@ -26,6 +30,11 @@ class CreateTask extends Component
         }
         $this->unit_id = (string) auth()->user()->unit_id;
         $this->pm_id   = (string) auth()->id();
+    }
+
+    public function removeUpload(int $index): void
+    {
+        array_splice($this->uploads, $index, 1);
     }
 
     public function save(): void
@@ -49,6 +58,8 @@ class CreateTask extends Component
                     }
                 },
             ],
+            'uploads'   => ['nullable', 'array'],
+            'uploads.*' => ['file', 'max:10240'],
         ]);
 
         $task = Task::create([
@@ -64,6 +75,17 @@ class CreateTask extends Component
             'credit_amount'     => $this->credit_amount,
             'created_by'        => auth()->id(),
         ]);
+
+        foreach ($this->uploads as $file) {
+            $path = $file->store('task-files/' . $this->task_code, 'r2');
+            $task->files()->create([
+                'file_path'     => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size'     => $file->getSize(),
+                'mime_type'     => $file->getMimeType(),
+                'uploaded_by'   => auth()->id(),
+            ]);
+        }
 
         foreach (User::where('role', 'admin')->get() as $admin) {
             $admin->notify(new NewTaskCreatedNotification($task));

@@ -8,6 +8,8 @@ use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -154,6 +156,100 @@ class CreateTaskTest extends TestCase
             ->set('credit_amount', '1.00')
             ->call('save')
             ->assertHasErrors(['task_code']);
+    }
+
+    public function test_pm_can_create_task_with_files_stored_on_r2(): void
+    {
+        Storage::fake('r2');
+
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('title', 'Task With Files')
+            ->set('task_code', 'TWF_001')
+            ->set('priority', 'medium')
+            ->set('deadline', now()->addDays(7)->format('Y-m-d'))
+            ->set('credit_amount', '1.00')
+            ->set('uploads', [
+                UploadedFile::fake()->create('brief.pdf', 100),
+                UploadedFile::fake()->create('notes.docx', 50),
+            ])
+            ->call('save');
+
+        $task = Task::first();
+        $this->assertNotNull($task);
+        $this->assertCount(2, $task->files);
+        $this->assertDatabaseHas('task_files', [
+            'task_id'           => $task->id,
+            'original_name'     => 'brief.pdf',
+            'is_completed_file' => false,
+            'uploaded_by'       => $pm->id,
+        ]);
+        $this->assertDatabaseHas('task_files', [
+            'task_id'       => $task->id,
+            'original_name' => 'notes.docx',
+        ]);
+    }
+
+    public function test_files_are_stored_under_task_code_directory_on_r2(): void
+    {
+        Storage::fake('r2');
+
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('title', 'Path Test')
+            ->set('task_code', 'PT_001')
+            ->set('priority', 'medium')
+            ->set('deadline', now()->addDays(7)->format('Y-m-d'))
+            ->set('credit_amount', '1.00')
+            ->set('uploads', [UploadedFile::fake()->create('doc.pdf', 10)])
+            ->call('save');
+
+        $file = \App\Models\TaskFile::first();
+        $this->assertStringStartsWith('task-files/PT_001/', $file->file_path);
+        Storage::disk('r2')->assertExists($file->file_path);
+    }
+
+    public function test_pm_can_create_task_without_files(): void
+    {
+        Storage::fake('r2');
+
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('title', 'No Files Task')
+            ->set('task_code', 'NFT_001')
+            ->set('priority', 'medium')
+            ->set('deadline', now()->addDays(7)->format('Y-m-d'))
+            ->set('credit_amount', '1.00')
+            ->call('save');
+
+        $this->assertCount(0, Task::first()->files);
+        $this->assertEmpty(Storage::disk('r2')->allFiles('task-files'));
+    }
+
+    public function test_remove_upload_splices_file_from_array(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        $component = Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('uploads', [
+                UploadedFile::fake()->create('a.pdf', 10),
+                UploadedFile::fake()->create('b.pdf', 20),
+                UploadedFile::fake()->create('c.pdf', 30),
+            ])
+            ->call('removeUpload', 1);
+
+        $this->assertCount(2, $component->get('uploads'));
     }
 
     public function test_pm_dashboard_has_add_task_button_linking_to_create_page(): void
