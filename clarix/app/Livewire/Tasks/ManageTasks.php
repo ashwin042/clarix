@@ -149,7 +149,13 @@ class ManageTasks extends Component
         ];
 
         if ($this->editingId) {
-            Task::findOrFail($this->editingId)->update($data);
+            $existing = Task::findOrFail($this->editingId);
+            if ($this->status === 'completed' && $existing->status !== 'completed') {
+                $data['completed_at'] = now();
+            } elseif ($this->status !== 'completed' && $existing->completed_at !== null) {
+                $data['completed_at'] = null;
+            }
+            $existing->update($data);
             $this->dispatch('notify', message: 'Task updated.', type: 'success');
         } else {
             $task = Task::create($data + ['created_by' => auth()->id()]);
