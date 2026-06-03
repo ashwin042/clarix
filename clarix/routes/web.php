@@ -20,6 +20,7 @@ use App\Livewire\Admin\ManageUsers;
 use App\Livewire\Admin\RoleUserManagement;
 use App\Livewire\CreditList;
 use App\Livewire\PM\UserManagement as PMUserManagement;
+use App\Livewire\Tasks\CreateTask;
 use App\Livewire\Tasks\ManageTasks;
 use App\Livewire\Tasks\TaskDetail;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Livewire full-page components
     Route::get('/tasks', ManageTasks::class)->name('tasks.index');
+    Route::get('/tasks/create', CreateTask::class)->name('tasks.create');
     Route::get('/tasks/{task}', TaskDetail::class)->name('tasks.show');
     Route::get('/credits', CreditList::class)->name('credits.index');
     Route::get('/credits/export', CreditExportController::class)->name('credits.export');
