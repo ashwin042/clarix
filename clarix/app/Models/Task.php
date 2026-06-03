@@ -22,12 +22,14 @@ class Task extends Model
         'status',
         'deadline',
         'credit_amount',
+        'completed_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'deadline' => 'date',
+            'deadline'     => 'date',
+            'completed_at' => 'datetime',
         ];
     }
 
