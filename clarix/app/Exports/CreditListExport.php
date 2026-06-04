@@ -70,17 +70,18 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
 
         foreach ($grouped as $group) {
             $this->styleMap[$rowNum] = 'unit_header';
-            $rows->push([$group['unit']?->name ?? 'Unknown Unit', '', '', '', '', '']);
+            $rows->push([$group['unit']?->name ?? 'Unknown Unit', '', '', '', '', '', '']);
             $rowNum++;
 
             $this->styleMap[$rowNum] = 'col_header';
-            $rows->push(['Task Code', 'Task Title', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+            $rows->push(['Task Code', 'Task Title', 'Task Type', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
             $rowNum++;
 
             foreach ($group['tasks'] as $task) {
                 $rows->push([
                     $task->task_code,
                     $task->title,
+                    $task->task_type ? ucfirst($task->task_type) : '—',
                     ucfirst($task->priority),
                     $task->assignedAdmin?->name ?? '—',
                     $task->updated_at->format('d M Y'),
@@ -90,17 +91,17 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
             }
 
             $this->styleMap[$rowNum] = 'subtotal';
-            $rows->push(['', '', '', '', 'Unit Subtotal', number_format($group['credits'], 2)]);
+            $rows->push(['', '', '', '', '', 'Unit Subtotal', number_format($group['credits'], 2)]);
             $rowNum++;
 
-            $rows->push(['', '', '', '', '', '']);
+            $rows->push(['', '', '', '', '', '', '']);
             $rowNum++;
 
             $grandTotal += $group['credits'];
         }
 
         $this->styleMap[$rowNum] = 'grand_total';
-        $rows->push(['', '', '', '', 'Grand Total', number_format($grandTotal, 2)]);
+        $rows->push(['', '', '', '', '', 'Grand Total', number_format($grandTotal, 2)]);
 
         return $rows;
     }
@@ -111,13 +112,14 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
         $rowNum = 1;
 
         $this->styleMap[$rowNum] = 'col_header';
-        $rows->push(['Task Code', 'Task Title', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+        $rows->push(['Task Code', 'Task Title', 'Task Type', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
         $rowNum++;
 
         foreach ($tasks as $task) {
             $rows->push([
                 $task->task_code,
                 $task->title,
+                $task->task_type ? ucfirst($task->task_type) : '—',
                 $task->unit?->name ?? '—',
                 ucfirst($task->priority),
                 $task->assignedAdmin?->name ?? '—',
@@ -128,14 +130,14 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
         }
 
         $this->styleMap[$rowNum] = 'grand_total';
-        $rows->push(['', '', '', '', '', 'Grand Total', number_format((float) $tasks->sum('credit_amount'), 2)]);
+        $rows->push(['', '', '', '', '', '', 'Grand Total', number_format((float) $tasks->sum('credit_amount'), 2)]);
 
         return $rows;
     }
 
     public function styles(Worksheet $sheet): void
     {
-        $lastCol = $this->viewMode === 'grouped' ? 'F' : 'G';
+        $lastCol = $this->viewMode === 'grouped' ? 'G' : 'H';
 
         foreach ($this->styleMap as $rowNum => $type) {
             $range = "A{$rowNum}:{$lastCol}{$rowNum}";
@@ -177,11 +179,12 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
         return [
             'A' => 15,
             'B' => 45,
-            'C' => 20,
-            'D' => 15,
-            'E' => 25,
-            'F' => 18,
-            'G' => 12,
+            'C' => 15,
+            'D' => 20,
+            'E' => 15,
+            'F' => 25,
+            'G' => 18,
+            'H' => 12,
         ];
     }
 
