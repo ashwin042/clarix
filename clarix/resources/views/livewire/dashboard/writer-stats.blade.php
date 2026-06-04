@@ -61,7 +61,6 @@
             <thead>
                 <tr class="bg-gray-50 dark:bg-slate-950/60 border-b border-gray-100 dark:border-slate-800/60">
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Task Code</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Deadline</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
@@ -79,10 +78,7 @@
                     $overdue = $assignment->task->deadline?->isPast() && $assignment->status !== 'ready_for_review';
                 @endphp
                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td class="px-5 py-3 text-xs font-mono text-gray-400 dark:text-slate-500 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
-                    <td class="px-5 py-3">
-                        <a href="{{ route('tasks.show', $assignment->task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $assignment->task->title }}</a>
-                    </td>
+                    <td class="px-5 py-3 text-xs font-mono font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
                     <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
                         {{ $assignment->task->assignedAdmin?->name ?? '—' }}
                     </td>
@@ -126,7 +122,6 @@
             <thead>
                 <tr class="bg-gray-50 dark:bg-slate-950/60 border-b border-gray-100 dark:border-slate-800/60">
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Task Code</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Deadline</th>
                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
@@ -135,10 +130,7 @@
             <tbody class="divide-y divide-gray-50 dark:divide-slate-800/60">
                 @foreach($completedAssignments as $assignment)
                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td class="px-5 py-3 text-xs font-mono text-gray-400 dark:text-slate-500 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
-                    <td class="px-5 py-3">
-                        <a href="{{ route('tasks.show', $assignment->task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $assignment->task->title }}</a>
-                    </td>
+                    <td class="px-5 py-3 text-xs font-mono font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
                     <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
                         {{ $assignment->task->assignedAdmin?->name ?? '—' }}
                     </td>

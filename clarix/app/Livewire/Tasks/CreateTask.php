@@ -14,6 +14,7 @@ class CreateTask extends Component
 
     public string $title = '';
     public string $task_code = '';
+    public string $task_type = '';
     public string $important_notes = '';
     public string $unit_id = '';
     public string $pm_id = '';
@@ -48,6 +49,7 @@ class CreateTask extends Component
             'priority'          => 'required|in:low,medium,high',
             'deadline'          => 'required|date',
             'credit_amount'     => 'required|numeric|min:0',
+            'task_type'         => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',
             'important_notes'   => 'nullable|string|max:5000',
             'assigned_admin_id' => [
                 'nullable',
@@ -65,6 +67,7 @@ class CreateTask extends Component
         $task = Task::create([
             'title'             => $this->title,
             'task_code'         => $this->task_code,
+            'task_type'         => $this->task_type ?: null,
             'important_notes'   => $this->important_notes ?: null,
             'unit_id'           => auth()->user()->unit_id,
             'pm_id'             => auth()->id(),

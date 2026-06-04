@@ -26,6 +26,7 @@ class ManageTasks extends Component
     // Form fields
     public string $title = '';
     public string $task_code = '';
+    public string $task_type = '';
     public string $important_notes = '';
     public string $unit_id = '';
     public string $pm_id = '';
@@ -56,7 +57,7 @@ class ManageTasks extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
+        $this->reset(['title', 'task_code', 'task_type', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
         $this->priority = 'medium';
         $this->status = 'pending';
         $this->credit_amount = '0';
@@ -75,6 +76,7 @@ class ManageTasks extends Component
         $this->editingId     = $task->id;
         $this->title         = $task->title;
         $this->task_code     = $task->task_code;
+        $this->task_type     = $task->task_type ?? '';
         $this->important_notes = $task->important_notes ?? '';
         $this->unit_id       = (string) $task->unit_id;
         $this->pm_id         = (string) ($task->pm_id ?? '');
@@ -123,6 +125,7 @@ class ManageTasks extends Component
             'status'        => 'required|in:pending,in_progress,submitted,verified,completed',
             'deadline'      => 'required|date',
             'credit_amount' => 'required|numeric|min:0',
+            'task_type'          => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',
             'important_notes'    => 'nullable|string|max:5000',
             'assigned_admin_id'  => [
                 'nullable',
@@ -138,6 +141,7 @@ class ManageTasks extends Component
         $data = [
             'title'         => $this->title,
             'task_code'     => $this->task_code,
+            'task_type'         => $this->task_type ?: null,
             'important_notes'   => $this->important_notes ?: null,
             'unit_id'       => $this->unit_id,
             'pm_id'             => $this->pm_id,
@@ -170,7 +174,7 @@ class ManageTasks extends Component
         }
 
         $this->showModal = false;
-        $this->reset(['title', 'task_code', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
+        $this->reset(['title', 'task_code', 'task_type', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
     }
 
     public function confirmDelete(): void

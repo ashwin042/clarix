@@ -82,10 +82,7 @@
                     @foreach($tasks as $task)
                         <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                             <td class="px-5 py-3">
-                                <div>
-                                    <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors">{{ $task->title }}</a>
-                                    <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ $task->task_code }}</p>
-                                </div>
+                                <a href="{{ route('tasks.show', $task) }}" class="text-sm font-bold font-mono text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors">{{ $task->task_code }}</a>
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '—' }}</td>
                             @if(auth()->user()->isAdmin())
@@ -303,6 +300,23 @@
                     @endforeach
                 </select>
                 @error('assigned_admin_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Task Type</label>
+                <select wire:model="task_type"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('task_type') border-red-400 @enderror">
+                    <option value="">— Select type —</option>
+                    <option value="tech">Tech</option>
+                    <option value="content">Content</option>
+                    <option value="accounts">Accounts</option>
+                    <option value="maths">Maths</option>
+                    <option value="nursing">Nursing</option>
+                    <option value="science">Science</option>
+                    <option value="civil">Civil</option>
+                    <option value="others">Others</option>
+                </select>
+                @error('task_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
             <div>

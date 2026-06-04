@@ -69,6 +69,24 @@
                     @error('assigned_admin_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
+                {{-- Task Type --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Task Type</label>
+                    <select wire:model="task_type"
+                        class="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('task_type') border-red-400 @enderror">
+                        <option value="">— Select type —</option>
+                        <option value="tech">Tech</option>
+                        <option value="content">Content</option>
+                        <option value="accounts">Accounts</option>
+                        <option value="maths">Maths</option>
+                        <option value="nursing">Nursing</option>
+                        <option value="science">Science</option>
+                        <option value="civil">Civil</option>
+                        <option value="others">Others</option>
+                    </select>
+                    @error('task_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
                 {{-- Important Notes --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Important Notes</label>

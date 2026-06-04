@@ -37,8 +37,7 @@
                         @foreach($tasks as $task)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-5 py-3">
-                                    <div class="font-medium text-gray-900 text-sm">{{ $task->title }}</div>
-                                    <div class="text-xs text-gray-400 mt-0.5">{{ $task->task_code }}</div>
+                                    <span class="text-sm font-bold font-mono text-gray-900">{{ $task->task_code }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-sm text-gray-600">{{ $task->unit->name }}</td>
                                 <td class="px-5 py-3">
