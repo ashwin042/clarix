@@ -35,6 +35,17 @@
             <option value="medium">Medium</option>
             <option value="high">High</option>
         </select>
+        <select wire:model.live="filterTaskType" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">All Types</option>
+            <option value="tech">Tech</option>
+            <option value="content">Content</option>
+            <option value="accounts">Accounts</option>
+            <option value="maths">Maths</option>
+            <option value="nursing">Nursing</option>
+            <option value="science">Science</option>
+            <option value="civil">Civil</option>
+            <option value="others">Others</option>
+        </select>
         @if(auth()->user()->isAdmin())
         <select wire:model.live="filterUnit" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All units</option>

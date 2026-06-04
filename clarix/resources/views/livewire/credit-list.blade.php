@@ -91,6 +91,23 @@
             </div>
             @endif
 
+            {{-- Task Type filter --}}
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-slate-400">Task Type</label>
+                <select wire:model.live="filterTaskType"
+                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <option value="">All Types</option>
+                    <option value="tech">Tech</option>
+                    <option value="content">Content</option>
+                    <option value="accounts">Accounts</option>
+                    <option value="maths">Maths</option>
+                    <option value="nursing">Nursing</option>
+                    <option value="science">Science</option>
+                    <option value="civil">Civil</option>
+                    <option value="others">Others</option>
+                </select>
+            </div>
+
             {{-- Clear --}}
             <button wire:click="clearFilters"
                 class="px-4 py-2 text-sm text-gray-600 dark:text-slate-400 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
@@ -138,6 +155,7 @@
                             <tr class="bg-white dark:bg-slate-900">
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Code</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task Title</th>
+                                <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Type</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned Supervisor</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Completed</th>
@@ -151,6 +169,7 @@
                                     <td class="px-6 py-3">
                                         <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors line-clamp-1">{{ $task->title }}</a>
                                     </td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
                                     <td class="px-6 py-3">
                                         @php
                                             $pBadge = ['low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'medium' => 'bg-blue-100 text-blue-700', 'high' => 'bg-amber-100 text-amber-700', 'urgent' => 'bg-rose-100 text-rose-700'];
@@ -169,7 +188,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="bg-indigo-50 border-t border-indigo-100">
-                                <td colspan="5" class="px-6 py-2.5 text-sm font-semibold text-indigo-700">Unit Subtotal</td>
+                                <td colspan="6" class="px-6 py-2.5 text-sm font-semibold text-indigo-700">Unit Subtotal</td>
                                 <td class="px-6 py-2.5 text-sm font-bold text-indigo-700 text-right pr-6">{{ number_format($group['credits'], 2) }}</td>
                             </tr>
                         </tfoot>
@@ -198,6 +217,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Code</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Unit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned Supervisor</th>
@@ -212,6 +232,7 @@
                                 <td class="px-6 py-3">
                                     <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $task->title }}</a>
                                 </td>
+                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->unit?->name ?? '—' }}</td>
                                 <td class="px-6 py-3">
                                     @php $pBadge = ['low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'medium' => 'bg-blue-100 text-blue-700', 'high' => 'bg-amber-100 text-amber-700', 'urgent' => 'bg-rose-100 text-rose-700']; @endphp

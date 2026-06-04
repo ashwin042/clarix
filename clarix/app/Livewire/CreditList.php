@@ -13,23 +13,25 @@ class CreditList extends Component
 {
     use WithPagination;
 
-    public string $dateFrom      = '';
-    public string $dateTo        = '';
-    public string $filterUnit    = '';
-    public string $filterPm      = '';
-    public string $viewMode      = 'grouped'; // grouped | unified
+    public string $dateFrom        = '';
+    public string $dateTo          = '';
+    public string $filterUnit      = '';
+    public string $filterPm        = '';
+    public string $filterTaskType  = '';
+    public string $viewMode        = 'grouped'; // grouped | unified
 
     protected string $paginationTheme = 'tailwind';
 
-    public function updatedDateFrom(): void   { $this->resetPage(); }
-    public function updatedDateTo(): void     { $this->resetPage(); }
-    public function updatedFilterUnit(): void { $this->resetPage(); $this->filterPm = ''; }
-    public function updatedFilterPm(): void   { $this->resetPage(); }
-    public function updatedViewMode(): void   { $this->resetPage(); }
+    public function updatedDateFrom(): void       { $this->resetPage(); }
+    public function updatedDateTo(): void         { $this->resetPage(); }
+    public function updatedFilterUnit(): void     { $this->resetPage(); $this->filterPm = ''; }
+    public function updatedFilterPm(): void       { $this->resetPage(); }
+    public function updatedFilterTaskType(): void { $this->resetPage(); }
+    public function updatedViewMode(): void       { $this->resetPage(); }
 
     public function clearFilters(): void
     {
-        $this->reset(['dateFrom', 'dateTo', 'filterUnit', 'filterPm']);
+        $this->reset(['dateFrom', 'dateTo', 'filterUnit', 'filterPm', 'filterTaskType']);
         $this->resetPage();
     }
 
@@ -41,6 +43,7 @@ class CreditList extends Component
             $this->dateTo,
             $this->filterUnit,
             $this->filterPm,
+            $this->filterTaskType,
         );
     }
 

@@ -13,7 +13,8 @@ class CreditQueryBuilder
         string $dateFrom = '',
         string $dateTo = '',
         string $filterUnit = '',
-        string $filterPm = ''
+        string $filterPm = '',
+        string $filterTaskType = ''
     ): Builder {
         $query = Task::with(['unit', 'creator', 'assignedAdmin'])
             ->where('status', 'completed');
@@ -32,6 +33,10 @@ class CreditQueryBuilder
 
         if ($user->isAdmin() && $filterPm) {
             $query->where('created_by', $filterPm);
+        }
+
+        if ($filterTaskType) {
+            $query->where('task_type', $filterTaskType);
         }
 
         if ($dateFrom) {

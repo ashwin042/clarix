@@ -18,6 +18,7 @@ class ManageTasks extends Component
     public string $filterStatus = '';
     public string $filterPriority = '';
     public string $filterUnit = '';
+    public string $filterTaskType = '';
     public string $sortBy = 'created_at';
     public string $sortDir = 'desc';
     public bool $showModal = false;
@@ -39,6 +40,7 @@ class ManageTasks extends Component
     public function updatingFilterStatus(): void { $this->resetPage(); }
     public function updatingFilterPriority(): void { $this->resetPage(); }
     public function updatingFilterUnit(): void { $this->resetPage(); }
+    public function updatingFilterTaskType(): void { $this->resetPage(); }
 
     public function updatedUnitId(): void
     {
@@ -200,6 +202,7 @@ class ManageTasks extends Component
             ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterPriority, fn ($q) => $q->where('priority', $this->filterPriority))
             ->when($this->filterUnit && $user->isAdmin(), fn ($q) => $q->where('unit_id', $this->filterUnit))
+            ->when($this->filterTaskType, fn ($q) => $q->where('task_type', $this->filterTaskType))
             ->orderBy($this->sortBy, $this->sortDir);
 
         $tasks = $query->paginate(15);
