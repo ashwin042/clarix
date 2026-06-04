@@ -34,10 +34,11 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
 
         $query = (new CreditQueryBuilder())->build(
             $this->user,
-            $this->filters['dateFrom']   ?? '',
-            $this->filters['dateTo']     ?? '',
-            $this->filters['filterUnit'] ?? '',
-            $this->filters['filterPm']   ?? '',
+            $this->filters['dateFrom']       ?? '',
+            $this->filters['dateTo']         ?? '',
+            $this->filters['filterUnit']     ?? '',
+            $this->filters['filterPm']       ?? '',
+            $this->filters['filterTaskType'] ?? '',
         );
 
         if ($this->viewMode === 'grouped') {
@@ -73,7 +74,7 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
             $rowNum++;
 
             $this->styleMap[$rowNum] = 'col_header';
-            $rows->push(['Code', 'Task Title', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+            $rows->push(['Task Code', 'Task Title', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
             $rowNum++;
 
             foreach ($group['tasks'] as $task) {
@@ -110,7 +111,7 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
         $rowNum = 1;
 
         $this->styleMap[$rowNum] = 'col_header';
-        $rows->push(['Code', 'Task Title', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+        $rows->push(['Task Code', 'Task Title', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
         $rowNum++;
 
         foreach ($tasks as $task) {

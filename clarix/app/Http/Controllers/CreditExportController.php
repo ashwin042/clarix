@@ -13,7 +13,7 @@ class CreditExportController extends Controller
     {
         abort_unless(auth()->user()->hasPermission('credits.view'), 403);
 
-        $filters  = $request->only(['dateFrom', 'dateTo', 'filterUnit', 'filterPm', 'viewMode']);
+        $filters  = $request->only(['dateFrom', 'dateTo', 'filterUnit', 'filterPm', 'filterTaskType', 'viewMode']);
         $export   = new CreditListExport($filters, auth()->user());
         $filename = 'credit-list-export-' . now()->format('Y-m-d') . '.xlsx';
 
