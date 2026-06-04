@@ -32,7 +32,7 @@ class CreateTask extends Component
         $this->pm_id   = (string) auth()->id();
     }
 
-    public function removeUpload(int $index): void
+    public function removeFile(int $index): void
     {
         array_splice($this->uploads, $index, 1);
     }

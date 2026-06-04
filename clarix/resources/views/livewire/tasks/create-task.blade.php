@@ -121,7 +121,7 @@
                                             @endphp
                                         </span>
                                     </div>
-                                    <button type="button" wire:click="removeUpload({{ $i }})"
+                                    <button type="button" wire:click="removeFile({{ $i }})"
                                         class="ml-3 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

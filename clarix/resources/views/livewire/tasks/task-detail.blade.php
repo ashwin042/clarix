@@ -116,7 +116,7 @@
                                             <p class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $assignment->writer->name }}</p>
                                         @endif
                                         @php
-                                            $asc = match($assignment->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'ready_for_review' => 'bg-teal-100 text-teal-700' };
+                                            $asc = match($assignment->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'ready_for_review' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                                         @endphp
                                         <span class="inline-flex mt-0.5 px-2 py-0 rounded text-xs font-medium {{ $asc }}">
                                             {{ str_replace('_', ' ', ucfirst($assignment->status)) }}
@@ -124,13 +124,12 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    {{-- Writer sets their own status --}}
-                                    @if(auth()->id() === $assignment->writer_id)
+                                    {{-- Writer sets their own status (Ready for Review is set automatically on file upload) --}}
+                                    @if(auth()->id() === $assignment->writer_id && !in_array($assignment->status, ['ready_for_review', 'completed']))
                                         <select wire:change="updateAssignmentStatus({{ $assignment->id }}, $event.target.value)"
                                             class="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                             <option value="pending" {{ $assignment->status === 'pending' ? 'selected' : '' }}>Pending</option>
                                             <option value="in_progress" {{ $assignment->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                            <option value="ready_for_review" {{ $assignment->status === 'ready_for_review' ? 'selected' : '' }}>Ready for Review</option>
                                         </select>
                                     @endif
                                     @can('assign', $task)
@@ -243,11 +242,7 @@
                                 <div class="min-w-0">
                                     <p class="text-sm text-gray-800 dark:text-slate-200 font-medium truncate">{{ $file->original_name }}</p>
                                     <p class="text-xs text-gray-400 dark:text-slate-500">
-                                        {{ $file->file_size_formatted }}
-                                        @if(!auth()->user()->isWriter())
-                                            · {{ $file->uploader->name }}
-                                        @endif
-                                        · {{ $file->created_at->diffForHumans() }}
+                                        {{ $file->file_size_formatted }} · {{ $file->created_at->diffForHumans() }}
                                     </p>
                                 </div>
                             </div>
