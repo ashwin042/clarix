@@ -38,10 +38,10 @@
         @endif
     </div>
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {{-- Main column --}}
-        <div class="col-span-2 space-y-5">
+        <div class="md:col-span-2 space-y-5">
 
             {{-- Details card --}}
             <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">

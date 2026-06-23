@@ -52,7 +52,7 @@ class CreditList extends Component
         $user = auth()->user();
         abort_unless($user->hasPermission('credits.view'), 403);
 
-        // Totals (unpaginated)
+        // Totals (respects all active filters including the unit tab)
         $totals = $this->baseQuery()
             ->selectRaw('COUNT(*) as task_count, COALESCE(SUM(credit_amount), 0) as total_credits')
             ->first();
@@ -70,18 +70,33 @@ class CreditList extends Component
             $pms = $pmQuery->get();
         }
 
+        // Tab units: units that have tasks under current date/pm/taskType filters
+        // (deliberately excludes filterUnit so all available tabs are always shown)
+        $tabUnits = collect();
+        if ($user->isAdmin()) {
+            $tabUnitIds = (new CreditQueryBuilder())->build(
+                $user,
+                $this->dateFrom,
+                $this->dateTo,
+                '',
+                $this->filterPm,
+                $this->filterTaskType,
+            )->pluck('unit_id')->unique()->filter();
+
+            $tabUnits = Unit::whereIn('id', $tabUnitIds)->orderBy('name')->get();
+        }
+
         // Writers always see a flat list — no unit grouping
         if ($user->isWriter()) {
             $tasks = $this->baseQuery()
                 ->orderBy('updated_at', 'desc')
                 ->paginate(25);
 
-            return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tasks'))
+            return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tabUnits', 'tasks'))
                 ->layout('layouts.app', ['pageTitle' => 'Credit List']);
         }
 
         if ($this->viewMode === 'grouped') {
-            // Get all tasks for grouped view (we group manually)
             $tasks = $this->baseQuery()
                 ->orderBy('unit_id')
                 ->orderBy('updated_at', 'desc')
@@ -96,7 +111,7 @@ class CreditList extends Component
                 ];
             })->sortBy(fn ($g) => $g['unit']?->name ?? '')->values();
 
-            return view('livewire.credit-list', compact('totals', 'units', 'pms', 'grouped'))
+            return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tabUnits', 'grouped'))
                 ->layout('layouts.app', ['pageTitle' => 'Credit List']);
         }
 
@@ -105,7 +120,7 @@ class CreditList extends Component
             ->orderBy('updated_at', 'desc')
             ->paginate(25);
 
-        return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tasks'))
+        return view('livewire.credit-list', compact('totals', 'units', 'pms', 'tabUnits', 'tasks'))
             ->layout('layouts.app', ['pageTitle' => 'Credit List']);
     }
 }

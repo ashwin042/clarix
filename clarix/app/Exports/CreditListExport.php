@@ -74,13 +74,13 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
             $rowNum++;
 
             $this->styleMap[$rowNum] = 'col_header';
-            $rows->push(['Task Code', 'Task Title', 'Task Type', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+            $rows->push(['Task Code', 'Writer', 'Task Type', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
             $rowNum++;
 
             foreach ($group['tasks'] as $task) {
                 $rows->push([
                     $task->task_code,
-                    $task->title,
+                    $task->writers->pluck('name')->join(', ') ?: '—',
                     $task->task_type ? ucfirst($task->task_type) : '—',
                     ucfirst($task->priority),
                     $task->assignedAdmin?->name ?? '—',
@@ -112,13 +112,13 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
         $rowNum = 1;
 
         $this->styleMap[$rowNum] = 'col_header';
-        $rows->push(['Task Code', 'Task Title', 'Task Type', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
+        $rows->push(['Task Code', 'Writer', 'Task Type', 'Unit', 'Priority', 'Assigned Supervisor', 'Completed Date', 'Credits']);
         $rowNum++;
 
         foreach ($tasks as $task) {
             $rows->push([
                 $task->task_code,
-                $task->title,
+                $task->writers->pluck('name')->join(', ') ?: '—',
                 $task->task_type ? ucfirst($task->task_type) : '—',
                 $task->unit?->name ?? '—',
                 ucfirst($task->priority),
@@ -178,7 +178,7 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
     {
         return [
             'A' => 15,
-            'B' => 45,
+            'B' => 30,
             'C' => 15,
             'D' => 20,
             'E' => 15,

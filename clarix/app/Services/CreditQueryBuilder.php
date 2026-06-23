@@ -16,7 +16,7 @@ class CreditQueryBuilder
         string $filterPm = '',
         string $filterTaskType = ''
     ): Builder {
-        $query = Task::with(['unit', 'creator', 'assignedAdmin'])
+        $query = Task::with(['unit', 'creator', 'assignedAdmin', 'writers'])
             ->where('status', 'completed');
 
         if ($user->isWriter()) {

@@ -5,22 +5,33 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Users</h1>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage project managers and writers</p>
         </div>
+        {{-- Add User button: desktop only --}}
         <button wire:click="openCreate"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+            class="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add User
         </button>
     </div>
 
     {{-- Filters --}}
-    <div class="flex items-center gap-3 mb-5">
-        <div class="relative flex-1 max-w-xs">
-            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search by name or email..."
-                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    {{-- Mobile: search + Add User button on row 1, role select on row 2
+         Desktop: all on one row, Add User in header --}}
+    <div class="mb-5 space-y-2 md:space-y-0 md:flex md:items-center md:gap-3">
+        <div class="flex items-center gap-2">
+            <div class="relative flex-1 md:max-w-xs">
+                <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search by name or email..."
+                    class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+            {{-- Add User button: mobile only, beside search --}}
+            <button wire:click="openCreate"
+                class="inline-flex md:hidden items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add User
+            </button>
         </div>
         <select wire:model.live="filterRole"
-            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
             <option value="">All roles</option>
             <option value="admin">Admin</option>
             <option value="pm">Project Manager</option>
@@ -28,9 +39,66 @@
         </select>
     </div>
 
-    {{-- Table --}}
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
-        @if($users->count())
+    {{-- Content --}}
+    @if($users->count())
+        {{-- Mobile: Card layout (hidden on md+) --}}
+        <div class="block md:hidden space-y-3">
+            @foreach($users as $user)
+                @php
+                    $roleClass = match($user->role) {
+                        'admin'  => 'bg-purple-100 text-purple-700',
+                        'pm'     => 'bg-blue-100 text-blue-700',
+                        'writer' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
+                    };
+                @endphp
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
+                    {{-- Card header: avatar + name + email --}}
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                            <span class="text-sm font-semibold text-indigo-600">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{{ $user->name }}</p>
+                            <p class="text-xs text-gray-400 dark:text-slate-500 truncate">{{ $user->email }}</p>
+                        </div>
+                    </div>
+                    {{-- Key-value rows --}}
+                    <dl class="space-y-1.5 text-sm mb-3">
+                        <div class="flex justify-between items-center">
+                            <dt class="text-gray-500 dark:text-slate-400">Role</dt>
+                            <dd>
+                                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $roleClass }}">{{ ucfirst($user->role) }}</span>
+                            </dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500 dark:text-slate-400">Unit</dt>
+                            <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '—' }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500 dark:text-slate-400">Joined</dt>
+                            <dd class="text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</dd>
+                        </div>
+                    </dl>
+                    {{-- Action buttons --}}
+                    <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-800/60">
+                        <button wire:click="openEdit({{ $user->id }})"
+                            class="flex-1 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/70 rounded-lg transition-colors">
+                            Edit
+                        </button>
+                        <button wire:click="openDeleteModal({{ $user->id }}, '{{ $user->name }}')"
+                            class="flex-1 py-2 text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 rounded-lg transition-colors">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+            @if($users->hasPages())
+                <div class="py-2">{{ $users->links() }}</div>
+            @endif
+        </div>
+
+        {{-- Desktop: Table layout (hidden below md) --}}
+        <div class="hidden md:block bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
             <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-800/60">
                 <thead class="bg-gray-50 dark:bg-slate-950/60">
                     <tr>
@@ -51,7 +119,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">{{ $user->email }}</p>
+                                        <p class="text-xs text-gray-400 dark:text-slate-500">{{ $user->email }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -82,14 +150,16 @@
             @if($users->hasPages())
                 <div class="px-5 py-4 border-t border-gray-100 dark:border-slate-800/60">{{ $users->links() }}</div>
             @endif
-        @else
-            <div class="py-16 text-center dark:text-slate-400">
+        </div>
+    @else
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
+            <div class="py-16 text-center">
                 <p class="text-sm text-gray-500 dark:text-slate-400">No users found.</p>
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 
-    {{-- Modal --}}
+    {{-- Create / Edit Modal --}}
     <x-livewire-modal :title="$editingId ? 'Edit User' : 'Add User'">
         <form wire:submit="save" class="p-6 space-y-4">
             {{-- Name --}}
@@ -161,7 +231,7 @@
                             <input type="text" value="{{ $pmUnit?->name ?? '—' }}" disabled
                                 class="w-full border border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2">
-                                <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                             </span>
                         </div>
                         <p class="mt-1 text-[11px] text-gray-400 dark:text-slate-500">Assigned to your unit automatically</p>

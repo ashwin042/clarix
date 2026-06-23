@@ -10,7 +10,7 @@ use App\Notifications\NewTaskCreatedNotification;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ManageTasks extends Component
+class AssignedTasks extends Component
 {
     use WithPagination, WithDeleteConfirmation;
 
@@ -36,6 +36,7 @@ class ManageTasks extends Component
     public string $deadline = '';
     public string $credit_amount = '0';
     public string $assigned_admin_id = '';
+
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingFilterStatus(): void { $this->resetPage(); }
     public function updatingFilterPriority(): void { $this->resetPage(); }
@@ -59,15 +60,11 @@ class ManageTasks extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['title', 'task_code', 'task_type', 'important_notes', 'unit_id', 'pm_id', 'assigned_admin_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
+        $this->reset(['title', 'task_code', 'task_type', 'important_notes', 'unit_id', 'pm_id', 'priority', 'status', 'deadline', 'credit_amount', 'editingId']);
         $this->priority = 'medium';
         $this->status = 'pending';
         $this->credit_amount = '0';
-
-        if (auth()->user()->isPm()) {
-            $this->unit_id = (string) auth()->user()->unit_id;
-            $this->pm_id   = (string) auth()->id();
-        }
+        $this->assigned_admin_id = (string) auth()->id();
 
         $this->resetErrorBag();
         $this->showModal = true;
@@ -93,15 +90,6 @@ class ManageTasks extends Component
 
     public function save(): void
     {
-        $authUser = auth()->user();
-
-        // Backend enforcement: PM cannot choose another PM or unit
-        if ($authUser->isPm()) {
-            $this->unit_id = (string) $authUser->unit_id;
-            $this->pm_id   = (string) $authUser->id;
-            $this->status  = 'pending';
-        }
-
         $unitId = $this->unit_id;
         $uniqueRule = $this->editingId
             ? "unique:tasks,task_code,{$this->editingId},id,unit_id,{$unitId}"
@@ -127,9 +115,9 @@ class ManageTasks extends Component
             'status'        => 'required|in:pending,in_progress,submitted,verified,completed',
             'deadline'      => 'required|date',
             'credit_amount' => 'required|numeric|min:0',
-            'task_type'          => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',
-            'important_notes'    => 'nullable|string|max:5000',
-            'assigned_admin_id'  => [
+            'task_type'         => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',
+            'important_notes'   => 'nullable|string|max:5000',
+            'assigned_admin_id' => [
                 'nullable',
                 'exists:users,id',
                 function ($attribute, $value, $fail) {
@@ -141,17 +129,17 @@ class ManageTasks extends Component
         ]);
 
         $data = [
-            'title'         => $this->title,
-            'task_code'     => $this->task_code,
+            'title'             => $this->title,
+            'task_code'         => $this->task_code,
             'task_type'         => $this->task_type ?: null,
             'important_notes'   => $this->important_notes ?: null,
-            'unit_id'       => $this->unit_id,
+            'unit_id'           => $this->unit_id,
             'pm_id'             => $this->pm_id,
             'assigned_admin_id' => $this->assigned_admin_id ?: null,
             'priority'          => $this->priority,
-            'status'        => $this->status,
-            'deadline'      => $this->deadline,
-            'credit_amount' => $this->credit_amount,
+            'status'            => $this->status,
+            'deadline'          => $this->deadline,
+            'credit_amount'     => $this->credit_amount,
         ];
 
         if ($this->editingId) {
@@ -167,7 +155,6 @@ class ManageTasks extends Component
             $task = Task::create($data + ['created_by' => auth()->id()]);
             $this->dispatch('notify', message: 'Task created.', type: 'success');
 
-            // Notify all admins
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
                 $admin->notify(new NewTaskCreatedNotification($task));
@@ -190,36 +177,30 @@ class ManageTasks extends Component
     public function render()
     {
         $user = auth()->user();
-        abort_unless($user->hasPermission('tasks.view'), 403);
+        abort_unless($user->isAdmin(), 403);
 
         $query = Task::with(['unit', 'creator', 'pm', 'assignments.writer', 'assignedAdmin', 'files'])
-            ->where('status', '!=', 'completed')
-            ->when($user->isPm(), fn ($q) => $q->where('unit_id', $user->unit_id))
-            ->when($user->isWriter(), fn ($q) => $q->whereHas('assignments', fn ($a) => $a->where('writer_id', $user->id)))
+            ->where('assigned_admin_id', $user->id)
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
                   ->orWhere('task_code', 'like', "%{$this->search}%");
             }))
             ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterPriority, fn ($q) => $q->where('priority', $this->filterPriority))
-            ->when($this->filterUnit && $user->isAdmin(), fn ($q) => $q->where('unit_id', $this->filterUnit))
+            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
             ->when($this->filterTaskType, fn ($q) => $q->where('task_type', $this->filterTaskType))
             ->orderBy($this->sortBy, $this->sortDir);
 
         $tasks = $query->paginate(15);
 
         $adminUsers = User::where('role', 'admin')->orderBy('name')->get();
+        $units = Unit::orderBy('name')->get();
 
-        $units = $user->isAdmin()
-            ? Unit::orderBy('name')->get()
-            : Unit::where('id', $user->unit_id)->get();
-
-        // PMs for selected unit (admin sees dropdown; PM gets own record injected)
         $pmsForUnit = $this->unit_id
             ? User::where('role', 'pm')->where('unit_id', $this->unit_id)->orderBy('name')->get()
             : collect();
 
-        return view('livewire.tasks.manage-tasks', compact('tasks', 'units', 'pmsForUnit', 'adminUsers'))
-            ->layout('layouts.app', ['pageTitle' => 'Tasks']);
+        return view('livewire.tasks.assigned-tasks', compact('tasks', 'units', 'pmsForUnit', 'adminUsers'))
+            ->layout('layouts.app', ['pageTitle' => 'Assigned Tasks']);
     }
 }

@@ -2,16 +2,14 @@
     {{-- Header --}}
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Tasks</h1>
-            <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage and track all project tasks</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Assigned Tasks</h1>
+            <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Tasks where you are the assigned supervisor</p>
         </div>
-        @if(!auth()->user()->isWriter())
         <button wire:click="openCreate"
             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Task
         </button>
-        @endif
     </div>
 
     {{-- Filters --}}
@@ -27,6 +25,7 @@
             <option value="in_progress">In Progress</option>
             <option value="submitted">Submitted</option>
             <option value="verified">Verified</option>
+            <option value="completed">Completed</option>
         </select>
         <select wire:model.live="filterPriority" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All priorities</option>
@@ -45,14 +44,12 @@
             <option value="civil">Civil</option>
             <option value="others">Others</option>
         </select>
-        @if(auth()->user()->isAdmin())
         <select wire:model.live="filterUnit" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All units</option>
             @foreach($units as $unit)
                 <option value="{{ $unit->id }}">{{ $unit->name }}</option>
             @endforeach
         </select>
-        @endif
     </div>
 
     {{-- Table --}}
@@ -75,12 +72,6 @@
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">PM</dt>
                                 <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->pm?->name ?? '—' }}</dd>
                             </div>
-                            @if(auth()->user()->isAdmin())
-                            <div>
-                                <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Supervisor</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->assignedAdmin?->name ?? '—' }}</dd>
-                            </div>
-                            @endif
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Deadline</dt>
                                 <dd class="text-sm mt-0.5 {{ $task->deadline->isPast() && $task->status !== 'completed' ? 'text-red-600 font-medium' : 'text-gray-600 dark:text-slate-400' }}">{{ $task->deadline->format('M d, Y') }}</dd>
@@ -96,16 +87,14 @@
                             <div class="col-span-2">
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Writers</dt>
                                 <dd class="mt-1">
-                                    @if(auth()->user()->isAdmin() && $task->assignments->count())
+                                    @if($task->assignments->count())
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($task->assignments as $assignment)
                                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">{{ $assignment->writer->name }}</span>
                                             @endforeach
                                         </div>
-                                    @elseif(auth()->user()->isAdmin())
-                                        <span class="text-sm text-gray-400 dark:text-slate-500">—</span>
                                     @else
-                                        <span class="text-sm text-gray-500 dark:text-slate-400">{{ $task->assignments->count() }}</span>
+                                        <span class="text-sm text-gray-400 dark:text-slate-500">—</span>
                                     @endif
                                 </dd>
                             </div>
@@ -114,14 +103,10 @@
                         <div class="flex items-center gap-2 pt-1">
                             <a href="{{ route('tasks.show', $task) }}"
                                 class="flex-1 text-center px-3 py-2 text-xs font-medium text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-800 hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors">View</a>
-                            @if(!auth()->user()->isWriter())
                             <button wire:click="openEdit({{ $task->id }})"
                                 class="flex-1 px-3 py-2 text-xs font-medium text-indigo-600 border border-indigo-100 dark:border-indigo-900/40 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
-                            @endif
-                            @if(auth()->user()->isAdmin())
                             <button wire:click="openDeleteModal({{ $task->id }}, '{{ $task->task_code }} - {{ $task->title }}')"
                                 class="flex-1 px-3 py-2 text-xs font-medium text-red-500 border border-red-100 dark:border-red-900/40 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
-                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -140,9 +125,6 @@
                             </div>
                         </th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">PM</th>
-                        @if(auth()->user()->isAdmin())
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Assigned Supervisor</th>
-                        @endif
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none" wire:click="sortBy('deadline')">
                             <div class="flex items-center gap-1">
@@ -165,9 +147,6 @@
                                 <a href="{{ route('tasks.show', $task) }}" class="text-sm font-bold font-mono text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors">{{ $task->task_code }}</a>
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '—' }}</td>
-                            @if(auth()->user()->isAdmin())
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>
-                            @endif
                             <td class="px-5 py-3">
                                 @php
                                     $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'submitted' => 'bg-purple-100 text-purple-700', 'verified' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700' };
@@ -179,16 +158,14 @@
                             </td>
                             <td class="px-5 py-3 text-sm font-medium text-gray-700 dark:text-slate-300">{{ number_format($task->credit_amount, 2) }}</td>
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">
-                                @if(auth()->user()->isAdmin() && $task->assignments->count())
+                                @if($task->assignments->count())
                                     <div class="flex flex-wrap gap-1">
                                         @foreach($task->assignments as $assignment)
                                             <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">{{ $assignment->writer->name }}</span>
                                         @endforeach
                                     </div>
-                                @elseif(auth()->user()->isAdmin())
-                                    <span class="text-gray-400 dark:text-slate-500">—</span>
                                 @else
-                                    {{ $task->assignments->count() }}
+                                    <span class="text-gray-400 dark:text-slate-500">—</span>
                                 @endif
                             </td>
                             <td class="px-5 py-3">
@@ -199,7 +176,6 @@
                                             @click="open = !open"
                                             @click.outside="open = false"
                                             class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors text-xs font-medium"
-                                            title="{{ $task->files->count() }} {{ $task->files->count() === 1 ? 'file' : 'files' }}"
                                         >
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -274,14 +250,10 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('tasks.show', $task) }}"
                                         class="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors">View</a>
-                                    @if(!auth()->user()->isWriter())
                                     <button wire:click="openEdit({{ $task->id }})"
                                         class="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
-                                    @endif
-                                    @if(auth()->user()->isAdmin())
                                     <button wire:click="openDeleteModal({{ $task->id }}, '{{ $task->task_code }} - {{ $task->title }}')"
                                         class="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -296,7 +268,7 @@
                 <div class="w-12 h-12 mx-auto bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
                     <svg class="w-6 h-6 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </div>
-                <p class="text-sm text-gray-500 dark:text-slate-400">No tasks found.</p>
+                <p class="text-sm text-gray-500 dark:text-slate-400">No assigned tasks found.</p>
             </div>
         @endif
     </div>
@@ -322,54 +294,36 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
-                    @if(auth()->user()->isAdmin())
-                        <select wire:model.live="unit_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('unit_id') border-red-400 @enderror">
-                            <option value="">Select unit</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    @else
-                        <input type="text" value="{{ $units->first()?->name ?? '—' }}" disabled
-                            class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
-                    @endif
+                    <select wire:model.live="unit_id"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('unit_id') border-red-400 @enderror">
+                        <option value="">Select unit</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        @endforeach
+                    </select>
                     @error('unit_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
             </div>
 
-            {{-- PM field --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Responsible PM</label>
-                @if(auth()->user()->isAdmin())
-                    @if($unit_id && $pmsForUnit->count())
-                        <select wire:model="pm_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('pm_id') border-red-400 @enderror">
-                            <option value="">Select PM</option>
-                            @foreach($pmsForUnit as $pm)
-                                <option value="{{ $pm->id }}">{{ $pm->name }}</option>
-                            @endforeach
-                        </select>
-                    @elseif($unit_id)
-                        <p class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">No PMs found in this unit. Assign a PM to this unit first.</p>
-                    @else
-                        <input type="text" value="Select a unit first" disabled
-                            class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-400 dark:text-slate-500 cursor-not-allowed">
-                    @endif
+                @if($unit_id && $pmsForUnit->count())
+                    <select wire:model="pm_id"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('pm_id') border-red-400 @enderror">
+                        <option value="">Select PM</option>
+                        @foreach($pmsForUnit as $pm)
+                            <option value="{{ $pm->id }}">{{ $pm->name }}</option>
+                        @endforeach
+                    </select>
+                @elseif($unit_id)
+                    <p class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">No PMs found in this unit.</p>
                 @else
-                    <div class="relative">
-                        <input type="text" value="{{ auth()->user()->name }}" disabled
-                            class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        </span>
-                    </div>
-                    <p class="mt-1 text-[11px] text-gray-400 dark:text-slate-500">Automatically assigned to you</p>
+                    <input type="text" value="Select a unit first" disabled
+                        class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-400 dark:text-slate-500 cursor-not-allowed">
                 @endif
                 @error('pm_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Assigned Supervisor --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Assigned Supervisor</label>
                 <select wire:model="assigned_admin_id"
@@ -418,19 +372,14 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Status</label>
-                    @if(auth()->user()->isAdmin())
-                        <select wire:model="status"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="verified">Verified</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    @else
-                        <input type="text" value="Pending" disabled
-                            class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
-                    @endif
+                    <select wire:model="status"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="verified">Verified</option>
+                        <option value="completed">Completed</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Deadline</label>
@@ -465,7 +414,7 @@
         </form>
     </x-livewire-modal>
 
-    {{-- Shared inline upload modal (triggered from Files column) --}}
+    {{-- Shared inline upload modal --}}
     <div
         x-data="{
             show: false,

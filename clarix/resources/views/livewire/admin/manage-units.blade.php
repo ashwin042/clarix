@@ -1,29 +1,79 @@
 <div>
-    {{-- Header --}}
+    {{-- Header: title left, Add Unit button right (desktop only) --}}
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Units</h1>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage organisational units</p>
         </div>
         <button wire:click="openCreate"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+            class="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add Unit
         </button>
     </div>
 
-    {{-- Search --}}
-    <div class="mb-4">
-        <div class="relative max-w-xs">
+    {{-- Search row: search + button side-by-side on mobile; search only on desktop --}}
+    <div class="mb-4 flex items-center gap-2">
+        <div class="relative flex-1 md:max-w-xs">
             <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search units..."
-                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500">
         </div>
+        <button wire:click="openCreate"
+            class="inline-flex md:hidden items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Unit
+        </button>
     </div>
 
-    {{-- Table --}}
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
-        @if($units->count())
+    {{-- Content --}}
+    @if($units->count())
+        {{-- Mobile: Card layout (hidden on md+) --}}
+        <div class="md:hidden space-y-3">
+            @foreach($units as $unit)
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
+                    {{-- Card title: avatar + name --}}
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                            <span class="text-xs font-bold text-indigo-600">{{ strtoupper(substr($unit->name, 0, 2)) }}</span>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-slate-100 leading-snug">{{ $unit->name }}</span>
+                    </div>
+                    {{-- Key-value rows --}}
+                    <dl class="space-y-1.5 text-sm mb-3">
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500 dark:text-slate-400">Members</dt>
+                            <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $unit->users_count }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500 dark:text-slate-400">Tasks</dt>
+                            <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $unit->tasks_count }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500 dark:text-slate-400">Created</dt>
+                            <dd class="text-gray-500 dark:text-slate-400">{{ $unit->created_at->format('M d, Y') }}</dd>
+                        </div>
+                    </dl>
+                    {{-- Action buttons --}}
+                    <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-800/60">
+                        <button wire:click="openEdit({{ $unit->id }})"
+                            class="flex-1 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/70 rounded-lg transition-colors">
+                            Edit
+                        </button>
+                        <button wire:click="openDeleteModal({{ $unit->id }}, '{{ $unit->name }}')"
+                            class="flex-1 py-2 text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 rounded-lg transition-colors">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+            @if($units->hasPages())
+                <div class="py-2">{{ $units->links() }}</div>
+            @endif
+        </div>
+
+        {{-- Desktop: Table layout (hidden below md) --}}
+        <div class="hidden md:block bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
             <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-800/60">
                 <thead class="bg-gray-50 dark:bg-slate-950/60">
                     <tr>
@@ -63,17 +113,19 @@
             @if($units->hasPages())
                 <div class="px-5 py-4 border-t border-gray-100 dark:border-slate-800/60">{{ $units->links() }}</div>
             @endif
-        @else
-            <div class="py-16 text-center dark:text-slate-400">
+        </div>
+    @else
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
+            <div class="py-16 text-center">
                 <div class="w-12 h-12 mx-auto bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
                     <svg class="w-6 h-6 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/></svg>
                 </div>
                 <p class="text-sm text-gray-500 dark:text-slate-400">No units found.</p>
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 
-    {{-- Modal --}}
+    {{-- Create / Edit Modal --}}
     <x-livewire-modal :title="$editingId ? 'Edit Unit' : 'Add Unit'" maxWidth="sm">
         <form wire:submit="save" class="p-6 space-y-4">
             <div>

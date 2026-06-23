@@ -21,21 +21,34 @@
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-slate-200 transition-colors duration-300">
 
-<div x-data="{ sidebarOpen: true, openMenu: null }" class="flex h-screen overflow-hidden">
+<div x-data="{ sidebarOpen: true, mobileOpen: false, openMenu: null }" @keydown.escape.window="mobileOpen = false" class="flex h-screen overflow-hidden">
+
+    {{-- Mobile backdrop --}}
+    <div x-show="mobileOpen" x-cloak
+        x-transition:enter="transition-opacity ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        @click="mobileOpen = false"
+        class="fixed inset-0 z-30 bg-gray-900/60 md:hidden"></div>
 
     {{-- Sidebar --}}
     <aside
-        :class="sidebarOpen ? 'w-64' : 'w-20'"
-        class="relative flex flex-col flex-shrink-0 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800/50 transition-all duration-300 ease-in-out overflow-hidden"
+        :class="[sidebarOpen ? 'md:w-64' : 'md:w-20', mobileOpen ? '!translate-x-0' : '']"
+        class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transform md:relative md:z-auto md:translate-x-0 flex flex-col flex-shrink-0 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800/50 transition-all duration-300 ease-in-out overflow-hidden"
     >
         {{-- Logo --}}
-        <div class="flex items-center h-16 px-4 border-b border-gray-100 dark:border-slate-800/50 flex-shrink-0" :class="sidebarOpen ? '' : 'justify-center'">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 min-w-0">
+        <div class="flex items-center h-16 px-4 border-b border-gray-100 dark:border-slate-800/50 flex-shrink-0" :class="sidebarOpen ? '' : 'md:justify-center'">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 min-w-0 flex-1 md:flex-none">
                 <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                     <span class="text-white text-sm font-bold leading-none">C</span>
                 </div>
                 <span x-show="sidebarOpen" class="text-gray-900 dark:text-white font-semibold text-base whitespace-nowrap">Clarix</span>
             </a>
+            <button type="button" @click="mobileOpen = false"
+                class="md:hidden p-1.5 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
         {{-- Navigation --}}
@@ -125,7 +138,11 @@
                     x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
                     x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
                     class="mt-0.5 space-y-0.5">
-                    <a href="{{ route('tasks.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">All Tasks</a>
+                    <a href="{{ route('tasks.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors {{ request()->routeIs('tasks.index') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800' }}">All Tasks</a>
+                    <a href="{{ route('tasks.completed') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors {{ request()->routeIs('tasks.completed') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800' }}">Completed Tasks</a>
+                    @if(auth()->user()->isAdmin())
+                    <a href="{{ route('tasks.assigned') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs transition-colors {{ request()->routeIs('tasks.assigned') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800' }}">Assigned Tasks</a>
+                    @endif
                 </div>
             </div>
             @endif
@@ -245,10 +262,18 @@
     <div class="flex flex-col flex-1 overflow-hidden">
 
         {{-- Top navigation bar --}}
-        <header class="flex items-center justify-between h-16 px-6 bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-slate-800/50 flex-shrink-0">
-            <div class="flex items-center gap-4">
+        <header class="flex items-center justify-between h-16 px-4 md:px-6 bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-slate-800/50 flex-shrink-0">
+            <div class="flex items-center gap-3 md:gap-4">
+                {{-- Mobile: open drawer --}}
+                <button @click="mobileOpen = true; sidebarOpen = true"
+                    class="md:hidden p-1.5 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                {{-- Desktop: collapse sidebar --}}
                 <button @click="sidebarOpen = !sidebarOpen"
-                    class="p-1.5 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors">
+                    class="hidden md:block p-1.5 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>

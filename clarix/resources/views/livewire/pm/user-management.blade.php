@@ -8,8 +8,9 @@
                 <span class="font-medium text-gray-700 dark:text-slate-300">{{ $pmUnit?->name ?? '—' }}</span>
             </p>
         </div>
+        {{-- Add PM: desktop only --}}
         <button wire:click="openCreate"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+            class="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -17,20 +18,78 @@
         </button>
     </div>
 
-    {{-- Search --}}
-    <div class="flex items-center gap-3 mb-5">
-        <div class="relative flex-1 max-w-xs">
-            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search by name or email..."
-                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    {{-- Search row: search + Add PM (mobile); search + badge (desktop) --}}
+    <div class="mb-5 space-y-2 md:space-y-0 md:flex md:items-center md:gap-3">
+        <div class="flex items-center gap-2">
+            <div class="relative flex-1 md:max-w-xs">
+                <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search by name or email..."
+                    class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+            {{-- Add PM: mobile only --}}
+            <button wire:click="openCreate"
+                class="inline-flex md:hidden items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add PM
+            </button>
         </div>
-        <span class="text-xs text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-full font-medium">Role: Project Manager only</span>
+        <span class="text-xs text-gray-400 dark:text-slate-500 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-full font-medium self-start md:self-auto">Role: Project Manager only</span>
     </div>
 
-    {{-- Table --}}
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
+    {{-- Mobile: Card layout --}}
+    <div class="block md:hidden">
+        @if($users->count())
+            <div class="space-y-3">
+                @foreach($users as $user)
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
+                        {{-- Card header: avatar + name + email --}}
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center shrink-0">
+                                <span class="text-sm font-semibold text-blue-600">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">{{ $user->name }}</p>
+                                    @if($user->id === auth()->id())
+                                        <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-600 rounded-full">You</span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-400 dark:text-slate-500 truncate">{{ $user->email }}</p>
+                            </div>
+                        </div>
+                        {{-- Key-value rows --}}
+                        <dl class="space-y-1.5 text-sm">
+                            <div class="flex justify-between">
+                                <dt class="text-gray-500 dark:text-slate-400">Unit</dt>
+                                <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '—' }}</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-gray-500 dark:text-slate-400">Joined</dt>
+                                <dd class="text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                @endforeach
+            </div>
+            @if($users->hasPages())
+                <div class="py-2">{{ $users->links() }}</div>
+            @endif
+        @else
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 py-16 text-center">
+                <svg class="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm text-gray-500 dark:text-slate-400">No team members found.</p>
+            </div>
+        @endif
+    </div>
+
+    {{-- Desktop: Table layout --}}
+    <div class="hidden md:block bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
         @if($users->count())
             <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-800/60">
                 <thead class="bg-gray-50 dark:bg-slate-950/60">
@@ -51,7 +110,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">{{ $user->email }}</p>
+                                        <p class="text-xs text-gray-400 dark:text-slate-500">{{ $user->email }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -62,7 +121,7 @@
                                     @if($user->id === auth()->id())
                                         <span class="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">You</span>
                                     @else
-                                        <span class="px-2.5 py-1 text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">—</span>
+                                        <span class="px-2.5 py-1 text-xs text-gray-400 dark:text-slate-500">—</span>
                                     @endif
                                 </div>
                             </td>
@@ -74,8 +133,8 @@
                 <div class="px-5 py-4 border-t border-gray-100 dark:border-slate-800/60">{{ $users->links() }}</div>
             @endif
         @else
-            <div class="py-16 text-center dark:text-slate-400">
-                <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="py-16 text-center">
+                <svg class="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <p class="text-sm text-gray-500 dark:text-slate-400">No team members found.</p>

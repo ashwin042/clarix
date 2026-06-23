@@ -131,6 +131,33 @@
         </div>
     </div>
 
+    {{-- Unit tabs (admin only, shown when there is more than one unit in the current results) --}}
+    @if(auth()->user()->isAdmin() && $tabUnits->count() > 0)
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+        <div class="flex overflow-x-auto gap-1 p-1.5" style="-webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
+            {{-- All Units tab --}}
+            <button wire:click="$set('filterUnit', '')"
+                class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors
+                    {{ $filterUnit === ''
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/60' }}">
+                All Units
+            </button>
+
+            {{-- Per-unit tabs --}}
+            @foreach($tabUnits as $tabUnit)
+                <button wire:click="$set('filterUnit', '{{ $tabUnit->id }}')"
+                    class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors
+                        {{ $filterUnit === (string)$tabUnit->id
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800/60' }}">
+                    {{ $tabUnit->name }}
+                </button>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Grouped view (admin and PM only) --}}
     @if(!auth()->user()->isWriter() && $viewMode === 'grouped')
         @if(!empty($grouped) && $grouped->count())
@@ -155,7 +182,7 @@
                         <thead>
                             <tr class="bg-white dark:bg-slate-900">
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Code</th>
-                                <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task Title</th>
+                                <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Writer</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Type</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
                                 <th class="px-6 py-2.5 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Assigned Supervisor</th>
@@ -167,8 +194,8 @@
                             @foreach($group['tasks'] as $task)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                                     <td class="px-6 py-3 text-xs font-mono text-gray-500 dark:text-slate-400">{{ $task->task_code }}</td>
-                                    <td class="px-6 py-3">
-                                        <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors line-clamp-1">{{ $task->title }}</a>
+                                    <td class="px-6 py-3 text-sm text-gray-800 dark:text-slate-200">
+                                        {{ $task->writers->pluck('name')->join(', ') ?: '—' }}
                                     </td>
                                     <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
                                     <td class="px-6 py-3">
@@ -217,7 +244,7 @@
                     <thead class="bg-gray-50 dark:bg-slate-950/60">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Code</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Task</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Writer</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Unit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">Priority</th>
@@ -230,8 +257,8 @@
                         @foreach($tasks as $task)
                             <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                                 <td class="px-6 py-3 text-xs font-mono text-gray-500 dark:text-slate-400">{{ $task->task_code }}</td>
-                                <td class="px-6 py-3">
-                                    <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 transition-colors">{{ $task->title }}</a>
+                                <td class="px-6 py-3 text-sm text-gray-800 dark:text-slate-200">
+                                    {{ $task->writers->pluck('name')->join(', ') ?: '—' }}
                                 </td>
                                 <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->unit?->name ?? '—' }}</td>
