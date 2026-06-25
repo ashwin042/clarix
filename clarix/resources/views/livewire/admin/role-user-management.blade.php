@@ -49,7 +49,7 @@
                             @if($managedRole === 'pm')
                                 <div class="flex justify-between">
                                     <dt class="text-gray-500 dark:text-slate-400">Unit</dt>
-                                    <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '—' }}</dd>
+                                    <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '-' }}</dd>
                                 </div>
                             @endif
                             <div class="flex justify-between">
@@ -110,7 +110,7 @@
                                 </div>
                             </td>
                             @if($managedRole === 'pm')
-                                <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '—' }}</td>
+                                <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '-' }}</td>
                             @endif
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3 text-right">

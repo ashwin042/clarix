@@ -30,13 +30,12 @@ class AdminStats extends Component
             ->pluck('count', 'status');
 
         $donutData = [
-            'labels' => ['Pending', 'In Progress', 'Submitted', 'Verified', 'Completed'],
+            'labels' => ['Pending', 'In Progress', 'Completed', 'Cancelled'],
             'data'   => [
                 $statusCounts->get('pending', 0),
                 $statusCounts->get('in_progress', 0),
-                $statusCounts->get('submitted', 0),
-                $statusCounts->get('verified', 0),
                 $statusCounts->get('completed', 0),
+                $statusCounts->get('cancelled', 0),
             ],
         ];
 

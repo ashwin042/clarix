@@ -80,7 +80,7 @@
                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td class="px-5 py-3 text-xs font-mono font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
                     <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
-                        {{ $assignment->task->assignedAdmin?->name ?? '—' }}
+                        {{ $assignment->task->assignedAdmin?->name ?? '-' }}
                     </td>
                     <td class="px-5 py-3 whitespace-nowrap">
                         @if($assignment->task->deadline)
@@ -88,7 +88,7 @@
                                 {{ $overdue ? '⚠ ' : '' }}{{ $assignment->task->deadline->format('d M Y') }}
                             </span>
                         @else
-                            <span class="text-xs text-gray-400 dark:text-slate-500">—</span>
+                            <span class="text-xs text-gray-400 dark:text-slate-500">-</span>
                         @endif
                     </td>
                     <td class="px-5 py-3">
@@ -132,13 +132,13 @@
                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td class="px-5 py-3 text-xs font-mono font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap">{{ $assignment->task->task_code }}</td>
                     <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400 whitespace-nowrap">
-                        {{ $assignment->task->assignedAdmin?->name ?? '—' }}
+                        {{ $assignment->task->assignedAdmin?->name ?? '-' }}
                     </td>
                     <td class="px-5 py-3 whitespace-nowrap">
                         @if($assignment->task->deadline)
                             <span class="text-xs text-gray-500 dark:text-slate-400">{{ $assignment->task->deadline->format('d M Y') }}</span>
                         @else
-                            <span class="text-xs text-gray-400 dark:text-slate-500">—</span>
+                            <span class="text-xs text-gray-400 dark:text-slate-500">-</span>
                         @endif
                     </td>
                     <td class="px-5 py-3">

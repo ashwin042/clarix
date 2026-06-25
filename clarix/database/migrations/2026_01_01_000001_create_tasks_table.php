@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('unit_id')->constrained('units')->cascadeOnDelete();
             $table->foreignId('created_by')->constrained('users');
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
-            $table->enum('status', ['pending', 'in_progress', 'submitted', 'verified', 'completed'])->default('pending');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->date('deadline');
             $table->timestamps();
 

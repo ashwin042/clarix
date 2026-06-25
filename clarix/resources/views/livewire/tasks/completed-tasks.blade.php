@@ -56,17 +56,17 @@
                         <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">PM</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->pm?->name ?? '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->pm?->name ?? '-' }}</dd>
                             </div>
                             @if(auth()->user()->isAdmin())
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Supervisor</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->assignedAdmin?->name ?? '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->assignedAdmin?->name ?? '-' }}</dd>
                             </div>
                             @endif
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Completed</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->completed_at?->format('M d, Y') ?? '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->completed_at?->format('M d, Y') ?? '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Credits</dt>
@@ -82,7 +82,7 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <span class="text-sm text-gray-400 dark:text-slate-500">—</span>
+                                        <span class="text-sm text-gray-400 dark:text-slate-500">-</span>
                                     @endif
                                 </dd>
                             </div>
@@ -132,11 +132,11 @@
                             <td class="px-5 py-3">
                                 <a href="{{ route('tasks.show', $task) }}" class="text-sm font-bold font-mono text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors">{{ $task->task_code }}</a>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '-' }}</td>
                             @if(auth()->user()->isAdmin())
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
                             @endif
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->completed_at?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->completed_at?->format('M d, Y') ?? '-' }}</td>
                             <td class="px-5 py-3 text-sm font-medium text-gray-700 dark:text-slate-300">{{ number_format($task->credit_amount, 2) }}</td>
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">
                                 @if($task->assignments->count())
@@ -146,7 +146,7 @@
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="text-gray-400 dark:text-slate-500">—</span>
+                                    <span class="text-gray-400 dark:text-slate-500">-</span>
                                 @endif
                             </td>
                             <td class="px-5 py-3">
@@ -197,7 +197,7 @@
                                         </div>
                                     </div>
                                 @else
-                                    <span class="text-gray-400 dark:text-slate-500 text-sm">—</span>
+                                    <span class="text-gray-400 dark:text-slate-500 text-sm">-</span>
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-right">

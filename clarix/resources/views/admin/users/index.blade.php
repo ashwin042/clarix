@@ -55,7 +55,7 @@
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-sm text-gray-600">{{ $user->unit?->name ?? '—' }}</td>
+                                <td class="px-5 py-3 text-sm text-gray-600">{{ $user->unit?->name ?? '-' }}</td>
                                 <td class="px-5 py-3 text-right">
                                     <div class="flex items-center justify-end gap-3">
                                         <a href="{{ route('admin.users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Edit</a>

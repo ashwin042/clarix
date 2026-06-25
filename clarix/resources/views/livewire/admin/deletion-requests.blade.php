@@ -38,16 +38,16 @@
                             <td class="px-5 py-3">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ $req->user?->name ?? 'Deleted User' }}</p>
-                                    <p class="text-xs text-gray-400">{{ $req->user?->email ?? '—' }}</p>
+                                    <p class="text-xs text-gray-400">{{ $req->user?->email ?? '-' }}</p>
                                 </div>
                             </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium
                                     {{ match($req->user?->role) { 'admin' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300', 'pm' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300', default => 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300' } }}">
-                                    {{ ucfirst($req->user?->role ?? '—') }}
+                                    {{ ucfirst($req->user?->role ?? '-') }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300 max-w-xs truncate">{{ $req->reason ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300 max-w-xs truncate">{{ $req->reason ?? '-' }}</td>
                             <td class="px-5 py-3">
                                 @php
                                     $sc = match($req->status) {
@@ -64,7 +64,7 @@
                                     {{ $req->processor->name }}
                                     <p class="text-xs text-gray-400">{{ $req->processed_at->format('M d, Y') }}</p>
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-right">

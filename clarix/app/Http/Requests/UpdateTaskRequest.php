@@ -31,7 +31,7 @@ class UpdateTaskRequest extends FormRequest
             'unit_id'     => ['required', 'exists:units,id'],
             'priority'    => ['required', Rule::in(['low', 'medium', 'high'])],
             'deadline'    => ['required', 'date'],
-            'status'      => ['sometimes', Rule::in(['pending', 'in_progress', 'submitted', 'verified', 'completed'])],
+            'status'      => ['sometimes', Rule::in(['pending', 'in_progress', 'completed', 'cancelled'])],
         ];
     }
 }

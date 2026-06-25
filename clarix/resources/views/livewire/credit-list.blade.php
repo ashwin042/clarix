@@ -195,9 +195,9 @@
                                 <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                                     <td class="px-6 py-3 text-xs font-mono text-gray-500 dark:text-slate-400">{{ $task->task_code }}</td>
                                     <td class="px-6 py-3 text-sm text-gray-800 dark:text-slate-200">
-                                        {{ $task->writers->pluck('name')->join(', ') ?: '—' }}
+                                        {{ $task->writers->pluck('name')->join(', ') ?: '-' }}
                                     </td>
-                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '-' }}</td>
                                     <td class="px-6 py-3">
                                         @php
                                             $pBadge = ['low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'medium' => 'bg-blue-100 text-blue-700', 'high' => 'bg-amber-100 text-amber-700', 'urgent' => 'bg-rose-100 text-rose-700'];
@@ -206,10 +206,10 @@
                                             {{ ucfirst($task->priority) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
                                     <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-3 text-sm font-semibold text-indigo-600 text-right pr-6">
-                                        {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '—' }}
+                                        {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '-' }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -258,20 +258,20 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
                                 <td class="px-6 py-3 text-xs font-mono text-gray-500 dark:text-slate-400">{{ $task->task_code }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-800 dark:text-slate-200">
-                                    {{ $task->writers->pluck('name')->join(', ') ?: '—' }}
+                                    {{ $task->writers->pluck('name')->join(', ') ?: '-' }}
                                 </td>
-                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</td>
-                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->unit?->name ?? '—' }}</td>
+                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->task_type ? ucfirst($task->task_type) : '-' }}</td>
+                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->unit?->name ?? '-' }}</td>
                                 <td class="px-6 py-3">
                                     @php $pBadge = ['low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'medium' => 'bg-blue-100 text-blue-700', 'high' => 'bg-amber-100 text-amber-700', 'urgent' => 'bg-rose-100 text-rose-700']; @endphp
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $pBadge[$task->priority] ?? 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' }}">
                                         {{ ucfirst($task->priority) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>
+                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
                                 <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->updated_at->format('d M Y') }}</td>
                                 <td class="px-6 py-3 text-sm font-semibold text-indigo-600 text-right pr-6">
-                                    {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '—' }}
+                                    {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '-' }}
                                 </td>
                             </tr>
                         @endforeach

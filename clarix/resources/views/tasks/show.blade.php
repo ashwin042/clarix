@@ -71,9 +71,9 @@
                                 $statusClass = match($task->status) {
                                     'pending'     => 'bg-gray-100 text-gray-600',
                                     'in_progress' => 'bg-blue-100 text-blue-700',
-                                    'submitted'   => 'bg-purple-100 text-purple-700',
-                                    'verified'    => 'bg-teal-100 text-teal-700',
                                     'completed'   => 'bg-green-100 text-green-700',
+                                    'cancelled'   => 'bg-rose-100 text-rose-700',
+                                    default       => 'bg-gray-100 text-gray-600',
                                 };
                             @endphp
                             <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $statusClass }}">

@@ -90,9 +90,8 @@
                     $sc = match($task->status) {
                         'pending'     => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                         'in_progress' => 'bg-blue-100 text-blue-700',
-                        'submitted'   => 'bg-purple-100 text-purple-700',
-                        'verified'    => 'bg-teal-100 text-teal-700',
                         'completed'   => 'bg-green-100 text-green-700',
+                        'cancelled'   => 'bg-rose-100 text-rose-700',
                         default       => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                     };
                 @endphp
@@ -129,7 +128,7 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{{ $file->original_name }}</p>
-                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">{{ $file->task?->task_code ?? '—' }} · {{ $file->file_size_formatted }} · {{ $file->created_at->diffForHumans() }}</p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400">{{ $file->task?->task_code ?? '-' }} · {{ $file->file_size_formatted }} · {{ $file->created_at->diffForHumans() }}</p>
                     </div>
                 </div>
                 @empty
@@ -158,8 +157,8 @@
                     labels: @json($donutData['labels']),
                     datasets: [{
                         data: @json($donutData['data']),
-                        backgroundColor: ['#e2e8f0','#bfdbfe','#c7d2fe','#99f6e4','#bbf7d0'],
-                        borderColor:     ['#cbd5e1','#93c5fd','#a5b4fc','#5eead4','#86efac'],
+                        backgroundColor: ['#e2e8f0','#bfdbfe','#bbf7d0','#fecaca'],
+                        borderColor:     ['#cbd5e1','#93c5fd','#86efac','#fca5a5'],
                         borderWidth: 1.5, hoverOffset: 4,
                     }]
                 },

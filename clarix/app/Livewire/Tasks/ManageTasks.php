@@ -124,7 +124,7 @@ class ManageTasks extends Component
                 },
             ],
             'priority'      => 'required|in:low,medium,high',
-            'status'        => 'required|in:pending,in_progress,submitted,verified,completed',
+            'status'        => 'required|in:pending,in_progress,completed,cancelled',
             'deadline'      => 'required|date',
             'credit_amount' => 'required|numeric|min:0',
             'task_type'          => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',

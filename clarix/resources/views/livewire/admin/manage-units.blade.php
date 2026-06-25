@@ -56,6 +56,12 @@
                     </dl>
                     {{-- Action buttons --}}
                     <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-800/60">
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('units.show', $unit) }}"
+                                class="flex-1 text-center py-2 text-sm font-medium text-gray-600 dark:text-slate-400 bg-gray-50 hover:bg-gray-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                View
+                            </a>
+                        @endif
                         <button wire:click="openEdit({{ $unit->id }})"
                             class="flex-1 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/70 rounded-lg transition-colors">
                             Edit
@@ -100,6 +106,10 @@
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $unit->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    @if(auth()->user()->isAdmin())
+                                        <a href="{{ route('units.show', $unit) }}"
+                                            class="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors">View</a>
+                                    @endif
                                     <button wire:click="openEdit({{ $unit->id }})"
                                         class="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
                                     <button wire:click="openDeleteModal({{ $unit->id }}, '{{ $unit->name }}')"

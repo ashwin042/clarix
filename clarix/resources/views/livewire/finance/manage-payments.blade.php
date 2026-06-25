@@ -79,8 +79,8 @@
                                 <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->payer_name }}</span>
                             </td>
                             <td class="px-5 py-3 text-sm font-semibold text-green-600 dark:text-green-400">Rs {{ number_format($payment->amount, 2) }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300">Rs {{ number_format($payment->total_credit, 2) }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300">{{ $payment->unit?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300">{{ number_format($payment->total_credit, 2) }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300">{{ $payment->unit?->name ?? '-' }}</td>
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-300">
                                 {{ $payment->from_date->format('M d') }} – {{ $payment->to_date->format('M d, Y') }}
                             </td>

@@ -36,7 +36,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
-                        <input type="text" value="{{ auth()->user()->unit?->name ?? '—' }}" disabled
+                        <input type="text" value="{{ auth()->user()->unit?->name ?? '-' }}" disabled
                             class="w-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                     </div>
                 </div>

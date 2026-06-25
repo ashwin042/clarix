@@ -66,9 +66,8 @@
                         <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="pending" {{ old('status', 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                            <option value="submitted" {{ old('status') === 'submitted' ? 'selected' : '' }}>Submitted</option>
-                            <option value="verified" {{ old('status') === 'verified' ? 'selected' : '' }}>Verified</option>
                             <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select>
                     </div>
 

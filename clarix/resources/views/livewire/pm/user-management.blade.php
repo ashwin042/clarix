@@ -5,7 +5,7 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">My Team</h1>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
                 Project managers in
-                <span class="font-medium text-gray-700 dark:text-slate-300">{{ $pmUnit?->name ?? '—' }}</span>
+                <span class="font-medium text-gray-700 dark:text-slate-300">{{ $pmUnit?->name ?? '-' }}</span>
             </p>
         </div>
         {{-- Add PM: desktop only --}}
@@ -65,7 +65,7 @@
                         <dl class="space-y-1.5 text-sm">
                             <div class="flex justify-between">
                                 <dt class="text-gray-500 dark:text-slate-400">Unit</dt>
-                                <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '—' }}</dd>
+                                <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '-' }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-gray-500 dark:text-slate-400">Joined</dt>
@@ -114,14 +114,14 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '-' }}</td>
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     @if($user->id === auth()->id())
                                         <span class="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-full">You</span>
                                     @else
-                                        <span class="px-2.5 py-1 text-xs text-gray-400 dark:text-slate-500">—</span>
+                                        <span class="px-2.5 py-1 text-xs text-gray-400 dark:text-slate-500">-</span>
                                     @endif
                                 </div>
                             </td>
@@ -181,7 +181,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
                     <div class="relative">
-                        <input type="text" value="{{ $pmUnit?->name ?? '—' }}" disabled
+                        <input type="text" value="{{ $pmUnit?->name ?? '-' }}" disabled
                             class="w-full border border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                         <span class="absolute right-3 top-1/2 -translate-y-1/2">
                             <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

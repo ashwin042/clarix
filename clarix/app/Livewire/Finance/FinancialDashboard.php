@@ -5,11 +5,15 @@ namespace App\Livewire\Finance;
 use App\Models\Payment;
 use App\Models\Task;
 use App\Models\Unit;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class FinancialDashboard extends Component
 {
+    use WithPagination;
+
     public string $filterUnit = '';
     public string $dateFrom = '';
     public string $dateTo = '';
@@ -20,88 +24,135 @@ class FinancialDashboard extends Component
         $this->dateTo = now()->format('Y-m-d');
     }
 
+    public function updatingFilterUnit(): void { $this->resetPage(); }
+    public function updatingDateFrom(): void { $this->resetPage(); }
+    public function updatingDateTo(): void { $this->resetPage(); }
+
+    /**
+     * Recorded payments matching the active unit + date-range filters.
+     * A payment is included only when its covered period falls within the range.
+     */
+    private function paymentQuery(): Builder
+    {
+        return Payment::query()
+            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('from_date', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('to_date', '<=', $this->dateTo));
+    }
+
+    /**
+     * Completed tasks (credits earned) matching the active unit + date-range filters.
+     */
+    private function creditQuery(): Builder
+    {
+        return Task::query()
+            ->where('status', 'completed')
+            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('completed_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('completed_at', '<=', $this->dateTo));
+    }
+
     public function render()
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $paymentQuery = Payment::query()
-            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->when($this->dateFrom, fn ($q) => $q->where('from_date', '>=', $this->dateFrom))
-            ->when($this->dateTo, fn ($q) => $q->where('to_date', '<=', $this->dateTo));
+        // ── Stat cards ──────────────────────────────────────────────────────────
+        // Revenue comes only from recorded payments; credits from completed tasks.
+        $totalRevenue = (float) $this->paymentQuery()->sum('amount');
+        $totalCredits = (float) $this->creditQuery()->sum('credit_amount');
+        // Net profit tracks recorded revenue.
+        $netProfit    = $totalRevenue;
 
-        $creditQuery = Task::query()
-            ->where('status', 'completed')
-            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->when($this->dateFrom, fn ($q) => $q->where('updated_at', '>=', $this->dateFrom))
-            ->when($this->dateTo, fn ($q) => $q->where('updated_at', '<=', $this->dateTo));
+        // ── Month buckets spanning the selected range (capped to last 24) ────────
+        $start = $this->dateFrom
+            ? \Carbon\Carbon::parse($this->dateFrom)->startOfMonth()
+            : now()->subMonths(5)->startOfMonth();
+        $end = $this->dateTo
+            ? \Carbon\Carbon::parse($this->dateTo)->startOfMonth()
+            : now()->startOfMonth();
 
-        $totalRevenue = (clone $paymentQuery)->sum('amount');
-        $totalCredits = (clone $creditQuery)->sum('credit_amount');
-        $totalCreditCovered = (clone $paymentQuery)->sum('total_credit');
-        $netProfit = $totalRevenue - $totalCredits;
-        $pendingCredit = $totalCredits - $totalCreditCovered;
-
-        // Monthly revenue vs credits (last 6 months)
         $months = collect();
-        for ($i = 5; $i >= 0; $i--) {
-            $months->push(now()->subMonths($i)->format('Y-m'));
+        $cursor = $start->copy();
+        while ($cursor->lessThanOrEqualTo($end)) {
+            $months->push($cursor->format('Y-m'));
+            $cursor->addMonth();
+        }
+        if ($months->count() > 24) {
+            $months = $months->slice(-24)->values();
         }
 
-        $monthlyRevenue = Payment::query()
-            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(amount) as total'))
-            ->whereIn(DB::raw("DATE_FORMAT(created_at, '%Y-%m')"), $months)
+        // ── Revenue vs Credits over time ─────────────────────────────────────────
+        $monthlyRevenue = $this->paymentQuery()
+            ->select(DB::raw("DATE_FORMAT(from_date, '%Y-%m') as month"), DB::raw('SUM(amount) as total'))
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        $monthlyCredits = Task::where('status', 'completed')
-            ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->select(DB::raw("DATE_FORMAT(updated_at, '%Y-%m') as month"), DB::raw('SUM(credit_amount) as total'))
-            ->whereIn(DB::raw("DATE_FORMAT(updated_at, '%Y-%m')"), $months)
+        $monthlyCredits = $this->creditQuery()
+            ->select(DB::raw("DATE_FORMAT(completed_at, '%Y-%m') as month"), DB::raw('SUM(credit_amount) as total'))
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        $revenueData = $months->map(fn ($m) => (float) ($monthlyRevenue[$m] ?? 0))->values();
-        $creditData = $months->map(fn ($m) => (float) ($monthlyCredits[$m] ?? 0))->values();
-        $monthLabels = $months->map(fn ($m) => \Carbon\Carbon::parse($m . '-01')->format('M Y'))->values();
+        $monthLabels = $months->map(fn ($m) => \Carbon\Carbon::parse($m . '-01')->format('M Y'))->values()->all();
+        $revenueData = $months->map(fn ($m) => (float) ($monthlyRevenue[$m] ?? 0))->values()->all();
+        $creditData  = $months->map(fn ($m) => (float) ($monthlyCredits[$m] ?? 0))->values()->all();
 
-        // Unit profitability
+        // ── Unit profitability: revenue received vs credits owed per unit ────────
         $units = Unit::orderBy('name')->get();
-        $unitRevenue = Payment::whereNotNull('unit_id')
+        $unitsForChart = $this->filterUnit
+            ? $units->where('id', (int) $this->filterUnit)->values()
+            : $units;
+
+        $unitRevenue = $this->paymentQuery()
+            ->whereNotNull('unit_id')
             ->select('unit_id', DB::raw('SUM(amount) as total'))
             ->groupBy('unit_id')
             ->pluck('total', 'unit_id');
 
-        $unitCredits = Task::where('status', 'completed')
+        $unitCredits = $this->creditQuery()
             ->select('unit_id', DB::raw('SUM(credit_amount) as total'))
             ->groupBy('unit_id')
             ->pluck('total', 'unit_id');
 
-        $unitLabels = $units->pluck('name')->values();
-        $unitRevenueData = $units->map(fn ($u) => (float) ($unitRevenue[$u->id] ?? 0))->values();
-        $unitCreditData = $units->map(fn ($u) => (float) ($unitCredits[$u->id] ?? 0))->values();
-        $unitProfitData = $units->map(fn ($u) => (float) (($unitRevenue[$u->id] ?? 0) - ($unitCredits[$u->id] ?? 0)))->values();
+        $unitLabels      = $unitsForChart->pluck('name')->values()->all();
+        $unitRevenueData = $unitsForChart->map(fn ($u) => (float) ($unitRevenue[$u->id] ?? 0))->values()->all();
+        $unitCreditData  = $unitsForChart->map(fn ($u) => (float) ($unitCredits[$u->id] ?? 0))->values()->all();
 
-        // Recent payments
-        $recentPayments = Payment::with(['unit', 'creator'])
+        // ── Top paying unit (hidden when a single unit is already filtered) ──────
+        $topPayingUnit = null;
+        if (! $this->filterUnit && $unitRevenue->isNotEmpty()) {
+            $topUnitId = $unitRevenue->sortDesc()->keys()->first();
+            $topPayingUnit = [
+                'name'  => $units->firstWhere('id', $topUnitId)?->name ?? 'Unknown',
+                'total' => (float) $unitRevenue->get($topUnitId),
+            ];
+        }
+
+        $chartData = [
+            'monthLabels'     => $monthLabels,
+            'revenueData'     => $revenueData,
+            'creditData'      => $creditData,
+            'unitLabels'      => $unitLabels,
+            'unitRevenueData' => $unitRevenueData,
+            'unitCreditData'  => $unitCreditData,
+        ];
+
+        // Push fresh chart data to the browser so Chart.js redraws on every filter change.
+        $this->dispatch('finance-charts-updated', data: $chartData);
+
+        // ── Payment history (respects filters, most recent first, paginated) ─────
+        $payments = $this->paymentQuery()
+            ->with('unit')
             ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
+            ->paginate(10);
 
         return view('livewire.finance.financial-dashboard', [
-            'totalRevenue' => $totalRevenue,
-            'totalCredits' => $totalCredits,
-            'netProfit' => $netProfit,
-            'pendingCredit' => $pendingCredit,
-            'monthLabels' => $monthLabels,
-            'revenueData' => $revenueData,
-            'creditData' => $creditData,
-            'unitLabels' => $unitLabels,
-            'unitRevenueData' => $unitRevenueData,
-            'unitCreditData' => $unitCreditData,
-            'unitProfitData' => $unitProfitData,
-            'recentPayments' => $recentPayments,
-            'units' => $units,
+            'totalRevenue'  => $totalRevenue,
+            'totalCredits'  => $totalCredits,
+            'netProfit'     => $netProfit,
+            'topPayingUnit' => $topPayingUnit,
+            'chartData'     => $chartData,
+            'payments'      => $payments,
+            'units'         => $units,
         ])->layout('layouts.app', ['pageTitle' => 'Financial Dashboard']);
     }
 }

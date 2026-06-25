@@ -72,7 +72,7 @@
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-500 dark:text-slate-400">Unit</dt>
-                            <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '—' }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-slate-100">{{ $user->unit?->name ?? '-' }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-500 dark:text-slate-400">Joined</dt>
@@ -133,7 +133,7 @@
                                 @endphp
                                 <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $roleClass }}">{{ ucfirst($user->role) }}</span>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $user->unit?->name ?? '-' }}</td>
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
@@ -207,7 +207,7 @@
                             </select>
                             @error('unit_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         @else
-                            <input type="text" value="—" disabled
+                            <input type="text" value="-" disabled
                                 class="w-full border border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-400 dark:text-slate-500 cursor-not-allowed">
                         @endif
                     </div>
@@ -228,7 +228,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
                         <div class="relative">
-                            <input type="text" value="{{ $pmUnit?->name ?? '—' }}" disabled
+                            <input type="text" value="{{ $pmUnit?->name ?? '-' }}" disabled
                                 class="w-full border border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2">
                                 <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>

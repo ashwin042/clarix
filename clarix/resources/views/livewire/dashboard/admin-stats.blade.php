@@ -93,9 +93,8 @@
                 $sc = match($task->status) {
                     'pending'     => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                     'in_progress' => 'bg-blue-100 text-blue-700',
-                    'submitted'   => 'bg-purple-100 text-purple-700',
-                    'verified'    => 'bg-teal-100 text-teal-700',
                     'completed'   => 'bg-green-100 text-green-700',
+                    'cancelled'   => 'bg-rose-100 text-rose-700',
                     default       => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                 };
             @endphp
@@ -106,7 +105,7 @@
                     </div>
                     <div class="min-w-0">
                         <a href="{{ route('tasks.show', $task) }}" class="text-sm font-medium text-gray-800 dark:text-slate-200 hover:text-indigo-600 truncate block transition-colors">{{ $task->title }}</a>
-                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400 font-mono">{{ $task->task_code }} · {{ $task->unit?->name ?? '—' }}</p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 dark:text-slate-400 font-mono">{{ $task->task_code }} · {{ $task->unit?->name ?? '-' }}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3 ml-3 flex-shrink-0">
@@ -131,7 +130,7 @@
                     <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm text-gray-700 dark:text-slate-300">Writer assigned to <span class="font-medium text-gray-900 dark:text-slate-100">{{ Str::limit($assignment->task?->title ?? '—', 32) }}</span></p>
+                    <p class="text-sm text-gray-700 dark:text-slate-300">Writer assigned to <span class="font-medium text-gray-900 dark:text-slate-100">{{ Str::limit($assignment->task?->title ?? '-', 32) }}</span></p>
                     <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{{ $assignment->created_at->diffForHumans() }}</p>
                 </div>
             </div>
@@ -143,7 +142,7 @@
                     <svg class="w-3.5 h-3.5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm text-gray-700 dark:text-slate-300">File uploaded to <span class="font-medium text-gray-900 dark:text-slate-100">{{ Str::limit($file->task?->title ?? '—', 32) }}</span></p>
+                    <p class="text-sm text-gray-700 dark:text-slate-300">File uploaded to <span class="font-medium text-gray-900 dark:text-slate-100">{{ Str::limit($file->task?->title ?? '-', 32) }}</span></p>
                     <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{{ $file->created_at->diffForHumans() }}</p>
                 </div>
             </div>
@@ -177,8 +176,8 @@
                     labels: @json($donutData['labels']),
                     datasets: [{
                         data: @json($donutData['data']),
-                        backgroundColor: ['#e2e8f0','#bfdbfe','#c7d2fe','#99f6e4','#bbf7d0'],
-                        borderColor:     ['#cbd5e1','#93c5fd','#a5b4fc','#5eead4','#86efac'],
+                        backgroundColor: ['#e2e8f0','#bfdbfe','#bbf7d0','#fecaca'],
+                        borderColor:     ['#cbd5e1','#93c5fd','#86efac','#fca5a5'],
                         borderWidth: 1.5,
                         hoverOffset: 4,
                     }]

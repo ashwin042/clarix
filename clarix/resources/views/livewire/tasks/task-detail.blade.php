@@ -12,7 +12,7 @@
                 <span class="text-sm text-gray-500 dark:text-slate-400">{{ $task->unit->name }}</span>
                 <span class="text-gray-300">·</span>
                 @php
-                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'submitted' => 'bg-purple-100 text-purple-700', 'verified' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700' };
+                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
                     $pc = match($task->priority) { 'high' => 'bg-red-100 text-red-700', 'medium' => 'bg-yellow-100 text-yellow-700', 'low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                 @endphp
                 <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sc }}">{{ str_replace('_', ' ', ucfirst($task->status)) }}</span>
@@ -30,9 +30,8 @@
                 class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="pending" {{ $task->status === 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="submitted" {{ $task->status === 'submitted' ? 'selected' : '' }}>Submitted</option>
-                <option value="verified" {{ $task->status === 'verified' ? 'selected' : '' }}>Verified</option>
                 <option value="completed" {{ $task->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                <option value="cancelled" {{ $task->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
         </div>
         @endif
@@ -49,11 +48,11 @@
                 <dl class="grid grid-cols-3 gap-4">
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Responsible PM</dt>
-                        <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->pm?->name ?? '—' }}</dd>
+                        <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->pm?->name ?? '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Assigned Supervisor</dt>
-                        <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->assignedAdmin?->name ?? '—' }}</dd>
+                        <dd class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $task->assignedAdmin?->name ?? '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Created by</dt>
@@ -61,7 +60,7 @@
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Task Type</dt>
-                        <dd class="text-sm text-gray-700 dark:text-slate-300">{{ $task->task_type ? ucfirst($task->task_type) : '—' }}</dd>
+                        <dd class="text-sm text-gray-700 dark:text-slate-300">{{ $task->task_type ? ucfirst($task->task_type) : '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs text-gray-400 dark:text-slate-500 mb-1">Credit Amount</dt>

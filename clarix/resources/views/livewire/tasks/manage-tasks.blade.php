@@ -25,8 +25,8 @@
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
-            <option value="submitted">Submitted</option>
-            <option value="verified">Verified</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
         </select>
         <select wire:model.live="filterPriority" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All priorities</option>
@@ -62,7 +62,7 @@
             <div class="md:hidden divide-y divide-gray-100 dark:divide-slate-800/60">
                 @foreach($tasks as $task)
                     @php
-                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'submitted' => 'bg-purple-100 text-purple-700', 'verified' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700' };
+                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
                     @endphp
                     <div class="p-4 space-y-3">
                         <div class="flex items-start justify-between gap-3">
@@ -73,12 +73,12 @@
                         <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">PM</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->pm?->name ?? '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->pm?->name ?? '-' }}</dd>
                             </div>
                             @if(auth()->user()->isAdmin())
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Supervisor</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->assignedAdmin?->name ?? '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->assignedAdmin?->name ?? '-' }}</dd>
                             </div>
                             @endif
                             <div>
@@ -91,7 +91,7 @@
                             </div>
                             <div>
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Files</dt>
-                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->files->count() ?: '—' }}</dd>
+                                <dd class="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{{ $task->files->count() ?: '-' }}</dd>
                             </div>
                             <div class="col-span-2">
                                 <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">Writers</dt>
@@ -103,7 +103,7 @@
                                             @endforeach
                                         </div>
                                     @elseif(auth()->user()->isAdmin())
-                                        <span class="text-sm text-gray-400 dark:text-slate-500">—</span>
+                                        <span class="text-sm text-gray-400 dark:text-slate-500">-</span>
                                     @else
                                         <span class="text-sm text-gray-500 dark:text-slate-400">{{ $task->assignments->count() }}</span>
                                     @endif
@@ -164,13 +164,13 @@
                             <td class="px-5 py-3">
                                 <a href="{{ route('tasks.show', $task) }}" class="text-sm font-bold font-mono text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors">{{ $task->task_code }}</a>
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '-' }}</td>
                             @if(auth()->user()->isAdmin())
-                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
                             @endif
                             <td class="px-5 py-3">
                                 @php
-                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'submitted' => 'bg-purple-100 text-purple-700', 'verified' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700' };
+                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
                                 @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $sc }}">{{ str_replace('_', ' ', ucfirst($task->status)) }}</span>
                             </td>
@@ -186,7 +186,7 @@
                                         @endforeach
                                     </div>
                                 @elseif(auth()->user()->isAdmin())
-                                    <span class="text-gray-400 dark:text-slate-500">—</span>
+                                    <span class="text-gray-400 dark:text-slate-500">-</span>
                                 @else
                                     {{ $task->assignments->count() }}
                                 @endif
@@ -266,7 +266,7 @@
                                         </svg>
                                     </button>
                                     @else
-                                    <span class="text-gray-400 dark:text-slate-500 text-sm">—</span>
+                                    <span class="text-gray-400 dark:text-slate-500 text-sm">-</span>
                                     @endcan
                                 @endif
                             </td>
@@ -331,7 +331,7 @@
                             @endforeach
                         </select>
                     @else
-                        <input type="text" value="{{ $units->first()?->name ?? '—' }}" disabled
+                        <input type="text" value="{{ $units->first()?->name ?? '-' }}" disabled
                             class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                     @endif
                     @error('unit_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -423,9 +423,8 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="verified">Verified</option>
                             <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
                     @else
                         <input type="text" value="Pending" disabled

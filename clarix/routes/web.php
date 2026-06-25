@@ -18,6 +18,7 @@ use App\Livewire\Admin\AuthorizationPanel;
 use App\Livewire\Admin\ManageUnits;
 use App\Livewire\Admin\ManageUsers;
 use App\Livewire\Admin\RoleUserManagement;
+use App\Livewire\Admin\UnitAnalytics;
 use App\Livewire\CreditList;
 use App\Livewire\PM\UserManagement as PMUserManagement;
 use App\Livewire\Tasks\AssignedTasks;
@@ -46,6 +47,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tasks/{task}', TaskDetail::class)->name('tasks.show');
     Route::get('/credits', CreditList::class)->name('credits.index');
     Route::get('/credits/export', CreditExportController::class)->name('credits.export');
+
+    // Unit analytics (admin only)
+    Route::middleware(['role:admin'])->get('/units/{unit}', UnitAnalytics::class)->name('units.show');
 
     // Issues
     Route::get('/issues', IssueList::class)->name('issues.index');
