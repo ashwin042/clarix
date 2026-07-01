@@ -107,17 +107,20 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
                         <p class="text-sm text-gray-500 dark:text-slate-400">Click to browse or drag & drop</p>
-                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Any file type · max 10 MB each</p>
+                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Any file type · max 50 MB each</p>
                         <input type="file" wire:model="uploads" multiple class="hidden">
                     </label>
 
-                    {{-- Upload progress --}}
-                    <div wire:loading wire:target="uploads" class="mt-2 flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
-                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                        </svg>
-                        Uploading…
+                    {{-- Upload progress (indeterminate) --}}
+                    <div wire:loading wire:target="uploads" class="mt-2 space-y-1.5">
+                        <div class="upload-progress-track"></div>
+                        <p class="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400">
+                            <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                            </svg>
+                            Uploading your files…
+                        </p>
                     </div>
 
                     {{-- Queued file list --}}

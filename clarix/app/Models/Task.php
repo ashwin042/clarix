@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class Task extends Model
 {
@@ -79,6 +81,44 @@ class Task extends Model
     public function completedFiles(): HasMany
     {
         return $this->hasMany(TaskFile::class)->completed();
+    }
+
+    /**
+     * Delete the task along with every attached file. Each file (regular and
+     * completed) is removed from R2 first, then the file records, then the
+     * task itself. A failed R2 delete is logged but does not stop the rest of
+     * the cleanup, so nothing gets stuck.
+     */
+    public function deleteWithFiles(): void
+    {
+        foreach ($this->files as $file) {
+            $this->deleteFileFromR2($file->file_path);
+        }
+
+        $this->files()->delete();
+        $this->delete();
+    }
+
+    /**
+     * Delete a single stored object from R2, logging (but swallowing) any
+     * failure so callers can continue their cleanup.
+     */
+    public function deleteFileFromR2(string $filePath): void
+    {
+        try {
+            // The r2 disk is configured with 'throw' => false, so a failed
+            // delete returns false rather than raising an exception.
+            if (! Storage::disk('r2')->delete($filePath)) {
+                Log::error('R2 storage reported failure deleting file.', [
+                    'file_path' => $filePath,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to delete file from R2 storage.', [
+                'file_path' => $filePath,
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function notes(): HasMany

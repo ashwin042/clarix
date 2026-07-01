@@ -242,7 +242,7 @@
                                     Upload
                                 </button>
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">Max 10MB per file</p>
+                            <p class="text-xs text-gray-400 mt-1">Max 50MB per file</p>
                         </form>
                     @endcan
                 </div>

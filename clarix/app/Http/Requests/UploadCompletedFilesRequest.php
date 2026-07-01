@@ -15,7 +15,7 @@ class UploadCompletedFilesRequest extends FormRequest
     {
         return [
             'files'   => ['required', 'array', 'min:1'],
-            'files.*' => ['file', 'max:10240'],
+            'files.*' => ['file', 'max:51200'],
         ];
     }
 }

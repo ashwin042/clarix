@@ -72,7 +72,7 @@ class TaskController extends Controller
     {
         $this->authorize('delete', $task);
 
-        $task->delete();
+        $task->deleteWithFiles();
 
         return redirect()->route('tasks.index')->with('success', 'Task deleted.');
     }

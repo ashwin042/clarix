@@ -8,6 +8,7 @@ use App\Models\TaskNote;
 use App\Models\User;
 use App\Notifications\TaskStatusUpdatedNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
@@ -108,8 +109,9 @@ class TaskDetail extends Component
     public function deleteFile(int $fileId): void
     {
         $file = $this->task->regularFiles()->findOrFail($fileId);
-        Storage::disk('r2')->delete($file->file_path);
+        $filePath = $file->file_path;
         $file->delete();
+        $this->deleteFromR2($filePath);
         $this->task->refresh();
         $this->dispatch('notify', message: 'File deleted.', type: 'success');
     }
@@ -119,10 +121,34 @@ class TaskDetail extends Component
         Gate::authorize('uploadCompletedFile', $this->task);
 
         $file = $this->task->completedFiles()->findOrFail($fileId);
-        Storage::disk('r2')->delete($file->file_path);
+        $filePath = $file->file_path;
         $file->delete();
+        $this->deleteFromR2($filePath);
         $this->task->refresh();
         $this->dispatch('notify', message: 'File deleted.', type: 'success');
+    }
+
+    /**
+     * Delete a stored object from R2. The database record has already been
+     * removed by the caller, so a failure here is logged but not surfaced —
+     * the UI stays clean even if the storage delete fails.
+     */
+    protected function deleteFromR2(string $filePath): void
+    {
+        try {
+            // The r2 disk is configured with 'throw' => false, so a failed
+            // delete returns false rather than raising an exception.
+            if (! Storage::disk('r2')->delete($filePath)) {
+                Log::error('R2 storage reported failure deleting file.', [
+                    'file_path' => $filePath,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to delete file from R2 storage.', [
+                'file_path' => $filePath,
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 
     // ── Notes ─────────────────────────────────────────────────────────────────
@@ -181,7 +207,7 @@ class TaskDetail extends Component
 
         $availableWriters = $user->isAdmin()
             ? User::where('role', 'writer')->whereNotIn('id', $assignedIds)->orderBy('name')
-                ->withCount(['taskAssignments as active_tasks' => fn ($q) => $q->whereNotIn('status', ['ready_for_review'])])
+                ->withCount(['taskAssignments as active_tasks' => fn ($q) => $q->whereHas('task', fn ($t) => $t->whereIn('status', ['pending', 'in_progress']))])
                 ->get()
             : collect();
 

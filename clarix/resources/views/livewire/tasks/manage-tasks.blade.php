@@ -470,6 +470,7 @@
             show: false,
             uploadUrl: '',
             dragging: false,
+            uploading: false,
             fileObjects: [],
             formatSize(bytes) {
                 if (bytes < 1024) return bytes + ' B';
@@ -501,7 +502,7 @@
                 if (e.dataTransfer?.files.length) this.addFiles(e.dataTransfer.files);
             }
         }"
-        x-on:open-upload-modal.window="uploadUrl = $event.detail.uploadUrl; fileObjects = []; show = true"
+        x-on:open-upload-modal.window="uploadUrl = $event.detail.uploadUrl; fileObjects = []; uploading = false; show = true"
         x-on:keydown.escape.window="show = false; reset()"
         x-show="show"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -517,10 +518,11 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <form :action="uploadUrl" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+            <form :action="uploadUrl" method="POST" enctype="multipart/form-data" class="p-6 space-y-4"
+                @submit="if (uploadUrl && fileObjects.length) uploading = true">
                 @csrf
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Files <span class="text-gray-400 dark:text-slate-500 font-normal">(max 10 MB each)</span></label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Files <span class="text-gray-400 dark:text-slate-500 font-normal">(max 50 MB each)</span></label>
                     <div
                         class="relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
                         :class="dragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 hover:border-indigo-300 hover:bg-gray-50 dark:bg-slate-950/50'"
@@ -561,14 +563,29 @@
                         </ul>
                     </template>
                 </div>
+                {{-- Upload progress (indeterminate) --}}
+                <div x-show="uploading" x-cloak class="space-y-1.5">
+                    <div class="upload-progress-track"></div>
+                    <p class="text-xs text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                        <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        Uploading your files…
+                    </p>
+                </div>
                 <div class="flex gap-3">
                     <button type="submit"
-                        :disabled="!uploadUrl || fileObjects.length === 0"
-                        class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Upload
+                        :disabled="!uploadUrl || fileObjects.length === 0 || uploading"
+                        class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        <svg x-show="uploading" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span x-text="uploading ? 'Uploading…' : 'Upload'">Upload</span>
                     </button>
-                    <button type="button" @click="show = false; reset()"
-                        class="flex-1 py-2.5 border border-gray-300 text-gray-700 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <button type="button" :disabled="uploading" @click="show = false; reset()"
+                        class="flex-1 py-2.5 border border-gray-300 text-gray-700 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                         Cancel
                     </button>
                 </div>

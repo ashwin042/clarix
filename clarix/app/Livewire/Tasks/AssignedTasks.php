@@ -168,8 +168,8 @@ class AssignedTasks extends Component
 
     public function confirmDelete(): void
     {
-        $task = Task::findOrFail($this->deletingId);
-        $task->delete();
+        $task = Task::with('files')->findOrFail($this->deletingId);
+        $task->deleteWithFiles();
         $this->cancelDelete();
         $this->dispatch('notify', message: 'Task deleted.', type: 'success');
     }

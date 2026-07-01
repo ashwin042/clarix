@@ -61,7 +61,7 @@ class CreateTask extends Component
                 },
             ],
             'uploads'   => ['nullable', 'array'],
-            'uploads.*' => ['file', 'max:10240'],
+            'uploads.*' => ['file', 'max:51200'],
         ]);
 
         $task = Task::create([
