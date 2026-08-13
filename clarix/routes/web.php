@@ -19,6 +19,11 @@ use App\Livewire\Admin\ManageUnits;
 use App\Livewire\Admin\ManageUsers;
 use App\Livewire\Admin\RoleUserManagement;
 use App\Livewire\Admin\UnitAnalytics;
+use App\Livewire\AI\Calendar;
+use App\Livewire\AI\Chatbot;
+use App\Livewire\AI\McpPlugins;
+use App\Livewire\AI\Overview;
+use App\Livewire\AI\ScheduledTasks;
 use App\Livewire\CreditList;
 use App\Livewire\PM\UserManagement as PMUserManagement;
 use App\Livewire\Tasks\AssignedTasks;
@@ -28,12 +33,18 @@ use App\Livewire\Tasks\ManageTasks;
 use App\Livewire\Tasks\TaskDetail;
 use Illuminate\Support\Facades\Route;
 
+// The bare root is a signpost, never a page of its own: signed-in users land
+// on their dashboard, everyone else on the marketing homepage. A 302, not a
+// 301 — browsers cache a permanent redirect hard, and this destination is the
+// kind of thing that gets revisited.
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('home');
 });
+
+// Public marketing homepage.
+Route::view('/home', 'marketing.home')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -79,6 +90,21 @@ Route::middleware(['auth'])->group(function () {
     Route::post('tasks/{task}/assignments', [TaskAssignmentController::class, 'store'])->name('tasks.assignments.store');
     Route::delete('tasks/{task}/assignments/{assignment}', [TaskAssignmentController::class, 'destroy'])->name('tasks.assignments.destroy');
     Route::patch('tasks/{task}/assignments/{assignment}/status', [TaskAssignmentController::class, 'updateStatus'])->name('tasks.assignments.status');
+
+    // AI & Automation. Open to every role that exists today; the middleware is
+    // listed explicitly so a role added later is denied until it is named here,
+    // and it mirrors the check guarding the sidebar section.
+    Route::middleware(['role:admin,pm,writer'])->prefix('ai')->name('ai.')->group(function () {
+        Route::get('/chatbot', Chatbot::class)->name('chatbot');
+
+        Route::get('/mcp', McpPlugins::class)->name('mcp');
+
+        Route::get('/calendar', Calendar::class)->name('calendar');
+
+        Route::get('/overview', Overview::class)->name('overview');
+
+        Route::get('/scheduled-tasks', ScheduledTasks::class)->name('scheduled-tasks');
+    });
 
     // PM-only routes
     Route::middleware(['role:pm'])->prefix('pm')->name('pm.')->group(function () {

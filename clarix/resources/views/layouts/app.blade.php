@@ -54,14 +54,30 @@
         {{-- Navigation --}}
         <nav class="flex-1 px-2.5 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden scrollbar-none">
 
-            {{-- Dashboard --}}
+            {{-- Dashboard. The 2x2 grid, not the house it used to carry — the
+                 house now belongs to Home, directly below. --}}
             <a href="{{ route('dashboard') }}"
                 class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
                 <span x-show="sidebarOpen" x-transition:enter="transition-opacity duration-150 delay-75" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="whitespace-nowrap">Dashboard</span>
             </a>
+
+            {{-- Home. The public marketing site, so it is a plain href rather
+                 than a routeIs() highlight: you are never "on" it from in here.
+                 Named explicitly for the three roles that exist, matching the
+                 AI & Automation guard, so a role added later is denied until
+                 it is named. --}}
+            @if(auth()->user()->isAdmin() || auth()->user()->isPm() || auth()->user()->isWriter())
+            <a href="{{ route('home') }}"
+                class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span x-show="sidebarOpen" x-transition:enter="transition-opacity duration-150 delay-75" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="whitespace-nowrap">Home</span>
+            </a>
+            @endif
 
             {{-- Section: Management --}}
             <div x-show="sidebarOpen" class="pt-4 pb-1.5 px-3">
@@ -197,6 +213,36 @@
                 <span x-show="sidebarOpen" class="whitespace-nowrap">Payments</span>
             </a>
             @endif
+            @endif
+
+            {{-- Section: AI & Automation.
+                 Open to every role that exists today; named explicitly so it
+                 matches the role:admin,pm,writer middleware on these routes. --}}
+            @if(auth()->user()->isAdmin() || auth()->user()->isPm() || auth()->user()->isWriter())
+            <div x-show="sidebarOpen" class="pt-4 pb-1 px-3">
+                <span class="inline-flex items-center gap-1.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">AI &amp; Automation</span>
+                    <span class="rounded-full bg-indigo-600 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide leading-[1.4] text-white">New</span>
+                </span>
+            </div>
+            <div x-show="!sidebarOpen" class="py-2 px-3"><div class="border-t border-gray-200 dark:border-slate-800/50"></div></div>
+
+            @foreach ([
+                ['ai.overview', 'Clarix AI Overview', 'M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16l-1.7-4.8L5.5 9.5l4.8-1.7L12 3zM18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8L18 15z'],
+                ['ai.chatbot', 'Chatbot', 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'],
+                ['ai.mcp', 'MCP & Plugins', 'M9 3v4M15 3v4M6 7h12v4a6 6 0 01-12 0V7zM12 17v4'],
+                ['ai.scheduled-tasks', 'Scheduled Tasks', 'M12 8v4l3 1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['ai.calendar', 'Calendar', 'M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
+            ] as [$aiRoute, $aiLabel, $aiIcon])
+                <a href="{{ route($aiRoute) }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs($aiRoute) ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                    :class="sidebarOpen ? '' : 'justify-center'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $aiIcon }}"/>
+                    </svg>
+                    <span x-show="sidebarOpen" class="whitespace-nowrap">{{ $aiLabel }}</span>
+                </a>
+            @endforeach
             @endif
 
             {{-- Section: System --}}
