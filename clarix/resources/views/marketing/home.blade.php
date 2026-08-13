@@ -1207,11 +1207,11 @@
                                     <span class="h-[10px] w-[10px] rounded-full bg-[#FEBC2E]"></span>
                                     <span class="h-[10px] w-[10px] rounded-full bg-[#28C840]"></span>
                                 </div>
-                                <div class="mx-auto font-mono-ui text-[10px] text-[#8A90A6]">clarix: claude</div>
+                                <div class="mx-auto font-mono-ui text-[10px] text-[#8A90A6]">clarix: axokai</div>
                             </div>
 
                             <div class="space-y-[7px] p-4 font-mono-ui text-[10.5px] leading-[1.55]">
-                                <div><span class="text-[#4ADE80]">➜</span> <span class="text-[#8A90A6]">clarix</span> <span class="text-[#E4E6F0]">claude</span></div>
+                                <div><span class="text-[#4ADE80]">➜</span> <span class="text-[#8A90A6]">clarix</span> <span class="text-[#E4E6F0]">axokai</span></div>
 
                                 <div class="pt-1 text-[#8A90A6]">&gt; the credit ledger charges revisions twice</div>
 
