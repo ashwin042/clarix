@@ -130,8 +130,13 @@
                         <a href="{{ route('admin.admins.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Admins</a>
                         <a href="{{ route('admin.pms.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Project Managers</a>
                         <a href="{{ route('admin.writers.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Writers</a>
-                    @else
+                    @elseif(auth()->user()->isPm())
                         <a href="{{ route('pm.users') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Manage Users</a>
+                    @else
+                        {{-- Any other role holding users.view. The PM screen is
+                             role:pm, so linking there would hand them a 403 on
+                             a link this sidebar had just drawn. --}}
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Manage Users</a>
                     @endif
                 </div>
             </div>
@@ -173,6 +178,61 @@
                 <span x-show="sidebarOpen" class="whitespace-nowrap">Issues</span>
             </a>
 
+            {{-- Section: HR.
+                 Gated on the plan, header included.
+
+                 Within an agency that has ERP the entries below stay
+                 unconditional, because clocking in and requesting leave are
+                 structural and no role may be denied them — that reasoning is
+                 about the permission layer and still holds. It says nothing
+                 about an agency that has not bought ERP at all, which is the
+                 separate question asked here.
+
+                 The header is inside the condition rather than beside it, so
+                 it cannot be left hanging over an empty section. --}}
+            @if(auth()->user()->planAllows('erp'))
+            <div x-show="sidebarOpen" class="pt-4 pb-1 px-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">HR</span>
+            </div>
+            <div x-show="!sidebarOpen" class="py-2 px-3"><div class="border-t border-gray-200 dark:border-slate-800/50"></div></div>
+
+            {{-- Attendance. Shown to everyone: clocking yourself in is not a
+                 granted capability, so there is always something here. --}}
+            <a href="{{ route('attendance.index') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('attendance.*') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                :class="sidebarOpen ? '' : 'justify-center'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="whitespace-nowrap">Attendance</span>
+            </a>
+
+            {{-- Leave. Shown to everyone, like attendance: requesting time off
+                 is not a granted capability. --}}
+            <a href="{{ route('leave.index') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('leave.*') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                :class="sidebarOpen ? '' : 'justify-center'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="whitespace-nowrap">Leave</span>
+            </a>
+
+            {{-- Payroll. Unlike attendance and leave this is permission-gated
+                 all the way down, so the link only appears for whoever may
+                 read something. --}}
+            @if(auth()->user()->hasPermission('payroll.view_own') || auth()->user()->hasPermission('payroll.manage'))
+            <a href="{{ auth()->user()->hasPermission('payroll.manage') ? route('payroll.manage') : route('payroll.index') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('payroll.*') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                :class="sidebarOpen ? '' : 'justify-center'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="whitespace-nowrap">Payroll</span>
+            </a>
+            @endif
+            @endif {{-- /plan:erp — closes the HR section --}}
+
             @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('credits.view'))
             {{-- Section: Finance --}}
             <div x-show="sidebarOpen" class="pt-4 pb-1 px-3">
@@ -213,6 +273,20 @@
                 <span x-show="sidebarOpen" class="whitespace-nowrap">Payments</span>
             </a>
             @endif
+
+            {{-- Clarix subscription (admin only). This organization's own
+                 billing with the platform, distinct from the Payments screen
+                 above, which is the agency billing its clients. --}}
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.subscription') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.subscription') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                :class="sidebarOpen ? '' : 'justify-center'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                <span x-show="sidebarOpen" class="whitespace-nowrap">Subscription</span>
+            </a>
+            @endif
             @endif
 
             {{-- Section: AI & Automation.
@@ -228,12 +302,18 @@
             <div x-show="!sidebarOpen" class="py-2 px-3"><div class="border-t border-gray-200 dark:border-slate-800/50"></div></div>
 
             @foreach ([
-                ['ai.overview', 'Clarix AI Overview', 'M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16l-1.7-4.8L5.5 9.5l4.8-1.7L12 3zM18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8L18 15z'],
-                ['ai.chatbot', 'Chatbot', 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'],
-                ['ai.mcp', 'MCP & Plugins', 'M9 3v4M15 3v4M6 7h12v4a6 6 0 01-12 0V7zM12 17v4'],
-                ['ai.scheduled-tasks', 'Scheduled Tasks', 'M12 8v4l3 1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
-                ['ai.calendar', 'Calendar', 'M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-            ] as [$aiRoute, $aiLabel, $aiIcon])
+                ['ai.overview', 'Clarix AI Overview', null, 'M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16l-1.7-4.8L5.5 9.5l4.8-1.7L12 3zM18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8L18 15z'],
+                ['ai.chatbot', 'Chatbot', 'ai_chat', 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'],
+                ['ai.mcp', 'MCP & Plugins', 'automation', 'M9 3v4M15 3v4M6 7h12v4a6 6 0 01-12 0V7zM12 17v4'],
+                ['ai.scheduled-tasks', 'Scheduled Tasks', 'automation', 'M12 8v4l3 1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['ai.calendar', 'Calendar', 'calendar', 'M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
+            ] as [$aiRoute, $aiLabel, $aiFeature, $aiIcon])
+                {{-- A null feature is ungated. The overview stays on every plan
+                     so a Base or Standard agency has somewhere in the product
+                     to read what upgrading would give them — which also means
+                     this section never empties, so its header can stay
+                     unconditional. --}}
+                @continue($aiFeature !== null && ! auth()->user()->planAllows($aiFeature))
                 <a href="{{ route($aiRoute) }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs($aiRoute) ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
                     :class="sidebarOpen ? '' : 'justify-center'">
@@ -263,6 +343,20 @@
             </a>
             @endif
 
+            {{-- Storage Usage (admin only) --}}
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.storage') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.storage') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+                :class="sidebarOpen ? '' : 'justify-center'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12c0 2.21 3.582 4 8 4s8-1.79 8-4"/>
+                    <ellipse cx="12" cy="7" rx="8" ry="4"/>
+                </svg>
+                <span x-show="sidebarOpen" class="whitespace-nowrap">Storage Usage</span>
+            </a>
+            @endif
+
             {{-- Deletion Requests (admin only) --}}
             @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.deletion-requests') }}"
@@ -275,9 +369,10 @@
             </a>
             @endif
 
-            {{-- Settings --}}
-            <a href="{{ route('profile') }}"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
+            {{-- Settings. The account forms; the profile overview they used to
+                 share a URL with is reached from the user menu instead. --}}
+            <a href="{{ route('settings') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('settings') ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-gray-900 dark:hover:text-slate-100' }}"
                 :class="sidebarOpen ? '' : 'justify-center'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -384,6 +479,10 @@
                 </div>
             </div>
         </header>
+
+        {{-- Grace-period warning. Renders nothing unless the organization's
+             renewal has lapsed. --}}
+        <x-subscription-banner />
 
         {{-- Page content --}}
         <main class="flex-1 overflow-y-auto p-6">

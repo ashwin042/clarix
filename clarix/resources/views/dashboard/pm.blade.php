@@ -31,6 +31,15 @@
 
         <livewire:dashboard.pm-stats />
 
+        {{-- Clock in / out. Compact form links through to the full page. --}}
+        <div class="max-w-md">
+            {{-- The widget refuses with its own 402, so an agency without ERP
+                 must not be shown it at all. --}}
+            @if(auth()->user()->planAllows('erp'))
+                @livewire('attendance.clock-widget', ['compact' => true])
+            @endif
+        </div>
+
     </div>
 </x-app-layout>
 
