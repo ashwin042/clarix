@@ -123,4 +123,28 @@ class PlanFeaturesTest extends TestCase
         $this->assertSame('pro', $features->minimumPlanFor('automation'));
         $this->assertNull($features->minimumPlanFor('teleportation'));
     }
+
+    public function test_a_member_of_a_base_organization_is_refused_erp(): void
+    {
+        $org = $this->populate($this->makeOrganization('pf-user-base', 'Base Co'), 'B');
+        $this->subscribe($org['organization']->id, 'base');
+
+        $this->assertTrue($org['admin']->planAllows('tasks'));
+        $this->assertFalse($org['admin']->planAllows('erp'));
+    }
+
+    public function test_a_superadmin_is_not_plan_gated_at_all(): void
+    {
+        $superadmin = \App\Models\User::factory()->create([
+            'name'            => 'Platform Super',
+            'email'           => 'super@example.test',
+            'role'            => 'superadmin',
+            'organization_id' => null,
+        ]);
+
+        // No organization, therefore no plan to consult. Every feature.
+        foreach (['tasks', 'files', 'erp', 'ai_chat', 'calendar', 'automation'] as $feature) {
+            $this->assertTrue($superadmin->planAllows($feature), "superadmin should reach {$feature}");
+        }
+    }
 }
