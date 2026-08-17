@@ -106,4 +106,53 @@ class PlanGatingTest extends TestCase
 
         $this->actingAs($superadmin)->get('/_test/auto')->assertOk();
     }
+
+    // ── The real route table ─────────────────────────────────────────────────
+
+    /**
+     * @return array<string, array{0: string, 1: array<string, int>}>
+     */
+    public static function planRouteMatrix(): array
+    {
+        $erp = ['/attendance', '/leave', '/leave/types', '/payroll', '/payroll/manage'];
+        $ai  = ['/ai/chatbot', '/ai/calendar', '/ai/mcp', '/ai/scheduled-tasks'];
+
+        return [
+            'base' => ['base', array_merge(
+                array_fill_keys($erp, 402),
+                array_fill_keys($ai, 402),
+                ['/ai/overview' => 200, '/tasks' => 200],
+            )],
+            'standard' => ['standard', array_merge(
+                array_fill_keys($erp, 200),
+                ['/ai/chatbot' => 200, '/ai/calendar' => 200],
+                ['/ai/mcp' => 402, '/ai/scheduled-tasks' => 402],
+                ['/ai/overview' => 200, '/tasks' => 200],
+            )],
+            'pro' => ['pro', array_merge(
+                array_fill_keys($erp, 200),
+                array_fill_keys($ai, 200),
+                ['/ai/overview' => 200, '/tasks' => 200],
+            )],
+        ];
+    }
+
+    /**
+     * @dataProvider planRouteMatrix
+     *
+     * @param  array<string, int>  $expected
+     */
+    public function test_a_plan_reaches_exactly_its_own_routes(string $plan, array $expected): void
+    {
+        $org = $this->populate($this->makeOrganization('matrix-'.$plan, ucfirst($plan)), 'M');
+        $this->subscribe($org['organization']->id, $plan);
+
+        // An admin holds every permission unconditionally, so anything refused
+        // below can only be the plan layer talking — never the role layer.
+        $admin = $org['admin'];
+
+        foreach ($expected as $url => $status) {
+            $this->actingAs($admin)->get($url)->assertStatus($status);
+        }
+    }
 }
