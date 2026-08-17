@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AI;
 
+use App\Livewire\Traits\RequiresPlan;
 use Livewire\Component;
 
 /**
@@ -24,6 +25,8 @@ use Livewire\Component;
  */
 class ScheduledTasks extends Component
 {
+    use RequiresPlan;
+
     /**
      * Trigger kind => the tint its pill wears. The colour carries meaning:
      * schedules are sky, and the event triggers take a tint that matches what
@@ -163,6 +166,8 @@ class ScheduledTasks extends Component
 
     public function render()
     {
+        $this->assertPlanIncludes('automation');
+
         return view('livewire.ai.scheduled-tasks', [
             'automations' => $this->automations(),
             'tints'       => self::TRIGGER_TINT,

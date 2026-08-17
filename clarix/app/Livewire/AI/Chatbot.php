@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AI;
 
+use App\Livewire\Traits\RequiresPlan;
 use App\Services\ChatMarkdown;
 use App\Services\ChatQuota;
 use App\Services\GroqChatService;
@@ -28,6 +29,8 @@ use RuntimeException;
  */
 class Chatbot extends Component
 {
+    use RequiresPlan;
+
     public const MODELS = ['Titan 3.2', 'Gaia 2.0', 'Kronos 1.5', 'Helios 4.0', 'Olympus Max'];
 
     /** Label => one-line description shown in the dropdown. */
@@ -138,6 +141,8 @@ class Chatbot extends Component
 
     public function render()
     {
+        $this->assertPlanIncludes('ai_chat');
+
         $quota = app(ChatQuota::class);
         $user  = auth()->user();
 

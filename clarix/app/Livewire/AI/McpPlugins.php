@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AI;
 
+use App\Livewire\Traits\RequiresPlan;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,8 @@ use Livewire\Component;
  */
 class McpPlugins extends Component
 {
+    use RequiresPlan;
+
     /** Category => the tint its pill uses. */
     public const CATEGORY_TINT = [
         'Communication' => 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400',
@@ -139,6 +142,8 @@ class McpPlugins extends Component
 
     public function render()
     {
+        $this->assertPlanIncludes('automation');
+
         return view('livewire.ai.mcp-plugins', [
             'plugins' => self::plugins(),
             'tints'   => self::CATEGORY_TINT,

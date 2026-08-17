@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AI;
 
+use App\Livewire\Traits\RequiresPlan;
 use App\Models\Task;
 use Carbon\CarbonImmutable;
 use Livewire\Component;
@@ -20,6 +21,8 @@ use Livewire\Component;
  */
 class Calendar extends Component
 {
+    use RequiresPlan;
+
     /** 'week' or 'month'. */
     public string $view = 'week';
 
@@ -117,6 +120,9 @@ class Calendar extends Component
 
     public function render()
     {
+        // The plan layer first, the permission layer below it.
+        $this->assertPlanIncludes('calendar');
+
         $user = auth()->user();
         abort_unless($user->hasPermission('tasks.view'), 403);
 
