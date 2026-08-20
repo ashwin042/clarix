@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Tasks;
 
+use App\Rules\TenantExists;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\NewTaskCreatedNotification;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -26,11 +28,31 @@ class CreateTask extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()->isPm()) {
-            abort(403);
-        }
+        $this->authorizeCreate();
+
         $this->unit_id = (string) auth()->user()->unit_id;
         $this->pm_id   = (string) auth()->id();
+    }
+
+    /**
+     * Two separate conditions, and both have to hold.
+     *
+     * The permission is the agency's decision, taken in the Authorization
+     * panel. The unit is structural: this screen files a task under the
+     * actor's own unit, so somebody with no unit has nothing to file it
+     * against and would otherwise reach a null unit_id and a database error
+     * rather than a refusal.
+     *
+     * Called from save() as well as mount() because Livewire runs mount() only
+     * on the initial render — every later action arrives on a hydrated
+     * component that never passes through it again.
+     */
+    protected function authorizeCreate(): void
+    {
+        $user = auth()->user();
+
+        abort_unless($user->hasPermission('tasks.create'), 403);
+        abort_unless($user->unit_id !== null, 403);
     }
 
     public function removeFile(int $index): void
@@ -40,6 +62,8 @@ class CreateTask extends Component
 
     public function save(): void
     {
+        $this->authorizeCreate();
+
         $unitId     = (string) auth()->user()->unit_id;
         $uniqueRule = "unique:tasks,task_code,NULL,id,unit_id,{$unitId}";
 
@@ -53,7 +77,7 @@ class CreateTask extends Component
             'important_notes'   => 'nullable|string|max:5000',
             'assigned_admin_id' => [
                 'nullable',
-                'exists:users,id',
+                TenantExists::in('users'),
                 function ($attribute, $value, $fail) {
                     if ($value && User::find($value)?->role !== 'admin') {
                         $fail('The selected user must be an admin.');
@@ -80,14 +104,18 @@ class CreateTask extends Component
         ]);
 
         foreach ($this->uploads as $file) {
-            $path = $file->store('task-files/' . $this->task_code, 'r2');
-            $task->files()->create([
-                'file_path'     => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'file_size'     => $file->getSize(),
-                'mime_type'     => $file->getMimeType(),
-                'uploaded_by'   => auth()->id(),
-            ]);
+            $path = $file->store($task->storagePrefix(), 'r2');
+
+            // The file record and the unit's storage total commit together.
+            DB::transaction(function () use ($task, $file, $path) {
+                $task->files()->create([
+                    'file_path'     => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size'     => $file->getSize(),
+                    'mime_type'     => $file->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
+                ]);
+            });
         }
 
         foreach (User::where('role', 'admin')->get() as $admin) {

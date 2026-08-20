@@ -7,9 +7,12 @@ use App\Models\TaskAssignment;
 use App\Models\TaskNote;
 use App\Models\User;
 use App\Notifications\TaskStatusUpdatedNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class TaskDetail extends Component
@@ -53,6 +56,8 @@ class TaskDetail extends Component
 
     public function assign(): void
     {
+        Gate::authorize('assign', $this->task);
+
         $this->validate(['selectedWriters' => 'required|array|min:1']);
 
         foreach ($this->selectedWriters as $writerId) {
@@ -70,6 +75,8 @@ class TaskDetail extends Component
 
     public function removeAssignment(TaskAssignment $assignment): void
     {
+        Gate::authorize('assign', $this->task);
+
         $assignment->delete();
         $this->task->refresh();
         $this->dispatch('notify', message: 'Assignment removed.', type: 'success');
@@ -108,9 +115,12 @@ class TaskDetail extends Component
 
     public function deleteFile(int $fileId): void
     {
+        Gate::authorize('deleteFile', $this->task);
+
         $file = $this->task->regularFiles()->findOrFail($fileId);
         $filePath = $file->file_path;
-        $file->delete();
+        // The record and the unit's storage total come off together.
+        DB::transaction(fn () => $file->delete());
         $this->deleteFromR2($filePath);
         $this->task->refresh();
         $this->dispatch('notify', message: 'File deleted.', type: 'success');
@@ -118,11 +128,11 @@ class TaskDetail extends Component
 
     public function deleteCompletedFile(int $fileId): void
     {
-        Gate::authorize('uploadCompletedFile', $this->task);
+        Gate::authorize('deleteFile', $this->task);
 
         $file = $this->task->completedFiles()->findOrFail($fileId);
         $filePath = $file->file_path;
-        $file->delete();
+        DB::transaction(fn () => $file->delete());
         $this->deleteFromR2($filePath);
         $this->task->refresh();
         $this->dispatch('notify', message: 'File deleted.', type: 'success');
@@ -171,24 +181,23 @@ class TaskDetail extends Component
 
     public function updateTaskStatus(string $status): void
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
-        $updateData = ['status' => $status];
-        if ($status === 'completed') {
-            $updateData['completed_at'] = now();
-        } elseif ($this->task->completed_at !== null) {
-            $updateData['completed_at'] = null;
-        }
-        $this->task->update($updateData);
+        // The same policy the board asks when a card crosses a column and the
+        // edit modal asks for its Status field. This was isAdmin(), so the one
+        // screen showing a task on its own refused a supervisor that the other
+        // two already allowed.
+        Gate::authorize('updateStatus', $this->task);
 
-        if ($status === 'completed') {
-            TaskAssignment::where('task_id', $this->task->id)
-                ->where('status', 'ready_for_review')
-                ->update(['status' => 'completed']);
-        }
+        // applyStatusChange() writes what it is given, and this method takes a
+        // bare string off the wire — the markup offering five options is not a
+        // constraint on what can arrive. Validated through the factory rather
+        // than $this->validate(), which reads public properties and would not
+        // see an argument.
+        Validator::make(
+            ['status' => $status],
+            ['status' => ['required', Rule::in(Task::STATUSES)]],
+        )->validate();
 
-        $this->task->refresh();
+        $this->task->applyStatusChange($status);
 
         // Notify the PM
         if ($this->task->pm) {
@@ -205,7 +214,16 @@ class TaskDetail extends Component
 
         $assignedIds = $this->task->assignments->pluck('writer_id')->toArray();
 
-        $availableWriters = $user->isAdmin()
+        /*
+         * Asked of the policy rather than of the role name.
+         *
+         * This was isAdmin(), and everyone else got an empty collection — which
+         * the view renders as "All available writers are already assigned",
+         * because an empty list is the only thing it knows how to describe. A
+         * supervisor with tasks.assign, and a PM on its own unit's task, were
+         * both told the writers were taken when none were.
+         */
+        $availableWriters = Gate::allows('assign', $this->task)
             ? User::where('role', 'writer')->whereNotIn('id', $assignedIds)->orderBy('name')
                 ->withCount(['taskAssignments as active_tasks' => fn ($q) => $q->whereHas('task', fn ($t) => $t->whereIn('status', ['pending', 'in_progress']))])
                 ->get()

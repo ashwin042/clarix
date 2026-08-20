@@ -2,21 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantExists;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTaskAssignmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->isAdmin();
+        return auth()->user()->hasPermission('tasks.assign');
     }
 
     public function rules(): array
     {
         return [
-            'task_id'   => ['required', 'exists:tasks,id'],
+            'task_id'   => ['required', TenantExists::in('tasks')],
             'writer_ids'=> ['required', 'array', 'min:1'],
-            'writer_ids.*' => ['exists:users,id'],
+            'writer_ids.*' => [TenantExists::in('users')],
         ];
     }
 

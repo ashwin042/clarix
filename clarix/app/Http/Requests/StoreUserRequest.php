@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantExists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->isAdmin();
+        return auth()->user()->hasPermission('users.create');
     }
 
     public function rules(): array
@@ -22,7 +23,7 @@ class StoreUserRequest extends FormRequest
             'unit_id' => [
                 Rule::requiredIf(fn () => $this->input('role') === 'pm'),
                 'nullable',
-                'exists:units,id',
+                TenantExists::in('units'),
             ],
         ];
     }

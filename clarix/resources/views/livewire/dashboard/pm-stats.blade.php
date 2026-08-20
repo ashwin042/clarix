@@ -90,6 +90,7 @@
                     $sc = match($task->status) {
                         'pending'     => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                         'in_progress' => 'bg-blue-100 text-blue-700',
+                        'sent_for_review' => 'bg-amber-100 text-amber-700',
                         'completed'   => 'bg-green-100 text-green-700',
                         'cancelled'   => 'bg-rose-100 text-rose-700',
                         default       => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',

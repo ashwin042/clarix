@@ -7,6 +7,7 @@ use App\Http\Requests\UploadTaskFilesRequest;
 use App\Models\Task;
 use App\Models\TaskFile;
 use App\Notifications\CompletedFileUploadedNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,15 +16,21 @@ class TaskFileController extends Controller
     public function store(UploadTaskFilesRequest $request, Task $task)
     {
         foreach ($request->file('files') as $file) {
-            $path = $file->store('task-files/' . $task->task_code, 'r2');
+            $path = $file->store($task->storagePrefix(), 'r2');
 
-            $task->files()->create([
-                'file_path'     => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'file_size'     => $file->getSize(),
-                'mime_type'     => $file->getMimeType(),
-                'uploaded_by'   => auth()->id(),
-            ]);
+            // The R2 put cannot join a database transaction, so it happens
+            // first; the file record and the unit's storage total then commit
+            // together. A failure here leaves an unreferenced object in R2,
+            // which the nightly storage:reconcile reports as an orphan.
+            DB::transaction(function () use ($task, $file, $path) {
+                $task->files()->create([
+                    'file_path'     => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size'     => $file->getSize(),
+                    'mime_type'     => $file->getMimeType(),
+                    'uploaded_by'   => auth()->id(),
+                ]);
+            });
         }
 
         if ($note = $request->input('upload_note')) {
@@ -41,16 +48,18 @@ class TaskFileController extends Controller
         Gate::authorize('uploadCompletedFile', $task);
 
         foreach ($request->file('files') as $file) {
-            $path = $file->store('task-files/' . $task->task_code . '/completed', 'r2');
+            $path = $file->store($task->completedStoragePrefix(), 'r2');
 
-            $task->files()->create([
-                'file_path'         => $path,
-                'original_name'     => $file->getClientOriginalName(),
-                'file_size'         => $file->getSize(),
-                'mime_type'         => $file->getMimeType(),
-                'uploaded_by'       => auth()->id(),
-                'is_completed_file' => true,
-            ]);
+            DB::transaction(function () use ($task, $file, $path) {
+                $task->files()->create([
+                    'file_path'         => $path,
+                    'original_name'     => $file->getClientOriginalName(),
+                    'file_size'         => $file->getSize(),
+                    'mime_type'         => $file->getMimeType(),
+                    'uploaded_by'       => auth()->id(),
+                    'is_completed_file' => true,
+                ]);
+            });
         }
 
         $task->assignments()->update(['status' => 'ready_for_review']);
@@ -70,39 +79,19 @@ class TaskFileController extends Controller
     {
         abort_if($file->task_id !== $task->id, 404);
 
-        $user = auth()->user();
-
-        if ($file->is_completed_file) {
-            if ($user->role === 'admin') {
-                // always allowed
-            } elseif ($user->role === 'writer' && $task->assignments()->where('writer_id', $user->id)->exists()) {
-                // allowed
-            } elseif ($user->role === 'pm' && $task->unit_id === $user->unit_id && $task->status === 'completed') {
-                // allowed only when task is completed
-            } else {
-                abort(403);
-            }
-        } else {
-            if ($user->role === 'admin') {
-                // allow
-            } elseif ($user->role === 'pm' && $task->unit_id === $user->unit_id) {
-                // allow
-            } elseif ($user->role === 'writer' && $task->assignments()->where('writer_id', $user->id)->exists()) {
-                // allow
-            } else {
-                abort(403);
-            }
-        }
+        Gate::authorize('downloadFile', [$task, $file]);
 
         return Storage::disk('r2')->download($file->file_path, $file->original_name);
     }
 
     public function destroy(Task $task, TaskFile $file)
     {
-        Gate::authorize('uploadFiles', $task);
+        Gate::authorize('deleteFile', $task);
 
         Storage::disk('r2')->delete($file->file_path);
-        $file->delete();
+
+        // The record and the unit's storage total come off together.
+        DB::transaction(fn () => $file->delete());
 
         return redirect()->route('tasks.show', $task)->with('success', 'File deleted.');
     }

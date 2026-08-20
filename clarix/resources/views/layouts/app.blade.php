@@ -66,10 +66,14 @@
 
             {{-- Home. The public marketing site, so it is a plain href rather
                  than a routeIs() highlight: you are never "on" it from in here.
-                 Named explicitly for the three roles that exist, matching the
-                 AI & Automation guard, so a role added later is denied until
-                 it is named. --}}
-            @if(auth()->user()->isAdmin() || auth()->user()->isPm() || auth()->user()->isWriter())
+
+                 Written as "anyone but the superadmin" rather than as a list of
+                 roles. The marketing site is not a capability, so a role added
+                 later should not silently lose its way back to the front page —
+                 which is what the old explicit list did to Supervisor and HR.
+                 The AI & Automation section below keeps its list, because there
+                 the guard has to match the middleware on those routes. --}}
+            @if(! auth()->user()->isSuperadmin())
             <a href="{{ route('home') }}"
                 class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100">
                 <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -130,6 +134,8 @@
                         <a href="{{ route('admin.admins.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Admins</a>
                         <a href="{{ route('admin.pms.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Project Managers</a>
                         <a href="{{ route('admin.writers.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Writers</a>
+                        <a href="{{ route('admin.supervisors.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Supervisors</a>
+                        <a href="{{ route('admin.hr.index') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">HR Staff</a>
                     @elseif(auth()->user()->isPm())
                         <a href="{{ route('pm.users') }}" class="flex items-center pl-11 pr-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200 hover:bg-gray-100 hover:text-gray-800 transition-colors">Manage Users</a>
                     @else

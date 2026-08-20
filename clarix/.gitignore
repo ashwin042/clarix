@@ -22,3 +22,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Generated knowledge-graph output from the graphify skill.
+graphify-out/
+
+# A stray SQLite database sitting in the project root. Not source, and easy to
+# sweep in by accident because the name matches the project.
+/clarix

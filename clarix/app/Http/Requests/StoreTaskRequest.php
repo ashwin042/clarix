@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantExists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreTaskRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array(auth()->user()->role, ['admin', 'pm']);
+        return auth()->user()->hasPermission('tasks.create');
     }
 
     public function rules(): array
@@ -25,7 +26,7 @@ class StoreTaskRequest extends FormRequest
                 Rule::unique('tasks')->where(fn ($q) => $q->where('unit_id', $unitId)),
             ],
             'description' => ['nullable', 'string'],
-            'unit_id'     => ['required', 'exists:units,id'],
+            'unit_id'     => ['required', TenantExists::in('units')],
             'priority'    => ['required', Rule::in(['low', 'medium', 'high'])],
             'deadline'    => ['required', 'date', 'after_or_equal:today'],
         ];

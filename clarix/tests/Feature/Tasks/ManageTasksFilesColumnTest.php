@@ -47,6 +47,15 @@ class ManageTasksFilesColumnTest extends TestCase
         ]);
     }
 
+    /**
+     * The page defaults to the kanban board, so anything asserting on the
+     * table has to switch to it first.
+     */
+    private function tableView(): \Livewire\Features\SupportTesting\Testable
+    {
+        return Livewire::test(ManageTasks::class)->call('setView', 'table');
+    }
+
     private function makeFile(Task $task, User $uploader): TaskFile
     {
         return TaskFile::create([
@@ -68,7 +77,7 @@ class ManageTasksFilesColumnTest extends TestCase
 
         $this->actingAs($pm);
 
-        Livewire::test(ManageTasks::class)
+        $this->tableView()
             ->assertViewHas('tasks', function ($tasks) {
                 return $tasks->first()->relationLoaded('files');
             });
@@ -82,7 +91,7 @@ class ManageTasksFilesColumnTest extends TestCase
         $task = $this->makeTask($unit, $pm);
         $this->actingAs($admin);
 
-        Livewire::test(ManageTasks::class)
+        $this->tableView()
             ->assertDontSeeHtml('tracking-wider">Unit</th>');
     }
 
@@ -94,7 +103,7 @@ class ManageTasksFilesColumnTest extends TestCase
         $task = $this->makeTask($unit, $pm);
         $this->actingAs($admin);
 
-        Livewire::test(ManageTasks::class)
+        $this->tableView()
             ->assertSeeHtml('tracking-wider">Files</th>');
     }
 
@@ -107,7 +116,7 @@ class ManageTasksFilesColumnTest extends TestCase
 
         $this->actingAs($pm);
 
-        Livewire::test(ManageTasks::class)
+        $this->tableView()
             ->assertSee('report.pdf');
     }
 
@@ -119,7 +128,7 @@ class ManageTasksFilesColumnTest extends TestCase
 
         $this->actingAs($pm);
 
-        Livewire::test(ManageTasks::class)
+        $this->tableView()
             ->assertSeeHtml('open-upload-modal');
     }
 }

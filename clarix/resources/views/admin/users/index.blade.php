@@ -46,9 +46,15 @@
                                 <td class="px-5 py-3">
                                     @php
                                         $roleClass = match($user->role) {
-                                            'admin'  => 'bg-purple-100 text-purple-700',
-                                            'pm'     => 'bg-blue-100 text-blue-700',
-                                            'writer' => 'bg-gray-100 text-gray-600',
+                                            'admin'      => 'bg-purple-100 text-purple-700',
+                                            'supervisor' => 'bg-violet-100 text-violet-700',
+                                            'pm'         => 'bg-blue-100 text-blue-700',
+                                            'hr'         => 'bg-emerald-100 text-emerald-700',
+                                            // Writer, and whatever the enum
+                                            // grows later. A missing badge
+                                            // colour must not take the page
+                                            // down with an unhandled match.
+                                            default      => 'bg-gray-100 text-gray-600',
                                         };
                                     @endphp
                                     <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $roleClass }}">

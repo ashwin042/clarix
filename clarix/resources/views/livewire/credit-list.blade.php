@@ -207,7 +207,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
-                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->updated_at->format('d M Y') }}</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->completed_at?->format('d M Y') ?? '-' }}</td>
                                     <td class="px-6 py-3 text-sm font-semibold text-indigo-600 text-right pr-6">
                                         {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '-' }}
                                     </td>
@@ -269,7 +269,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->assignedAdmin?->name ?? '-' }}</td>
-                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->updated_at->format('d M Y') }}</td>
+                                <td class="px-6 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $task->completed_at?->format('d M Y') ?? '-' }}</td>
                                 <td class="px-6 py-3 text-sm font-semibold text-indigo-600 text-right pr-6">
                                     {{ $task->credit_amount ? number_format($task->credit_amount, 2) : '-' }}
                                 </td>

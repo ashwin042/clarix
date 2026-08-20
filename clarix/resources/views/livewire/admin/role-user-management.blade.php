@@ -192,7 +192,7 @@
     </x-livewire-modal>
 
     <x-delete-confirm-modal
-        title="Delete {{ ucfirst($managedRole === 'pm' ? 'Project Manager' : $managedRole) }}"
+        title="Delete {{ $roleSingular }}"
         :description="'You are about to delete: ' . $deletingName"
         :consequences="['Remove user access permanently', 'May affect assigned tasks', 'This action cannot be undone']"
     />

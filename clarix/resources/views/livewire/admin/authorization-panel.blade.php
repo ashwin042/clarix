@@ -46,13 +46,20 @@
         {{-- Role Header --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-950/50">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg {{ $role === 'pm' ? 'bg-blue-100' : 'bg-amber-100' }} flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {{ $role === 'pm' ? 'text-blue-600' : 'text-amber-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        @if($role === 'pm')
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        @else
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        @endif
+                @php
+                    // One colour and one glyph per role, so four cards of the
+                    // same shape are still told apart at a glance.
+                    $roleChrome = [
+                        'supervisor' => ['bg' => 'bg-violet-100', 'fg' => 'text-violet-600', 'd' => 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'],
+                        'pm'         => ['bg' => 'bg-blue-100',   'fg' => 'text-blue-600',   'd' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                        'hr'         => ['bg' => 'bg-emerald-100','fg' => 'text-emerald-600','d' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
+                        'writer'     => ['bg' => 'bg-amber-100',  'fg' => 'text-amber-600',  'd' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
+                    ];
+                    $chrome = $roleChrome[$role] ?? $roleChrome['writer'];
+                @endphp
+                <div class="w-8 h-8 rounded-lg {{ $chrome['bg'] }} flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {{ $chrome['fg'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $chrome['d'] }}"/>
                     </svg>
                 </div>
                 <div>

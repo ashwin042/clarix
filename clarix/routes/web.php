@@ -221,6 +221,8 @@ Route::middleware(['auth', 'subscription'])->group(function () {
             Route::get('/admins', RoleUserManagement::class)->name('admins.index')->defaults('role', 'admin');
             Route::get('/project-managers', RoleUserManagement::class)->name('pms.index')->defaults('role', 'pm');
             Route::get('/writers', RoleUserManagement::class)->name('writers.index')->defaults('role', 'writer');
+            Route::get('/supervisors', RoleUserManagement::class)->name('supervisors.index')->defaults('role', 'supervisor');
+            Route::get('/hr', RoleUserManagement::class)->name('hr.index')->defaults('role', 'hr');
         });
 
         // Keep traditional routes for any redirects that reference them

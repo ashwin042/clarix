@@ -6,6 +6,64 @@
     display: none !important;
 }
 
+/* ------------------------------------------------------------ scrollbars ---
+   The sidebar nav has always asked for .scrollbar-none but nothing defined it,
+   so it was scrolling with a default bar. Both utilities live here now. */
+.scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+/* Slim bar for the kanban board — the default one is heavy enough to read as
+   chrome rather than as part of the board. Momentum scrolling stays on for
+   touch, and the thumb only resolves on hover so a resting board looks clean. */
+.kanban-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+.kanban-scroll:hover,
+.kanban-scroll:focus-within {
+    scrollbar-color: rgb(203 213 225) transparent; /* slate-300 */
+}
+.dark .kanban-scroll:hover,
+.dark .kanban-scroll:focus-within {
+    scrollbar-color: rgb(51 65 85) transparent; /* slate-700 */
+}
+.kanban-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.kanban-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.kanban-scroll::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.kanban-scroll:hover::-webkit-scrollbar-thumb,
+.kanban-scroll:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgb(203 213 225); /* slate-300 */
+}
+.dark .kanban-scroll:hover::-webkit-scrollbar-thumb,
+.dark .kanban-scroll:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgb(51 65 85); /* slate-700 */
+}
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(148 163 184); /* slate-400 */
+}
+
+/* A card mid-drag should not fight the snap points. */
+.kanban-scroll.is-dragging {
+    scroll-snap-type: none;
+}
+
 /* Indeterminate upload progress bar — conveys activity without a real percentage. */
 .upload-progress-track {
     position: relative;

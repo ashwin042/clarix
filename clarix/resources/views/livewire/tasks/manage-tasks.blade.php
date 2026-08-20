@@ -5,13 +5,31 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Tasks</h1>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage and track all project tasks</p>
         </div>
-        @if(!auth()->user()->isWriter())
+        {{-- Drawn off the permission the button actually needs. As a
+             not-a-writer test it offered the modal to any other role whether
+             or not the agency had granted them tasks.create — save() refused,
+             but only after the form had been filled in. --}}
+        @if(auth()->user()->hasPermission('tasks.create'))
         <button wire:click="openCreate"
             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Task
         </button>
         @endif
+    </div>
+
+    {{-- View switcher --}}
+    <div class="flex items-center gap-1 p-1 mb-5 w-fit bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg">
+        @foreach(['kanban' => 'Kanban', 'table' => 'Table'] as $view => $viewLabel)
+            <button type="button" wire:click="setView('{{ $view }}')"
+                @class([
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                    'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 shadow-sm' => $activeView === $view,
+                    'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200' => $activeView !== $view,
+                ])>
+                {{ $viewLabel }}
+            </button>
+        @endforeach
     </div>
 
     {{-- Filters --}}
@@ -22,11 +40,11 @@
                 class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <select wire:model.live="filterStatus" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            {{-- Built from the constant so this list cannot fall behind it. --}}
             <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            @foreach(\App\Models\Task::STATUSES as $value)
+                <option value="{{ $value }}">{{ ucfirst(str_replace('_', ' ', $value)) }}</option>
+            @endforeach
         </select>
         <select wire:model.live="filterPriority" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All priorities</option>
@@ -45,7 +63,7 @@
             <option value="civil">Civil</option>
             <option value="others">Others</option>
         </select>
-        @if(auth()->user()->isAdmin())
+        @if(auth()->user()->reachesEveryUnit())
         <select wire:model.live="filterUnit" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All units</option>
             @foreach($units as $unit)
@@ -55,14 +73,165 @@
         @endif
     </div>
 
+    @if($activeView === 'kanban')
+    {{-- Kanban board. The columns are flex children with a min-width floor, so
+         they share the available width evenly when it is wide enough for all
+         four and fall back to horizontal scroll when it is not. Past xl the
+         floor is dropped, which is what keeps a full desktop free of scroll.
+         Below that the container snaps, so a swipe lands on a whole column. --}}
+    <div data-kanban-board
+        class="kanban-scroll flex gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory xl:snap-none pb-3">
+            @foreach($board as $status => $column)
+                <div wire:key="kanban-col-{{ $status }}"
+                    {{-- The height cap only applies from md up. Below that the filter bar
+                         stacks into a tall column of its own, so a fixed viewport offset
+                         would be wrong; letting the page scroll is the right mobile call. --}}
+                    class="snap-start flex-1 min-w-[280px] xl:min-w-0 flex flex-col md:max-h-[calc(100vh-19rem)] bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-800 rounded-xl">
+
+                    {{-- Column header --}}
+                    @php
+                        $dot = match($status) {
+                            'pending'         => 'bg-gray-400 dark:bg-slate-500',
+                            'on_hold'         => 'bg-orange-500',
+                            'in_progress'     => 'bg-blue-500',
+                            'sent_for_review' => 'bg-amber-500',
+                            'completed'       => 'bg-green-500',
+                            default           => 'bg-gray-400 dark:bg-slate-500',
+                        };
+                    @endphp
+                    {{-- Anchored above the scroll area, so it stays put while the cards move. --}}
+                    <div class="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-slate-800">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0 {{ $dot }}"></span>
+                        <h2 class="text-sm font-semibold text-gray-700 dark:text-slate-300 truncate">{{ $column['label'] }}</h2>
+                        <span class="ml-auto flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400">{{ $column['total'] }}</span>
+                    </div>
+
+                    {{-- Cards. min-h-0 lets this flex child actually shrink, which is what
+                         keeps the overflow on the column instead of pushing the page taller. --}}
+                    <div
+                        data-kanban-column
+                        data-status="{{ $status }}"
+                        class="kanban-scroll flex-1 min-h-0 p-3 space-y-3 overflow-y-auto"
+                    >
+                        @foreach($column['tasks'] as $task)
+                            @php
+                                // Reordering inside a column is a plain edit; moving between
+                                // columns changes the status, which is the stricter right.
+                                $mayReorder = auth()->user()->can('update', $task);
+                                $mayChangeStatus = auth()->user()->can('updateStatus', $task);
+                                $overdue = $task->deadline->isPast() && $task->status !== 'completed';
+                                $cardWriters = $task->assignments->pluck('writer')->filter();
+                            @endphp
+                            <div
+                                wire:key="kanban-card-{{ $task->id }}"
+                                data-task-id="{{ $task->id }}"
+                                data-draggable="{{ $mayReorder ? '1' : '0' }}"
+                                data-can-change-status="{{ $mayChangeStatus ? '1' : '0' }}"
+                                @class([
+                                    'group bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-3 shadow-sm transition-shadow hover:shadow-md',
+                                    'cursor-grab active:cursor-grabbing' => $mayReorder,
+                                    'opacity-80' => $status === 'completed',
+                                ])
+                            >
+                                <div class="flex items-start justify-between gap-2">
+                                    <a href="{{ route('tasks.show', $task) }}" wire:navigate
+                                        class="text-sm font-bold text-gray-900 dark:text-slate-100 hover:text-indigo-600 transition-colors line-clamp-2">
+                                        {{ $task->title }}
+                                    </a>
+                                    <span class="text-[10px] font-mono text-gray-400 dark:text-slate-500 flex-shrink-0 pt-0.5">{{ $task->task_code }}</span>
+                                </div>
+
+                                <p class="mt-1.5 text-xs text-gray-500 dark:text-slate-400 truncate">{{ $task->pm?->name ?? 'No PM' }}</p>
+
+                                {{-- Attachment counters. Each is omitted at zero
+                                     rather than shown as "0", so a card only
+                                     carries the marks it has earned and an
+                                     empty task looks exactly as it did before.
+                                     Counts come from withCount() on the board
+                                     query; the data- attributes are what the
+                                     tests read, so changing an icon cannot
+                                     break them. --}}
+                                @if($task->regular_files_count || $task->completed_files_count || $task->notes_count)
+                                    <div class="mt-2 flex items-center gap-3 text-gray-400 dark:text-slate-500">
+                                        @if($task->regular_files_count)
+                                            <span data-card-files="{{ $task->regular_files_count }}"
+                                                title="{{ $task->regular_files_count }} {{ Str::plural('file', $task->regular_files_count) }}"
+                                                class="inline-flex items-center gap-1 text-[11px]">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                {{ $task->regular_files_count }}
+                                            </span>
+                                        @endif
+                                        @if($task->completed_files_count)
+                                            <span data-card-completed-files="{{ $task->completed_files_count }}"
+                                                title="{{ $task->completed_files_count }} completed {{ Str::plural('file', $task->completed_files_count) }}"
+                                                class="inline-flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                {{ $task->completed_files_count }}
+                                            </span>
+                                        @endif
+                                        @if($task->notes_count)
+                                            <span data-card-notes="{{ $task->notes_count }}"
+                                                title="{{ $task->notes_count }} {{ Str::plural('note', $task->notes_count) }}"
+                                                class="inline-flex items-center gap-1 text-[11px]">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                                                {{ $task->notes_count }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <div class="mt-3 flex items-center justify-between gap-2">
+                                    <span class="text-xs {{ $overdue ? 'text-red-600 font-medium' : 'text-gray-500 dark:text-slate-400' }}">
+                                        {{ $task->deadline->format('M d, Y') }}
+                                    </span>
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">
+                                        {{ number_format($task->credit_amount, 2) }}
+                                    </span>
+                                </div>
+
+                                @if($cardWriters->isNotEmpty())
+                                    <div class="mt-3 pt-2.5 border-t border-gray-100 dark:border-slate-800/60 flex items-center -space-x-1.5">
+                                        @foreach($cardWriters->take(4) as $writer)
+                                            <span title="{{ $writer->name }}"
+                                                class="w-6 h-6 rounded-full ring-2 ring-white dark:ring-slate-900 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-semibold flex items-center justify-center">
+                                                {{ Str::of($writer->name)->explode(' ')->take(2)->map(fn ($part) => Str::substr($part, 0, 1))->implode('') }}
+                                            </span>
+                                        @endforeach
+                                        @if($cardWriters->count() > 4)
+                                            <span class="w-6 h-6 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[10px] font-semibold flex items-center justify-center">
+                                                +{{ $cardWriters->count() - 4 }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+
+                        @if($column['tasks']->isEmpty())
+                            <p class="py-8 text-center text-xs text-gray-400 dark:text-slate-500">No tasks</p>
+                        @endif
+                    </div>
+
+                    @if($status === 'completed' && $column['total'] > $column['tasks']->count())
+                        <div class="flex-shrink-0 px-4 py-2.5 border-t border-gray-200 dark:border-slate-800">
+                            <a href="{{ route('tasks.completed') }}" wire:navigate
+                                class="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                                Showing {{ $column['tasks']->count() }} of {{ $column['total'] }} — view all completed
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+    </div>
+    @else
     {{-- Table --}}
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-visible">
         @if($tasks->count())
-            {{-- Mobile card list (below md) --}}
+            {{-- Mobile card fallback for the table below md --}}
             <div class="md:hidden divide-y divide-gray-100 dark:divide-slate-800/60">
                 @foreach($tasks as $task)
                     @php
-                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
+                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'sent_for_review' => 'bg-amber-100 text-amber-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                     @endphp
                     <div class="p-4 space-y-3">
                         <div class="flex items-start justify-between gap-3">
@@ -170,7 +339,7 @@
                             @endif
                             <td class="px-5 py-3">
                                 @php
-                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
+                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'sent_for_review' => 'bg-amber-100 text-amber-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                                 @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $sc }}">{{ str_replace('_', ' ', ucfirst($task->status)) }}</span>
                             </td>
@@ -300,6 +469,7 @@
             </div>
         @endif
     </div>
+    @endif
 
     {{-- Task Modal --}}
     <x-livewire-modal :title="$editingId ? 'Edit Task' : 'New Task'" maxWidth="xl">
@@ -322,7 +492,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
-                    @if(auth()->user()->isAdmin())
+                    @if(auth()->user()->reachesEveryUnit())
                         <select wire:model.live="unit_id"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('unit_id') border-red-400 @enderror">
                             <option value="">Select unit</option>
@@ -341,7 +511,7 @@
             {{-- PM field --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Responsible PM</label>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->reachesEveryUnit())
                     @if($unit_id && $pmsForUnit->count())
                         <select wire:model="pm_id"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('pm_id') border-red-400 @enderror">
@@ -418,16 +588,24 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Status</label>
-                    @if(auth()->user()->isAdmin())
+                    {{-- The permission, not the role. This asked isAdmin(),
+                         which left a supervisor holding tasks.update_status
+                         looking at a disabled box on the same task it could
+                         drag between columns on the board behind this modal.
+                         $maySetStatus is the same question save() asks, so the
+                         field appears exactly when the value would be kept. --}}
+                    @if($maySetStatus)
                         <select wire:model="status"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            @foreach(\App\Models\Task::STATUSES as $value)
+                                <option value="{{ $value }}">{{ ucfirst(str_replace('_', ' ', $value)) }}</option>
+                            @endforeach
                         </select>
                     @else
-                        <input type="text" value="Pending" disabled
+                        {{-- The task's real state. This read "Pending" whatever
+                             the task was, so a PM opening an in-progress task
+                             was shown a status it was not in. --}}
+                        <input type="text" value="{{ $lockedStatusLabel }}" disabled
                             class="w-full border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950/50 rounded-lg px-3 py-2.5 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed">
                     @endif
                 </div>
@@ -599,3 +777,98 @@
         :consequences="['Delete all associated files', 'Remove all writer assignments', 'This action cannot be undone']"
     />
 </div>
+
+{{-- Kanban drag and drop. Loaded from the same CDN the dashboard charts use. --}}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script>
+(function () {
+    var GROUP = 'clarix-task-board';
+
+    function idsIn(column) {
+        return Array.from(column.querySelectorAll('[data-task-id]'))
+            .map(function (card) { return parseInt(card.dataset.taskId, 10); });
+    }
+
+    function componentFor(el) {
+        var root = el.closest('[wire\\:id]');
+
+        return root ? window.Livewire.find(root.getAttribute('wire:id')) : null;
+    }
+
+    function initBoard() {
+        if (typeof Sortable === 'undefined') return;
+
+        document.querySelectorAll('[data-kanban-column]').forEach(function (column) {
+            // Livewire morphs these nodes in place, so an already-wired column
+            // keeps its instance rather than stacking a second one on top.
+            if (column._kanbanSortable) return;
+
+            column._kanbanSortable = new Sortable(column, {
+                group: GROUP,
+                animation: 150,
+                draggable: '[data-task-id]',
+                filter: '[data-draggable="0"]',
+                ghostClass: 'opacity-40',
+                dragClass: 'shadow-lg',
+                // On touch a plain swipe has to stay a swipe, or the board
+                // could not be scrolled at all on a phone. Holding briefly is
+                // what picks a card up; the mouse keeps its instant drag.
+                delay: 160,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
+                // Scroll the board while dragging a card towards its edge.
+                scroll: true,
+                scrollSensitivity: 80,
+                scrollSpeed: 12,
+                onStart: function () {
+                    // Snap points fight a drag that crosses columns.
+                    document.querySelectorAll('[data-kanban-board]')
+                        .forEach(function (board) { board.classList.add('is-dragging'); });
+                },
+                onMove: function (evt) {
+                    // Crossing columns is a status change, which not everyone
+                    // who can reorder is allowed to make.
+                    if (evt.from === evt.to) return true;
+
+                    return evt.dragged.dataset.canChangeStatus === '1';
+                },
+                onEnd: function (evt) {
+                    document.querySelectorAll('[data-kanban-board]')
+                        .forEach(function (board) { board.classList.remove('is-dragging'); });
+
+                    var from = evt.from;
+                    var to = evt.to;
+
+                    if (from === to && evt.oldIndex === evt.newIndex) return;
+
+                    var fromStatus = from.dataset.status;
+                    var toStatus = to.dataset.status;
+
+                    var columnOrders = {};
+                    columnOrders[toStatus] = idsIn(to);
+
+                    if (fromStatus !== toStatus) {
+                        columnOrders[fromStatus] = idsIn(from);
+                    }
+
+                    var component = componentFor(to);
+
+                    if (component) {
+                        component.call('moveTask', parseInt(evt.item.dataset.taskId, 10), toStatus, columnOrders);
+                    }
+                },
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initBoard);
+    document.addEventListener('livewire:navigated', initBoard);
+    document.addEventListener('livewire:init', function () {
+        // Switching views or filtering re-renders the board, which can bring in
+        // columns that were not on the page when it first loaded.
+        Livewire.hook('morphed', initBoard);
+    });
+
+    initBoard();
+})();
+</script>

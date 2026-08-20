@@ -12,7 +12,7 @@
                 <span class="text-sm text-gray-500 dark:text-slate-400">{{ $task->unit->name }}</span>
                 <span class="text-gray-300">·</span>
                 @php
-                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
+                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'sent_for_review' => 'bg-amber-100 text-amber-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                     $pc = match($task->priority) { 'high' => 'bg-red-100 text-red-700', 'medium' => 'bg-yellow-100 text-yellow-700', 'low' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                 @endphp
                 <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sc }}">{{ str_replace('_', ' ', ucfirst($task->status)) }}</span>
@@ -23,18 +23,28 @@
             </div>
         </div>
 
-        {{-- Status quick-change (admin only) --}}
-        @if(auth()->user()->isAdmin())
+        {{-- Status quick-change. Gated on the policy, so this page agrees with
+             the board's drag-and-drop and the edit modal's dropdown about who
+             may advance a task. It asked isAdmin(), which left a supervisor
+             looking at a read-only badge for a task it could move from either
+             of the other two screens.
+
+             The options come from Task::STATUSES rather than a hand-written
+             list: this one omitted 'sent_for_review', so a task in that state
+             matched no option and the control displayed "Pending". --}}
+        @can('updateStatus', $task)
         <div class="flex items-center gap-2 flex-shrink-0">
-            <select wire:change="updateTaskStatus($event.target.value)"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="pending" {{ $task->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="completed" {{ $task->status === 'completed' ? 'selected' : '' }}>Completed</option>
-                <option value="cancelled" {{ $task->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+            <label for="task-status" class="sr-only">Change status</label>
+            <select id="task-status" wire:change="updateTaskStatus($event.target.value)"
+                class="border border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                @foreach(\App\Models\Task::STATUSES as $value)
+                    <option value="{{ $value }}" {{ $task->status === $value ? 'selected' : '' }}>
+                        {{ ucfirst(str_replace('_', ' ', $value)) }}
+                    </option>
+                @endforeach
             </select>
         </div>
-        @endif
+        @endcan
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -119,7 +129,7 @@
                                             <p class="text-sm font-medium text-gray-800 dark:text-slate-200">{{ $assignment->writer->name }}</p>
                                         @endif
                                         @php
-                                            $asc = match($assignment->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'ready_for_review' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
+                                            $asc = match($assignment->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'ready_for_review' => 'bg-teal-100 text-teal-700', 'completed' => 'bg-green-100 text-green-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                                         @endphp
                                         <span class="inline-flex mt-0.5 px-2 py-0 rounded text-xs font-medium {{ $asc }}">
                                             {{ str_replace('_', ' ', ucfirst($assignment->status)) }}

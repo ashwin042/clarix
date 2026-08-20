@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Rules\TenantExists;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\Unit;
@@ -47,8 +48,8 @@ class UserController extends Controller
         $data = $request->validate([
             'name'    => 'required|string|max:255',
             'email'   => 'required|email|unique:users,email,' . $user->id,
-            'role'    => 'required|in:admin,pm,writer',
-            'unit_id' => 'nullable|exists:units,id',
+            'role'    => 'required|in:admin,supervisor,pm,hr,writer',
+            'unit_id' => ['nullable', TenantExists::in('units')],
         ]);
 
         $user->update([
@@ -66,6 +67,9 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
+
+        // Admin of the owning agency, structurally — see User::administers().
+        $this->authorize('delete', $user);
 
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');

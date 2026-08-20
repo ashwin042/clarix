@@ -193,7 +193,7 @@ class CreateTaskTest extends TestCase
         ]);
     }
 
-    public function test_files_are_stored_under_task_code_directory_on_r2(): void
+    public function test_files_are_stored_under_unit_and_task_code_directory_on_r2(): void
     {
         Storage::fake('r2');
 
@@ -210,8 +210,10 @@ class CreateTaskTest extends TestCase
             ->set('uploads', [UploadedFile::fake()->create('doc.pdf', 10)])
             ->call('save');
 
+        // The unit id leads the prefix so objects are addressable by tenant;
+        // task_code alone is only unique within a unit.
         $file = \App\Models\TaskFile::first();
-        $this->assertStringStartsWith('task-files/PT_001/', $file->file_path);
+        $this->assertStringStartsWith("task-files/{$unit->id}/PT_001/", $file->file_path);
         Storage::disk('r2')->assertExists($file->file_path);
     }
 

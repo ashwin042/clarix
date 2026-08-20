@@ -5,12 +5,16 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-slate-100">Users</h1>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage project managers and writers</p>
         </div>
-        {{-- Add User button: desktop only --}}
+        {{-- Add User button: desktop only. Gated on the same permission
+             save() enforces, so a role holding only users.view is not shown a
+             button that would refuse it. --}}
+        @if(auth()->user()->hasPermission('users.create'))
         <button wire:click="openCreate"
             class="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add User
         </button>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -24,17 +28,21 @@
                     class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500">
             </div>
             {{-- Add User button: mobile only, beside search --}}
+            @if(auth()->user()->hasPermission('users.create'))
             <button wire:click="openCreate"
                 class="inline-flex md:hidden items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add User
             </button>
+            @endif
         </div>
         <select wire:model.live="filterRole"
             class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
             <option value="">All roles</option>
             <option value="admin">Admin</option>
+            <option value="supervisor">Supervisor</option>
             <option value="pm">Project Manager</option>
+            <option value="hr">HR</option>
             <option value="writer">Writer</option>
         </select>
     </div>
@@ -46,9 +54,14 @@
             @foreach($users as $user)
                 @php
                     $roleClass = match($user->role) {
-                        'admin'  => 'bg-purple-100 text-purple-700',
-                        'pm'     => 'bg-blue-100 text-blue-700',
-                        'writer' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
+                        'admin'      => 'bg-purple-100 text-purple-700',
+                        'supervisor' => 'bg-violet-100 text-violet-700',
+                        'pm'         => 'bg-blue-100 text-blue-700',
+                        'hr'         => 'bg-emerald-100 text-emerald-700',
+                        // Writer, and anything the enum grows later: a new
+                        // role must not take the whole screen down over a
+                        // missing badge colour.
+                        default      => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                     };
                 @endphp
                 <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
@@ -81,14 +94,18 @@
                     </dl>
                     {{-- Action buttons --}}
                     <div class="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-800/60">
+                        @can('update', $user)
                         <button wire:click="openEdit({{ $user->id }})"
                             class="flex-1 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/70 rounded-lg transition-colors">
                             Edit
                         </button>
+                        @endcan
+                        @can('delete', $user)
                         <button wire:click="openDeleteModal({{ $user->id }}, '{{ $user->name }}')"
                             class="flex-1 py-2 text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 rounded-lg transition-colors">
                             Delete
                         </button>
+                        @endcan
                     </div>
                 </div>
             @endforeach
@@ -126,9 +143,11 @@
                             <td class="px-5 py-3">
                                 @php
                                     $roleClass = match($user->role) {
-                                        'admin'  => 'bg-purple-100 text-purple-700',
-                                        'pm'     => 'bg-blue-100 text-blue-700',
-                                        'writer' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
+                                        'admin'      => 'bg-purple-100 text-purple-700',
+                                        'supervisor' => 'bg-violet-100 text-violet-700',
+                                        'pm'         => 'bg-blue-100 text-blue-700',
+                                        'hr'         => 'bg-emerald-100 text-emerald-700',
+                                        default      => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400',
                                     };
                                 @endphp
                                 <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $roleClass }}">{{ ucfirst($user->role) }}</span>
@@ -137,10 +156,14 @@
                             <td class="px-5 py-3 text-sm text-gray-500 dark:text-slate-400">{{ $user->created_at->format('M d, Y') }}</td>
                             <td class="px-5 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    @can('update', $user)
                                     <button wire:click="openEdit({{ $user->id }})"
                                         class="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
+                                    @endcan
+                                    @can('delete', $user)
                                     <button wire:click="openDeleteModal({{ $user->id }}, '{{ $user->name }}')"
                                         class="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -183,18 +206,28 @@
 
             {{-- Role + Unit --}}
             <div class="grid grid-cols-2 gap-4">
-                @if(auth()->user()->isAdmin())
-                    {{-- Admin: full role dropdown --}}
+                {{-- The lock below belongs to the PM specifically: save()
+                     overwrites role and unit for a PM whatever was posted, so
+                     the disabled fields are that rule showing through.
+
+                     This asked isAdmin() and let every other role fall into
+                     the PM branch, which was true while only those two could
+                     reach the screen. A supervisor granted users.view was then
+                     told "Only PMs can be added by a PM". Ask about the PM
+                     rule directly, and everyone else gets a real picker built
+                     from what they may actually assign. --}}
+                @if(! auth()->user()->isPm())
+                    {{-- Role dropdown, narrowed to this actor's ceiling --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Role</label>
                         <select wire:model.live="role"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="admin">Admin</option>
-                            <option value="pm">Project Manager</option>
-                            <option value="writer">Writer</option>
+                            @foreach($assignableRoles as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
-                    {{-- Admin: unit dropdown (only for pm) --}}
+                    {{-- Unit dropdown (only for pm) --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Unit</label>
                         @if($role === 'pm')

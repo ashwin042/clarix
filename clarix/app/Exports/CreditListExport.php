@@ -84,7 +84,7 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
                     $task->task_type ? ucfirst($task->task_type) : '—',
                     ucfirst($task->priority),
                     $task->assignedAdmin?->name ?? '—',
-                    $task->updated_at->format('d M Y'),
+                    $task->completed_at?->format('d M Y') ?? '—',
                     number_format((float) $task->credit_amount, 2),
                 ]);
                 $rowNum++;
@@ -123,7 +123,7 @@ class CreditListExport implements FromCollection, WithColumnWidths, WithStyles, 
                 $task->unit?->name ?? '—',
                 ucfirst($task->priority),
                 $task->assignedAdmin?->name ?? '—',
-                $task->updated_at->format('d M Y'),
+                $task->completed_at?->format('d M Y') ?? '—',
                 number_format((float) $task->credit_amount, 2),
             ]);
             $rowNum++;

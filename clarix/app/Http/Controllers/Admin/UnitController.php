@@ -48,6 +48,9 @@ class UnitController extends Controller
 
     public function destroy(Unit $unit)
     {
+        // Admin of the owning agency, structurally — see User::administers().
+        $this->authorize('delete', $unit);
+
         $unit->delete();
         return redirect()->route('admin.units.index')->with('success', 'Unit deleted.');
     }

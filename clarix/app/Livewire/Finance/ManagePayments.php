@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Finance;
 
+use App\Rules\TenantExists;
 use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Payment;
 use App\Models\Unit;
@@ -73,7 +74,7 @@ class ManagePayments extends Component
             'payer_name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'total_credit' => 'required|numeric|min:0',
-            'unit_id' => 'nullable|exists:units,id',
+            'unit_id' => ['nullable', TenantExists::in('units')],
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
             'payment_method' => 'required|string|max:50',

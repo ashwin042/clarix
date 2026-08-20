@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Rules\TenantExists;
 use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Unit;
 use App\Models\User;
@@ -14,7 +15,7 @@ class RoleUserManagement extends Component
 {
     use WithPagination, WithDeleteConfirmation;
 
-    public string $managedRole; // 'admin', 'pm', or 'writer'
+    public string $managedRole; // 'admin', 'supervisor', 'pm', 'hr' or 'writer'
     public string $search = '';
     public bool $showModal = false;
     public ?int $editingId = null;
@@ -26,7 +27,7 @@ class RoleUserManagement extends Component
 
     public function mount(string $role): void
     {
-        abort_unless(in_array($role, ['admin', 'pm', 'writer']), 404);
+        abort_unless(in_array($role, ['admin', 'supervisor', 'pm', 'hr', 'writer']), 404);
         abort_unless(auth()->user()->isAdmin(), 403);
         $this->managedRole = $role;
     }
@@ -70,7 +71,7 @@ class RoleUserManagement extends Component
         }
 
         if ($this->managedRole === 'pm') {
-            $rules['unit_id'] = 'required|exists:units,id';
+            $rules['unit_id'] = ['required', TenantExists::in('units')];
         }
 
         $this->validate($rules);
@@ -101,10 +102,10 @@ class RoleUserManagement extends Component
                 abort(403);
             }
             $user->update($data);
-            $this->dispatch('notify', message: ucfirst($this->managedRole) . ' updated.', type: 'success');
+            $this->dispatch('notify', message: $this->roleSingular() . ' updated.', type: 'success');
         } else {
             User::create($data);
-            $this->dispatch('notify', message: ucfirst($this->managedRole) . ' created.', type: 'success');
+            $this->dispatch('notify', message: $this->roleSingular() . ' created.', type: 'success');
         }
 
         $this->showModal = false;
@@ -124,24 +125,28 @@ class RoleUserManagement extends Component
         }
         $user->delete();
         $this->cancelDelete();
-        $this->dispatch('notify', message: ucfirst($this->managedRole) . ' deleted.', type: 'success');
+        $this->dispatch('notify', message: $this->roleSingular() . ' deleted.', type: 'success');
     }
 
     protected function roleLabel(): string
     {
         return match ($this->managedRole) {
-            'admin'  => 'Admins',
-            'pm'     => 'Project Managers',
-            'writer' => 'Writers',
+            'admin'      => 'Admins',
+            'supervisor' => 'Supervisors',
+            'pm'         => 'Project Managers',
+            'hr'         => 'HR Staff',
+            'writer'     => 'Writers',
         };
     }
 
     protected function roleSingular(): string
     {
         return match ($this->managedRole) {
-            'admin'  => 'Admin',
-            'pm'     => 'Project Manager',
-            'writer' => 'Writer',
+            'admin'      => 'Admin',
+            'supervisor' => 'Supervisor',
+            'pm'         => 'Project Manager',
+            'hr'         => 'HR',
+            'writer'     => 'Writer',
         };
     }
 

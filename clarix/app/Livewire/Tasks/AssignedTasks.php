@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tasks;
 
+use App\Rules\TenantExists;
 use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Task;
 use App\Models\Unit;
@@ -90,6 +91,11 @@ class AssignedTasks extends Component
 
     public function save(): void
     {
+        // render() already refuses a non-admin, but only after the write. The
+        // Livewire endpoint is reachable without ever passing the route's
+        // role:admin middleware, so the guard is repeated where it bites.
+        abort_unless(auth()->user()->isAdmin(), 403);
+
         $unitId = $this->unit_id;
         $uniqueRule = $this->editingId
             ? "unique:tasks,task_code,{$this->editingId},id,unit_id,{$unitId}"
@@ -98,10 +104,10 @@ class AssignedTasks extends Component
         $this->validate([
             'title'         => 'required|string|max:255',
             'task_code'     => ['required', 'string', 'max:50', $uniqueRule],
-            'unit_id'       => 'required|exists:units,id',
+            'unit_id'       => ['required', TenantExists::in('units')],
             'pm_id'         => [
                 'required',
-                'exists:users,id',
+                TenantExists::in('users'),
                 function ($attribute, $value, $fail) use ($unitId) {
                     $pm = User::find($value);
                     if (!$pm || $pm->role !== 'pm') {
@@ -119,7 +125,7 @@ class AssignedTasks extends Component
             'important_notes'   => 'nullable|string|max:5000',
             'assigned_admin_id' => [
                 'nullable',
-                'exists:users,id',
+                TenantExists::in('users'),
                 function ($attribute, $value, $fail) {
                     if ($value && User::find($value)?->role !== 'admin') {
                         $fail('The selected user must be an admin.');
@@ -144,15 +150,10 @@ class AssignedTasks extends Component
 
         if ($this->editingId) {
             $existing = Task::findOrFail($this->editingId);
-            if ($this->status === 'completed' && $existing->status !== 'completed') {
-                $data['completed_at'] = now();
-            } elseif ($this->status !== 'completed' && $existing->completed_at !== null) {
-                $data['completed_at'] = null;
-            }
-            $existing->update($data);
+            $existing->update($data + $existing->completedAtFor($this->status));
             $this->dispatch('notify', message: 'Task updated.', type: 'success');
         } else {
-            $task = Task::create($data + ['created_by' => auth()->id()]);
+            $task = Task::create($data + (new Task)->completedAtFor($this->status) + ['created_by' => auth()->id()]);
             $this->dispatch('notify', message: 'Task created.', type: 'success');
 
             $admins = User::where('role', 'admin')->get();
@@ -168,6 +169,8 @@ class AssignedTasks extends Component
 
     public function confirmDelete(): void
     {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
         $task = Task::with('files')->findOrFail($this->deletingId);
         $task->deleteWithFiles();
         $this->cancelDelete();

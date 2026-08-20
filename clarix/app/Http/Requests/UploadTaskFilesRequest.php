@@ -8,7 +8,7 @@ class UploadTaskFilesRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->canUploadFiles();
+        return auth()->user()->hasPermission('tasks.upload_files');
     }
 
     public function rules(): array

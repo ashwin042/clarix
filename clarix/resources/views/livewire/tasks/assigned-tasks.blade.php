@@ -20,11 +20,12 @@
                 class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <select wire:model.live="filterStatus" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            {{-- Built from the constant. This list had already drifted:
+                 it never offered sent_for_review. --}}
             <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            @foreach(\App\Models\Task::STATUSES as $value)
+                <option value="{{ $value }}">{{ ucfirst(str_replace('_', ' ', $value)) }}</option>
+            @endforeach
         </select>
         <select wire:model.live="filterPriority" class="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">All priorities</option>
@@ -58,7 +59,7 @@
             <div class="md:hidden divide-y divide-gray-100 dark:divide-slate-800/60">
                 @foreach($tasks as $task)
                     @php
-                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
+                        $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'sent_for_review' => 'bg-amber-100 text-amber-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                     @endphp
                     <div class="p-4 space-y-3">
                         <div class="flex items-start justify-between gap-3">
@@ -148,7 +149,7 @@
                             <td class="px-5 py-3 text-sm text-gray-600 dark:text-slate-400">{{ $task->pm?->name ?? '-' }}</td>
                             <td class="px-5 py-3">
                                 @php
-                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'in_progress' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700' };
+                                    $sc = match($task->status) { 'pending' => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400', 'on_hold' => 'bg-orange-100 text-orange-700', 'in_progress' => 'bg-blue-100 text-blue-700', 'sent_for_review' => 'bg-amber-100 text-amber-700', 'completed' => 'bg-green-100 text-green-700', 'cancelled' => 'bg-rose-100 text-rose-700', default => 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400' };
                                 @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $sc }}">{{ str_replace('_', ' ', ucfirst($task->status)) }}</span>
                             </td>
