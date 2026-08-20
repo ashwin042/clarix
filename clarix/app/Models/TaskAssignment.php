@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Observers\TaskAssignmentActivityObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(TaskAssignmentActivityObserver::class)]
 class TaskAssignment extends Model
 {
     use BelongsToOrganization;

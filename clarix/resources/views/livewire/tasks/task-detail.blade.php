@@ -310,6 +310,52 @@
                     </button>
                 </form>
             </div>
+
+            {{-- History. No permission check: anybody already reading this task
+                 may read what happened to it, and a writer's identity is
+                 protected by the wording rather than by hiding the section.
+                 describeFor() does that masking; the view never touches a
+                 writer's name itself. --}}
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-slate-100">
+                        History
+                        <span class="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 rounded-full">{{ $historyTotal }}</span>
+                    </h2>
+                    @if($historyExpanded && $historyTotal > \App\Livewire\Tasks\TaskDetail::HISTORY_PREVIEW)
+                        <button type="button" wire:click="collapseHistory"
+                            class="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                            Show less
+                        </button>
+                    @endif
+                </div>
+
+                @forelse($activities as $entry)
+                    <div class="flex gap-3 pb-3 mb-3 border-b border-gray-100 dark:border-slate-800/60 last:border-0 last:pb-0 last:mb-0">
+                        <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-slate-600 flex-shrink-0"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm text-gray-700 dark:text-slate-300 leading-snug">{{ $entry->describeFor(auth()->user()) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5"
+                                title="{{ $entry->created_at->format('M d, Y H:i') }}">
+                                {{ $entry->created_at->diffForHumans() }}
+                            </p>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-400 dark:text-slate-500">Nothing has happened yet.</p>
+                @endforelse
+
+                @if(! $historyExpanded && $historyTotal > \App\Livewire\Tasks\TaskDetail::HISTORY_PREVIEW)
+                    <button type="button" wire:click="showFullHistory"
+                        class="mt-1 w-full py-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors">
+                        View full history ({{ $historyTotal }})
+                    </button>
+                @endif
+
+                @if($historyExpanded && method_exists($activities, 'hasPages') && $activities->hasPages())
+                    <div class="pt-3 border-t border-gray-100 dark:border-slate-800/60">{{ $activities->links() }}</div>
+                @endif
+            </div>
         </div>
     </div>
 

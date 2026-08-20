@@ -14,9 +14,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class TaskDetail extends Component
 {
+    use WithPagination;
+
     public Task $task;
 
     // Assignment modal
@@ -29,6 +32,30 @@ class TaskDetail extends Component
 
     // Note form
     public string $note = '';
+
+    /**
+     * History starts collapsed to its five newest entries.
+     *
+     * Five is enough to answer "what just happened", which is what the
+     * section is for at a glance; the rest is a click away and paginated,
+     * because a task worked for months accumulates more than a page.
+     */
+    public bool $historyExpanded = false;
+
+    public const HISTORY_PREVIEW = 5;
+
+    public const HISTORY_PER_PAGE = 20;
+
+    public function showFullHistory(): void
+    {
+        $this->historyExpanded = true;
+        $this->resetPage('history');
+    }
+
+    public function collapseHistory(): void
+    {
+        $this->historyExpanded = false;
+    }
 
     public function mount(Task $task): void
     {
@@ -237,7 +264,20 @@ class TaskDetail extends Component
             'notes' => fn ($q) => $q->with('author')->latest(),
         ]);
 
-        return view('livewire.tasks.task-detail', compact('availableWriters'))
+        /*
+         * Newest first, and no permission gate of its own: anyone already
+         * looking at this task may read what happened to it. Masking, not
+         * visibility, is what protects the writer's identity here.
+         */
+        $historyQuery = $this->task->activities()->with('user')->latest('id');
+
+        $activities = $this->historyExpanded
+            ? $historyQuery->paginate(self::HISTORY_PER_PAGE, ['*'], 'history')
+            : $historyQuery->limit(self::HISTORY_PREVIEW)->get();
+
+        $historyTotal = $this->task->activities()->count();
+
+        return view('livewire.tasks.task-detail', compact('availableWriters', 'activities', 'historyTotal'))
             ->layout('layouts.app', ['pageTitle' => $this->task->task_code]);
     }
 }

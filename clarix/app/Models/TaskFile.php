@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
 use App\Services\TenantContext;
+use App\Observers\TaskFileActivityObserver;
 use App\Observers\TaskFileObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[ObservedBy(TaskFileObserver::class)]
+#[ObservedBy([TaskFileObserver::class, TaskFileActivityObserver::class])]
 class TaskFile extends Model
 {
     use BelongsToOrganization;

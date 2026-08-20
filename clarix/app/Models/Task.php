@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Observers\TaskActivityObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Services\StorageUsageService;
 use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+#[ObservedBy(TaskActivityObserver::class)]
 class Task extends Model
 {
     use BelongsToOrganization;
@@ -229,6 +232,18 @@ class Task extends Model
         }
     }
 
+    /**
+     * Everything that has happened to this task, oldest first by id.
+     *
+     * Ordered by id rather than created_at: several entries can share a
+     * timestamp when one save changes two fields, and id is the only thing
+     * that keeps them in the order they were written.
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TaskActivity::class);
+    }
+
     public function notes(): HasMany
     {
         return $this->hasMany(TaskNote::class)->latest();
@@ -262,7 +277,19 @@ class Task extends Model
      */
     public function applyStatusChange(string $status): void
     {
+        $from = $this->getOriginal('status');
+
         $this->update(['status' => $status] + $this->completedAtFor($status));
+
+        // Logged here rather than in the observer's updated() hook because
+        // this method is the single door every status change already comes
+        // through — a dragged card and a chosen dropdown value both land here,
+        // so both produce one identical entry. The observer skips 'status' for
+        // the same reason, or every change would be recorded twice.
+        if ($from !== $status) {
+            app(\App\Services\TaskActivityLogger::class)
+                ->record($this, 'status_changed', ['from' => $from, 'to' => $status]);
+        }
 
         if ($status === 'completed') {
             $this->assignments()

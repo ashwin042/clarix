@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Observers\TaskNoteActivityObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(TaskNoteActivityObserver::class)]
 class TaskNote extends Model
 {
     use BelongsToOrganization;
