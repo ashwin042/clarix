@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Livewire\Traits\WithDeleteConfirmation;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,6 +42,15 @@ class ManageUnits extends Component
 
     public function save(): void
     {
+        // A Livewire action posts to Livewire's own endpoint, so the route's
+        // permission middleware never runs for it, and render()'s guard would
+        // only refuse after the unit had already been written. The check
+        // belongs here, against the permission for what is being done.
+        abort_unless(
+            auth()->user()->hasPermission($this->editingId ? 'units.update' : 'units.create'),
+            403
+        );
+
         $this->validate([
             'name' => 'required|string|max:255|unique:units,name' . ($this->editingId ? ",{$this->editingId}" : ''),
         ]);
@@ -60,6 +70,10 @@ class ManageUnits extends Component
     public function confirmDelete(): void
     {
         $unit = Unit::findOrFail($this->deletingId);
+
+        // Admin of this agency, structurally. No permission grant reaches it.
+        abort_unless(Gate::allows('delete', $unit), 403);
+
         $unit->delete();
         $this->cancelDelete();
         $this->dispatch('notify', message: 'Unit deleted.', type: 'success');

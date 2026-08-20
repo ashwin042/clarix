@@ -119,6 +119,51 @@ class User extends Authenticatable implements PlatformVisible
         return $this->role === 'pm';
     }
 
+    /**
+     * Runs the agency's work across every unit, without running the agency.
+     *
+     * The role's whole character is in that gap, so the two things worth
+     * remembering are both negatives: a supervisor is not a PM, and so is not
+     * confined to one unit; and a supervisor is not an admin, and so may
+     * destroy nothing — administers() answers false for them like anyone else.
+     */
+    public function isSupervisor(): bool
+    {
+        return $this->role === 'supervisor';
+    }
+
+    /**
+     * Runs attendance, leave and pay for the whole agency, and nothing else.
+     *
+     * Named here because AttendancePolicy and LeaveRequestPolicy have to ask:
+     * their reach is structural, and "everyone in the agency" was previously a
+     * thing only an admin could be.
+     */
+    public function isHr(): bool
+    {
+        return $this->role === 'hr';
+    }
+
+    /**
+     * Works across every unit of the agency rather than inside one.
+     *
+     * Admin and supervisor differ in what they may do; they do not differ in
+     * how far they reach, and neither carries a unit_id. So anything keyed on
+     * "which unit is this person's" — the board's unit filter, the unit and PM
+     * pickers in the create modal — has to ask this rather than isAdmin(), and
+     * hand them the agency's units to choose from.
+     *
+     * Named rather than spelled out inline because the question is asked in
+     * four places across ManageTasks and its view. Inline, the view's copies
+     * were simply missed when the supervisor role arrived: a supervisor was
+     * given admin's data and a PM's markup — two disabled boxes over a form
+     * that could then only fail validation.
+     */
+    public function reachesEveryUnit(): bool
+    {
+        return $this->isAdmin() || $this->isSupervisor();
+    }
+
     public function isWriter(): bool
     {
         return $this->role === 'writer';

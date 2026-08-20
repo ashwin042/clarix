@@ -14,10 +14,13 @@ class AuthorizationPanel extends Component
 
     // Module order and labels
     public array $modules = [
-        'units'   => 'Units',
-        'users'   => 'Users',
-        'tasks'   => 'Tasks',
-        'credits' => 'Credit List',
+        'units'      => 'Units',
+        'users'      => 'Users',
+        'tasks'      => 'Tasks',
+        'credits'    => 'Credit List',
+        'attendance' => 'Attendance',
+        'leave'      => 'Leave',
+        'payroll'    => 'Payroll',
     ];
 
     // All actions that could appear as columns (not all modules have all actions)
@@ -25,29 +28,90 @@ class AuthorizationPanel extends Component
         'view'         => 'View',
         'create'       => 'Create',
         'update'       => 'Update',
-        'delete'       => 'Delete',
         'assign'       => 'Assign',
         'upload_files' => 'Upload Files',
+        'view_own'     => 'View Own',
+        'view_all'     => 'View Team',
+        'manage'       => 'Manage',
     ];
+
+    /**
+     * Actions this screen refuses to offer, whatever is in the permissions
+     * table.
+     *
+     * Deleting a task, a unit or a person is admin-only by structure, and the
+     * seeder no longer creates a permission for it. Filtering here as well
+     * means a row left behind by an older database, or inserted by hand, still
+     * cannot appear as a toggle or be flipped through this component — the
+     * panel can only ever offer what is genuinely grantable.
+     *
+     * @var list<string>
+     */
+    public const UNGRANTABLE_ACTIONS = ['delete'];
 
     // Permissions grouped by module: ['tasks' => [Permission, ...], ...]
     public array $modulePermissions = [];
 
-    public array $roles = ['pm', 'writer'];
+    /**
+     * Every role an agency configures, in seniority order.
+     *
+     * Admin is absent and stays absent: hasPermission() answers true for them
+     * unconditionally, so a row of toggles would claim to control something it
+     * does not. Superadmin is absent for the opposite reason — they belong to
+     * no agency and have no map here to edit.
+     */
+    public array $roles = ['supervisor', 'pm', 'hr', 'writer'];
 
     public array $roleLabels = [
-        'pm'     => 'Project Manager',
-        'writer' => 'Writer',
+        'supervisor' => 'Supervisor',
+        'pm'         => 'Project Manager',
+        'hr'         => 'HR',
+        'writer'     => 'Writer',
     ];
 
     public function mount(): void
     {
+        $this->authorizeAdmin();
         $this->loadMatrix();
+    }
+
+    /**
+     * An admin, and one who belongs to an agency.
+     *
+     * Every row this screen reads and writes is owned by the acting user's
+     * organization. Somebody with no organization — a platform superadmin —
+     * has no map to edit and must not reach a screen that would otherwise
+     * write rows belonging to nobody.
+     */
+    protected function authorizeAdmin(): void
+    {
+        $user = auth()->user();
+
+        abort_unless($user?->isAdmin() && $user->organization_id !== null, 403);
+    }
+
+    /**
+     * The agency whose map this screen is editing.
+     */
+    protected function organizationId(): int
+    {
+        return (int) auth()->user()->organization_id;
+    }
+
+    /**
+     * The permissions this panel is allowed to show and change.
+     */
+    private function grantablePermissions()
+    {
+        return Permission::whereNotIn('action', self::UNGRANTABLE_ACTIONS)
+            ->orderBy('module')
+            ->orderBy('action')
+            ->get();
     }
 
     private function loadMatrix(): void
     {
-        $permissions = Permission::orderBy('module')->orderBy('action')->get();
+        $permissions = $this->grantablePermissions();
 
         // Build modulePermissions: module => [name => label, ...]
         $grouped = [];
@@ -60,7 +124,12 @@ class AuthorizationPanel extends Component
         }
         $this->modulePermissions = $grouped;
 
-        // Load existing role_permissions into matrix
+        /*
+         * Confined to this agency by OrganizationScope, which is what makes
+         * the screen safe: an admin reads their own map and could not see
+         * another organization's rows if they tried. The writes below are
+         * stamped with the same organization by BelongsToOrganization.
+         */
         $existing = RolePermission::with('permission')->get();
         $map = [];
         foreach ($existing as $rp) {
@@ -82,9 +151,13 @@ class AuthorizationPanel extends Component
      */
     public function toggle(string $role, string $permissionName): void
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        $this->authorizeAdmin();
 
         $permission = Permission::where('name', $permissionName)->firstOrFail();
+
+        // The screen never draws a delete toggle, but the action is reachable
+        // by anyone willing to post to Livewire's endpoint directly.
+        abort_if(in_array($permission->action, self::UNGRANTABLE_ACTIONS, true), 403);
 
         $current = $this->matrix[$role][$permissionName] ?? false;
         $newValue = ! $current;
@@ -96,7 +169,7 @@ class AuthorizationPanel extends Component
 
         $this->matrix[$role][$permissionName] = $newValue;
 
-        PermissionService::flushFor($role);
+        PermissionService::flushFor($role, $this->organizationId());
 
         $this->dispatch('notify',
             message: $permission->label . ' ' . ($newValue ? 'enabled' : 'disabled') . ' for ' . $this->roleLabels[$role],
@@ -109,10 +182,11 @@ class AuthorizationPanel extends Component
      */
     public function grantAll(string $role): void
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        $this->authorizeAdmin();
 
-        $permissions = Permission::all();
-        foreach ($permissions as $perm) {
+        // Grantable only: "all" must never reach a delete permission left
+        // behind in an older database.
+        foreach ($this->grantablePermissions() as $perm) {
             RolePermission::updateOrCreate(
                 ['role' => $role, 'permission_id' => $perm->id],
                 ['allowed' => true]
@@ -120,7 +194,7 @@ class AuthorizationPanel extends Component
             $this->matrix[$role][$perm->name] = true;
         }
 
-        PermissionService::flushFor($role);
+        PermissionService::flushFor($role, $this->organizationId());
         $this->dispatch('notify', message: 'All permissions granted to ' . $this->roleLabels[$role], type: 'success');
     }
 
@@ -129,10 +203,9 @@ class AuthorizationPanel extends Component
      */
     public function revokeAll(string $role): void
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        $this->authorizeAdmin();
 
-        $permissions = Permission::all();
-        foreach ($permissions as $perm) {
+        foreach ($this->grantablePermissions() as $perm) {
             RolePermission::updateOrCreate(
                 ['role' => $role, 'permission_id' => $perm->id],
                 ['allowed' => false]
@@ -140,12 +213,16 @@ class AuthorizationPanel extends Component
             $this->matrix[$role][$perm->name] = false;
         }
 
-        PermissionService::flushFor($role);
+        PermissionService::flushFor($role, $this->organizationId());
         $this->dispatch('notify', message: 'All permissions revoked from ' . $this->roleLabels[$role], type: 'info');
     }
 
     public function render()
     {
+        // mount() runs only on the first render; every later Livewire request
+        // arrives on a hydrated component and passes through here instead.
+        $this->authorizeAdmin();
+
         return view('livewire.admin.authorization-panel')
             ->layout('layouts.app', ['pageTitle' => 'Authorization']);
     }

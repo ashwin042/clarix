@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Organization;
 use App\Models\Task;
 use App\Models\TaskAssignment;
 use App\Models\TaskNote;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\TenantContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,6 +16,22 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Everything below is agency data and needs an owner. Nobody is
+        // authenticated when a seeder runs, so the organization the migrations
+        // created is named explicitly and the models pick it up from there.
+        $organization = Organization::firstOrCreate(
+            ['slug' => 'code-next-door'],
+            [
+                'name'              => 'Code Next Door',
+                'contact_number'    => '0000000000',
+                'email'             => 'placeholder@codenextdoor.example',
+                'address'           => 'Address to be updated',
+                'subscription_type' => 'pro',
+            ]
+        );
+
+        TenantContext::useOrganization($organization->id);
+
         // Units
         $unitA = Unit::create(['name' => 'Content Unit A']);
         $unitB = Unit::create(['name' => 'Research Unit B']);

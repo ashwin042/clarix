@@ -16,6 +16,11 @@ class Permission extends Model
 
     /**
      * All defined permission names grouped by module.
+     *
+     * Deletion is absent, and stays absent. Removing a task, a unit or a
+     * person is admin-only by structure — there is no permission to grant, so
+     * listing one here would advertise a control that does not exist. The
+     * check lives in the policies, on User::administers().
      */
     public static function allByModule(): array
     {
@@ -24,19 +29,16 @@ class Permission extends Model
                 'units.view'   => 'View Units',
                 'units.create' => 'Create Units',
                 'units.update' => 'Update Units',
-                'units.delete' => 'Delete Units',
             ],
             'users' => [
                 'users.view'   => 'View Users',
                 'users.create' => 'Create Users',
                 'users.update' => 'Update Users',
-                'users.delete' => 'Delete Users',
             ],
             'tasks' => [
                 'tasks.view'         => 'View Tasks',
                 'tasks.create'       => 'Create Tasks',
                 'tasks.update'       => 'Update Tasks',
-                'tasks.delete'       => 'Delete Tasks',
                 'tasks.assign'       => 'Assign Writers',
                 'tasks.upload_files' => 'Upload Files',
             ],
