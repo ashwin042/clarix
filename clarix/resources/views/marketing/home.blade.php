@@ -1742,62 +1742,63 @@
         // A feature line ending in ':' is a lead-in ("Everything in Pro,
         // plus:") rather than a feature, and renders without a checkmark.
         //
-        // 'priceAnnual' is the same plan at 30% off, quoted as a per-month
+        // 'priceAnnual' is the same plan at 20% off, quoted as a per-month
         // figure because that is what the card compares against. A plan
-        // without the key (Enterprise) ignores the billing toggle entirely.
+        // without the key ignores the billing toggle entirely — which is how
+        // Base and Enterprise behave, Base carrying no annual discount and
+        // Enterprise no list price at all.
         $plans = [
             [
-                'name'  => 'Basic',
-                'price' => 'Rs 2,500',
-                'priceAnnual' => 'Rs 1,750',
+                'name'  => 'Base',
+                'price' => 'Rs 1,250',
+                // No 'priceAnnual': Base is not discounted annually, and a plan
+                // without the key ignores the billing toggle rather than
+                // showing the same figure struck through against itself.
                 'period' => 'per month',
                 'blurb' => 'For small teams getting organized',
-                'cta'   => 'Get Started with Basic',
+                'cta'   => 'Get Started with Base',
                 'href'  => route('login'),
                 'features' => [
-                    'Up to 5 Teams/Units',
+                    'Unlimited Teams/Units',
                     'Task boards & file attachments',
-                    'Basic client view (read-only status)',
+                    'Upload/download files',
                     '5GB file storage',
                     'Email support',
                 ],
             ],
             [
                 'name'  => 'Standard',
-                'price' => 'Rs 6,000',
-                'priceAnnual' => 'Rs 4,200',
+                'price' => 'Rs 2,000',
+                'priceAnnual' => 'Rs 1,600',
                 'period' => 'per month',
                 'blurb' => 'For growing agencies with real client load',
                 'cta'   => 'Get Started with Standard',
                 'href'  => route('login'),
                 'popular' => true,
                 'features' => [
-                    'Up to 20 Teams/Units',
-                    'Full client portal access',
-                    'Custom order/task labels & workflows',
-                    'AI chatbot integration',
+                    'Unlimited Teams/Units',
+                    'Everything in Base, plus:',
+                    'Full ERP access (Attendance, Leave, Payroll)',
+                    'AI Chatbot',
+                    'Gantt charts',
                     '50GB file storage',
                     'Priority email support',
-                    'Basic analytics dashboard',
                 ],
             ],
             [
                 'name'  => 'Pro',
-                'price' => 'Rs 10,000',
-                'priceAnnual' => 'Rs 7,000',
+                'price' => 'Rs 3,500',
+                'priceAnnual' => 'Rs 2,800',
                 'period' => 'per month',
                 'blurb' => 'For agencies running multiple teams and clients',
                 'cta'   => 'Get Started with Pro',
                 'href'  => route('login'),
                 'features' => [
-                    'Up to 50 Teams/Units',
+                    'Unlimited Teams/Units',
                     'Everything in Standard, plus:',
-                    'AI automation, chatbot & custom integrations (Excel, Google Sheets, MCPs)',
-                    'Advanced analytics & reporting',
-                    'Role-based permissions',
-                    '200GB file storage',
+                    'MCP & Plugins / Automation (full access)',
+                    '100GB file storage (+Rs 1,000 per extra 100GB on request)',
                     'Priority chat support',
-                    'Custom branding on client portal',
                 ],
             ],
             [
@@ -1823,7 +1824,7 @@
         // Column order matches $plans, so the table reads left to right in
         // the same order as the cards above it.
         $compareHeads = [
-            ['name' => 'Basic',      'cta' => 'Get Started',       'href' => route('login')],
+            ['name' => 'Base',       'cta' => 'Get Started',       'href' => route('login')],
             ['name' => 'Standard',   'cta' => 'Get Started',       'href' => route('login')],
             ['name' => 'Pro',        'cta' => 'Talk to an expert', 'href' => '#schedule-demo'],
             ['name' => 'Enterprise', 'cta' => 'Talk to an expert', 'href' => '#schedule-demo'],
@@ -1834,19 +1835,14 @@
         // tooltip copy for the '?' beside the label.
         $compare = [
             'Core' => [
-                ['Teams/Units', ['5', '20', '50', 'Unlimited']],
+                ['Teams/Units', ['Unlimited', 'Unlimited', 'Unlimited', 'Unlimited']],
                 ['Task boards', [true, true, true, true]],
-                ['File attachments', [true, true, true, true]],
-                ['Custom task labels & workflows', [false, true, true, true],
-                 'Define your own task statuses and the order work moves through them.'],
-            ],
-            'Client Access' => [
-                ['Client portal', ['Read-only', 'Full access', 'Full access', 'Full access'],
-                 'The view your clients sign in to for status, files and credits.'],
-                ['Custom branding on portal', [false, false, true, true]],
+                ['Create projects/tasks', [true, true, true, true]],
+                ['Upload/download files', [true, true, true, true]],
+                ['Seats', ['10', '25', '50', 'Unlimited']],
             ],
             'Storage' => [
-                ['File storage', ['5GB', '50GB', '200GB', 'Custom']],
+                ['File storage', ['5GB', '50GB', '100GB (+Rs 1,000/extra 100GB)', 'Custom']],
             ],
             'Support' => [
                 ['Support type', ['Email', 'Priority email', 'Priority chat', 'Dedicated manager']],
@@ -1855,11 +1851,11 @@
                 ['Onboarding & migration support', [false, false, false, true]],
             ],
             'Advanced' => [
-                ['Analytics dashboard', [false, 'Basic', 'Advanced', 'Advanced']],
-                ['AI Integration', [false, 'Chatbot', 'Automation + Chatbot + Custom MCPs', 'Custom AI setup'],
-                 'Chatbot answers client and team questions; automation and custom MCPs connect Clarix to Excel, Google Sheets and your own tools.'],
-                ['Role-based permissions', [false, false, true, true],
-                 'Control what each staff role can see and change.'],
+                ['ERP (Attendance/Leave/Payroll)', [false, 'Full access', 'Full access', 'Full access']],
+                ['AI Chatbot', [false, true, true, true]],
+                ['Gantt charts', [false, true, true, true]],
+                ['MCP & Plugins / Automation', [false, false, 'Full access', 'Full access'],
+                 'Connect Clarix to Excel, Google Sheets and your own tools.'],
                 ['API access', [false, false, false, true],
                  'Programmatic access to your Clarix data for custom tooling.'],
                 ['Custom integrations', [false, false, false, true]],
@@ -2297,7 +2293,7 @@
                         Annually
                         <span class="rounded-full px-2 py-[1px] text-[10.5px] font-semibold transition-colors"
                               :class="billing === 'annual' ? 'bg-white/20 text-white' : 'bg-[#EEF0FF] text-indigo-700'">
-                            Save 30%
+                            Save 20%
                         </span>
                     </button>
                 </div>
