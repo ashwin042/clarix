@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
+use App\Services\TenantContext;
+use App\Observers\TaskFileObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(TaskFileObserver::class)]
 class TaskFile extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'task_id',
         'file_path',
@@ -51,5 +58,15 @@ class TaskFile extends Model
         if ($bytes < 1024) return $bytes . ' B';
         if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
         return round($bytes / 1048576, 1) . ' MB';
+    }
+
+    /**
+     * The acting user's organization wins, so a request can never attribute a
+     * record to another agency. Console commands and queued jobs have no
+     * acting user, and fall back to the task that owns this row.
+     */
+    protected function resolveOrganizationId(): ?int
+    {
+        return TenantContext::organizationId() ?? $this->task?->organization_id;
     }
 }
