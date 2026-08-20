@@ -68,17 +68,23 @@ class AttendancePage extends Component
      * The people whose attendance this viewer may reach.
      *
      * Confined to the organization by the tenant scope on User, and narrowed
-     * again to a PM's own unit. A writer never gets here — the team table is
-     * not drawn for them at all — but the query is written so that it would
-     * return only themselves if they did.
+     * again to a PM's own unit. An admin and HR both keep the whole agency. A
+     * writer never gets here — the team table is not drawn for them at all —
+     * but the query is written so that it would return only themselves if
+     * they did.
      */
     protected function subjects()
     {
         $user = auth()->user();
 
+        // HR sits with the admin here rather than with the narrowed roles: the
+        // records of the whole agency are what the role is for. The tenant
+        // scope still confines that to their own agency.
+        $seesEveryone = $user->isAdmin() || $user->isHr();
+
         return User::query()
             ->when($user->isPm(), fn ($q) => $q->where('unit_id', $user->unit_id))
-            ->when(! $user->isAdmin() && ! $user->isPm(), fn ($q) => $q->whereKey($user->id))
+            ->when(! $seesEveryone && ! $user->isPm(), fn ($q) => $q->whereKey($user->id))
             ->orderBy('name');
     }
 

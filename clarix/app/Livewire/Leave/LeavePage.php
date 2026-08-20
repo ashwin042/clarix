@@ -55,15 +55,19 @@ class LeavePage extends Component
 
     /**
      * The people whose requests this viewer may reach — the organization for
-     * an admin, their own unit for a PM, themselves otherwise.
+     * an admin or HR, their own unit for a PM, themselves otherwise.
      */
     protected function subjectIds()
     {
         $user = auth()->user();
 
+        // HR reaches the agency, as in AttendancePage — approving time off is
+        // the role's job across every unit.
+        $seesEveryone = $user->isAdmin() || $user->isHr();
+
         return User::query()
             ->when($user->isPm(), fn ($q) => $q->where('unit_id', $user->unit_id))
-            ->when(! $user->isAdmin() && ! $user->isPm(), fn ($q) => $q->whereKey($user->id))
+            ->when(! $seesEveryone && ! $user->isPm(), fn ($q) => $q->whereKey($user->id))
             ->pluck('id');
     }
 
