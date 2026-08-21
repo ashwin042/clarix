@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
@@ -18,11 +21,35 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useTailwind();
 
+        $this->registerRateLimiters();
+
          if (config('app.env') === 'production') {
             URL::forceScheme('https');
 
             $this->assertRealObjectStorage();
         }
+    }
+
+    /**
+     * Throttles for the Hermes endpoints.
+     *
+     * Named here because the api middleware group carries no throttle at all —
+     * the task API is protected by needing a bearer token, and nothing else in
+     * routes/api.php has ever needed a limit. The link endpoint is different in
+     * kind: it answers "is this code real", which makes it a guessing oracle,
+     * and an eight-character code is only safe behind a limit.
+     *
+     * Keyed on IP rather than on the key, because every Hermes request carries
+     * the same key by definition — keying on it would be one global bucket that
+     * a single noisy caller could exhaust for everyone.
+     */
+    protected function registerRateLimiters(): void
+    {
+        RateLimiter::for('hermes-verify', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        // Resolve is not a guessing oracle — the caller already holds the chat
+        // id — so this bounds abuse rather than protecting a secret.
+        RateLimiter::for('hermes-resolve', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
     }
 
     /**

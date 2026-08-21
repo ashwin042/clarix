@@ -77,4 +77,28 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Hermes (Telegram bot)
+    |--------------------------------------------------------------------------
+    |
+    | The bot that links Telegram accounts to Clarix users. Unlike the task API,
+    | Hermes does not authenticate as a user: it presents a static key and signs
+    | each request, and the link code inside the body is what identifies the
+    | person. See EnsureHermesRequest for why a user-authenticated token would
+    | break the cross-organization lookup.
+    |
+    | Both key and secret are required in any environment where the endpoints
+    | are reachable; the middleware refuses every request while either is unset,
+    | so a half-configured deploy is closed rather than open.
+    |
+    */
+    'hermes' => [
+        'key'    => env('HERMES_API_KEY'),
+        'secret' => env('HERMES_SIGNING_SECRET'),
+
+        // Only used to build the t.me deep link shown in the connect card.
+        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'ClarixHermesBot'),
+    ],
+
 ];
