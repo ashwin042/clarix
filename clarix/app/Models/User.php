@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use App\Services\PermissionService;
 use App\Services\PlanFeatures;
 
@@ -23,6 +24,15 @@ class User extends Authenticatable implements PlatformVisible
 {
     use HasFactory, Notifiable;
     use BelongsToOrganization;
+
+    /**
+     * Personal access tokens, for the service accounts an agency's
+     * integrations authenticate as. A token resolves to a real user row, which
+     * is what lets TenantContext answer "which organization is acting" for an
+     * API request exactly as it does for a browser session — see
+     * TaskCreationService.
+     */
+    use HasApiTokens;
 
     protected $fillable = [
         'name',

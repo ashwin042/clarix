@@ -6,9 +6,11 @@ use App\Livewire\Tasks\CreateTask;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
+use App\Notifications\NewTaskCreatedNotification;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -252,6 +254,100 @@ class CreateTaskTest extends TestCase
             ->call('removeUpload', 1);
 
         $this->assertCount(2, $component->get('uploads'));
+    }
+
+    /**
+     * Characterization test, written before TaskCreationService was extracted.
+     *
+     * The admin fan-out was the one part of the create flow with no coverage
+     * at all, which made it exactly the part a refactor could drop in silence
+     * — nothing else in the suite would have gone red. It is pinned here
+     * against the current behaviour so the extraction has to preserve it.
+     */
+    public function test_every_admin_is_notified_when_a_task_is_created(): void
+    {
+        Notification::fake();
+
+        $unit   = $this->makeUnit();
+        $pm     = $this->makePm($unit);
+        $adminA = $this->makeAdmin();
+        $adminB = $this->makeAdmin();
+        $writer = $this->makeWriter($unit);
+
+        Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('title', 'Notify Me')
+            ->set('task_code', 'NOTIFY_001')
+            ->set('priority', 'medium')
+            ->set('deadline', now()->addDays(7)->format('Y-m-d'))
+            ->set('credit_amount', '1.00')
+            ->call('save');
+
+        Notification::assertSentTo([$adminA, $adminB], NewTaskCreatedNotification::class);
+
+        // The fan-out is by role, so the two non-admins must be left out.
+        Notification::assertNotSentTo([$pm, $writer], NewTaskCreatedNotification::class);
+    }
+
+    /**
+     * Characterization test for the tenant stamp.
+     *
+     * organization_id is filled by the BelongsToOrganization creating hook
+     * rather than by this component, and it is deliberately absent from
+     * Task::$fillable. Pinned here because the API endpoint depends on the
+     * same hook firing for a token-authenticated actor, and a refactor that
+     * moved the create off the Eloquent path would break both at once.
+     */
+    public function test_created_task_is_stamped_with_the_actors_organization(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        Livewire::actingAs($pm)
+            ->test(CreateTask::class)
+            ->set('title', 'Owned Task')
+            ->set('task_code', 'OWNED_001')
+            ->set('priority', 'medium')
+            ->set('deadline', now()->addDays(7)->format('Y-m-d'))
+            ->set('credit_amount', '1.00')
+            ->call('save');
+
+        $task = Task::first();
+
+        $this->assertNotNull($task->organization_id);
+        $this->assertSame((int) $pm->organization_id, (int) $task->organization_id);
+    }
+
+    /**
+     * The rendered form still binds to the component it is paired with.
+     *
+     * The other tests here drive the component class directly, which means a
+     * view that had drifted away from it — a wire:model naming a property that
+     * no longer exists, a wire:submit naming a removed method — would not show
+     * up in any of them. Asserted against the real page so that extracting
+     * work out of save() cannot quietly strand the form that calls it.
+     */
+    public function test_create_form_binds_to_the_components_properties_and_actions(): void
+    {
+        $unit = $this->makeUnit();
+        $pm   = $this->makePm($unit);
+
+        $page = $this->actingAs($pm)->get(route('tasks.create'))->assertOk();
+
+        foreach ([
+            'title', 'task_code', 'task_type', 'important_notes',
+            'priority', 'deadline', 'credit_amount', 'assigned_admin_id', 'uploads',
+        ] as $property) {
+            $page->assertSee('wire:model="'.$property.'"', false);
+            $this->assertTrue(
+                property_exists(CreateTask::class, $property),
+                "The form binds wire:model=\"{$property}\" but the component has no such property."
+            );
+        }
+
+        $page->assertSee('wire:submit="save"', false);
+        $this->assertTrue(method_exists(CreateTask::class, 'save'));
+        $this->assertTrue(method_exists(CreateTask::class, 'removeFile'));
     }
 
     public function test_pm_dashboard_has_add_task_button_linking_to_create_page(): void

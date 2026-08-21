@@ -52,6 +52,48 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API Upload Limits
+    |--------------------------------------------------------------------------
+    |
+    | What the task file endpoint accepts. Deliberately narrower than the
+    | browser, which validates size alone and takes any file type at all: a
+    | file picker has a person behind it choosing something, while a leaked
+    | token that accepts arbitrary bytes is a writable object store on the
+    | agency's R2 bill.
+    |
+    | SVG is absent from the image list on purpose. It is an image by
+    | extension and a script container by format, and these objects are served
+    | back out of storage.
+    |
+    | The per-file ceiling matches the browser's 50MB, but PHP has the final
+    | say and its limits are environment-specific. Whatever post_max_size the
+    | running PHP is configured with caps the whole multipart body, and
+    | upload_max_filesize caps each part — set either below the figure here and
+    | PHP wins. Worth checking with `php -i` on the deployment target rather
+    | than assuming this file's number applies: the repository's own php.ini is
+    | not necessarily the one PHP loads.
+    |
+    | An over-large body is answered cleanly. Laravel's ValidatePostSize
+    | compares Content-Length against post_max_size before anything else runs
+    | and raises PostTooLargeException, which is a 413 with a plain message —
+    | verified against a real 60MB request. The confusing case is narrower than
+    | it looks: only a request with no Content-Length to check, such as chunked
+    | transfer encoding, reaches the validator with an emptied body and comes
+    | back as "the files field is required".
+    |
+    */
+
+    'api_allowed_mimes' => [
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+        'txt', 'csv', 'rtf', 'odt', 'ods',
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp',
+    ],
+
+    'api_max_files' => (int) env('STORAGE_API_MAX_FILES', 10),
+
+    'api_max_file_kb' => (int) env('STORAGE_API_MAX_FILE_KB', 51200),
+    /*
+    |--------------------------------------------------------------------------
     | Reconciliation
     |--------------------------------------------------------------------------
     |

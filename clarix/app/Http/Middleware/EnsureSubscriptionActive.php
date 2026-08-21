@@ -26,7 +26,9 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * The response is a page rather than a redirect or a logout: the user stays
  * signed in, can still reach their profile and can still sign out, they simply
- * cannot get at the work.
+ * cannot get at the work. A caller that asked for JSON gets the same refusal
+ * as JSON — the middleware is shared with the API routes, and an integration
+ * cannot read the suspension page.
  */
 class EnsureSubscriptionActive
 {
@@ -44,6 +46,18 @@ class EnsureSubscriptionActive
 
         if ($subscription === null || ! $subscription->isSuspended()) {
             return $next($request);
+        }
+
+        // The suspension page is a page, and an integration cannot read one.
+        // Same decision, same status, in whichever form the caller asked for
+        // — so a suspended agency's API stops filing work instead of getting
+        // HTML it will fail to parse.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'This organization\'s subscription is suspended.',
+                'organization' => $user->organization?->name,
+                'status' => $subscription->status,
+            ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
         return response()->view('errors.subscription-suspended', [

@@ -61,13 +61,22 @@ return [
         ],
 
         'r2' => [
-            'driver' => 's3',
+            // Overridable so the endpoint can be exercised end to end against a
+            // local directory. Production leaves it unset and gets s3, exactly
+            // as before; nothing but a deliberate R2_DRIVER=local changes it.
+            'driver' => env('R2_DRIVER', 's3'),
             'key' => env('R2_ACCESS_KEY_ID'),
             'secret' => env('R2_SECRET_ACCESS_KEY'),
             'region' => env('R2_REGION', 'auto'),
             'bucket' => env('R2_BUCKET'),
             'endpoint' => env('R2_ENDPOINT'),
             'use_path_style_endpoint' => true,
+            // Only meaningful when R2_DRIVER is overridden to local, which is
+            // how the upload path gets exercised end to end without writing
+            // into the real bucket. Left unset in production, where the s3
+            // driver reads it as (string) (null ?? '') — an empty key prefix,
+            // exactly as before this line existed.
+            'root' => env('R2_ROOT'),
             'throw' => false,
             'report' => false,
         ],

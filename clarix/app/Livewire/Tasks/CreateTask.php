@@ -2,11 +2,8 @@
 
 namespace App\Livewire\Tasks;
 
-use App\Rules\TenantExists;
-use App\Models\Task;
 use App\Models\User;
-use App\Notifications\NewTaskCreatedNotification;
-use Illuminate\Support\Facades\DB;
+use App\Services\TaskCreationService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -64,63 +61,27 @@ class CreateTask extends Component
     {
         $this->authorizeCreate();
 
-        $unitId     = (string) auth()->user()->unit_id;
-        $uniqueRule = "unique:tasks,task_code,NULL,id,unit_id,{$unitId}";
+        $actor = auth()->user();
 
-        $this->validate([
-            'title'             => 'required|string|max:255',
-            'task_code'         => ['required', 'string', 'max:50', $uniqueRule],
-            'priority'          => 'required|in:low,medium,high',
-            'deadline'          => 'required|date',
-            'credit_amount'     => 'required|numeric|min:0',
-            'task_type'         => 'nullable|in:tech,content,accounts,maths,nursing,science,civil,others',
-            'important_notes'   => 'nullable|string|max:5000',
-            'assigned_admin_id' => [
-                'nullable',
-                TenantExists::in('users'),
-                function ($attribute, $value, $fail) {
-                    if ($value && User::find($value)?->role !== 'admin') {
-                        $fail('The selected user must be an admin.');
-                    }
-                },
-            ],
+        // The task's own rules come from the service, so this screen and the
+        // API endpoint cannot drift apart. The upload rules stay here: they
+        // describe how *this* caller received its files, and the endpoint
+        // receives none.
+        $this->validate(TaskCreationService::rules((int) $actor->unit_id) + [
             'uploads'   => ['nullable', 'array'],
             'uploads.*' => ['file', 'max:51200'],
         ]);
 
-        $task = Task::create([
+        $task = app(TaskCreationService::class)->create([
             'title'             => $this->title,
             'task_code'         => $this->task_code,
-            'task_type'         => $this->task_type ?: null,
-            'important_notes'   => $this->important_notes ?: null,
-            'unit_id'           => auth()->user()->unit_id,
-            'pm_id'             => auth()->id(),
-            'assigned_admin_id' => $this->assigned_admin_id ?: null,
+            'task_type'         => $this->task_type,
+            'important_notes'   => $this->important_notes,
+            'assigned_admin_id' => $this->assigned_admin_id,
             'priority'          => $this->priority,
-            'status'            => 'pending',
             'deadline'          => $this->deadline,
             'credit_amount'     => $this->credit_amount,
-            'created_by'        => auth()->id(),
-        ]);
-
-        foreach ($this->uploads as $file) {
-            $path = $file->store($task->storagePrefix(), 'r2');
-
-            // The file record and the unit's storage total commit together.
-            DB::transaction(function () use ($task, $file, $path) {
-                $task->files()->create([
-                    'file_path'     => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size'     => $file->getSize(),
-                    'mime_type'     => $file->getMimeType(),
-                    'uploaded_by'   => auth()->id(),
-                ]);
-            });
-        }
-
-        foreach (User::where('role', 'admin')->get() as $admin) {
-            $admin->notify(new NewTaskCreatedNotification($task));
-        }
+        ], $actor, $this->uploads);
 
         $this->redirectRoute('tasks.show', $task);
     }
