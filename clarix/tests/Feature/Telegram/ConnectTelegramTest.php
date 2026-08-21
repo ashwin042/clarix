@@ -25,7 +25,7 @@ class ConnectTelegramTest extends TestCase
         parent::setUp();
         $this->seed(PermissionSeeder::class);
 
-        config()->set('services.hermes.bot_username', 'ClarixHermesBot');
+        config()->set('services.hermes.bot_username', 'Jarvis_clarix_assistant_bot');
 
         $this->org = $this->populate($this->makeOrganization('card-a', 'Agency A'), 'A');
         $this->subscribeOrganization($this->org['organization'], 'pro');
@@ -52,7 +52,7 @@ class ConnectTelegramTest extends TestCase
     {
         Livewire::actingAs($this->org['pm'])->test(ConnectTelegram::class)
             ->call('generate')
-            ->assertSee('https://t.me/ClarixHermesBot?start=', false);
+            ->assertSee('https://t.me/Jarvis_clarix_assistant_bot?start=', false);
     }
 
     public function test_generating_again_replaces_the_previous_code(): void
@@ -165,8 +165,12 @@ class ConnectTelegramTest extends TestCase
         $component->call('generate')->assertSee('Too many codes');
     }
 
-    /** The settings page must stay reachable for every plan. */
-    public function test_the_settings_page_still_renders_for_a_base_plan(): void
+    /**
+     * The settings page must stay reachable for every plan — and Telegram is no
+     * longer part of it. Linking moved to the Telegram card on MCP & Plugins,
+     * so a stray mention here would send people to a page that cannot do it.
+     */
+    public function test_the_settings_page_renders_without_telegram(): void
     {
         $base = $this->populate($this->makeOrganization('card-e', 'Base Four'), 'E');
         $this->subscribeOrganization($base['organization'], 'base');
@@ -175,6 +179,49 @@ class ConnectTelegramTest extends TestCase
             ->get('/settings')
             ->assertOk()
             ->assertSee('Danger Zone')
-            ->assertSee('Telegram');
+            ->assertDontSee('Telegram');
+    }
+
+    /**
+     * The one live integration is reachable where it now lives. Pro, because
+     * /ai/mcp is gated on the automation feature.
+     */
+    public function test_the_mcp_page_carries_the_connect_card(): void
+    {
+        $this->actingAs($this->org['pm'])
+            ->get('/ai/mcp')
+            ->assertOk()
+            ->assertSee('Generate code');
+    }
+
+    /**
+     * "Hermes" is the bot's internal name and stays in the wire protocol, the
+     * config keys and the class names. It must never reach a user, so this
+     * sweeps every rendered template rather than trusting a code review.
+     */
+    public function test_no_view_says_hermes(): void
+    {
+        $offenders = [];
+
+        $views = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(resource_path('views'))
+        );
+
+        foreach ($views as $view) {
+            if (! $view->isFile() || ! str_ends_with($view->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            // The bot's @username is set in BotFather, not here, so the deep
+            // link is excused from this rule whatever handle it carries. The
+            // current one happens not to need the excuse; the next one might.
+            $body = str_replace('Jarvis_clarix_assistant_bot', '', file_get_contents($view->getPathname()));
+
+            if (stripos($body, 'hermes') !== false) {
+                $offenders[] = $view->getPathname();
+            }
+        }
+
+        $this->assertSame([], $offenders, 'Views must say AXOKAI, never Hermes.');
     }
 }

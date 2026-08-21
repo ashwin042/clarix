@@ -82,30 +82,43 @@
                         x-transition:leave-end="opacity-0"
                         class="border-t border-gray-100 px-4 pb-4 pt-3.5 dark:border-slate-800/60">
 
-                        <div class="space-y-3">
-                            @foreach ($plugin['fields'] as [$label, $placeholder, $type])
-                                <div>
-                                    <label class="block text-[12px] font-medium text-gray-500 dark:text-slate-400">{{ $label }}</label>
-                                    {{-- Disabled throughout: there is nothing behind these to save to. --}}
-                                    <input type="{{ $type }}" placeholder="{{ $placeholder }}" disabled
-                                        class="mt-1.5 block w-full cursor-not-allowed rounded-lg border-gray-200 bg-gray-50 text-[13px] text-gray-400 placeholder-gray-300 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-500 dark:placeholder-slate-600">
-                                </div>
-                            @endforeach
-                        </div>
+                        @if ($plugin['connect'] ?? false)
 
-                        <div class="mt-3.5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/25 dark:bg-amber-500/10">
-                            <svg class="mt-px h-3.5 w-3.5 flex-shrink-0 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.5m0 3.5h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                            </svg>
-                            <p class="text-[11.5px] leading-relaxed text-amber-800 dark:text-amber-200/90">
-                                This integration is currently in development and will be available on Clarix soon.
-                            </p>
-                        </div>
+                            {{-- The one live integration, so this panel holds the
+                                 real thing rather than a mock of it. Linking binds
+                                 one person, not the agency, which is why the card
+                                 is a component with its own state and not fields
+                                 on this page. --}}
+                            <livewire:profile.connect-telegram wire:key="connect-telegram" />
 
-                        <button type="button" disabled
-                            class="mt-3.5 w-full cursor-not-allowed rounded-lg bg-gray-100 px-4 py-2 text-[13px] font-semibold text-gray-400 dark:bg-slate-800 dark:text-slate-600">
-                            Save Setting
-                        </button>
+                        @else
+
+                            <div class="space-y-3">
+                                @foreach ($plugin['fields'] as [$label, $placeholder, $type])
+                                    <div>
+                                        <label class="block text-[12px] font-medium text-gray-500 dark:text-slate-400">{{ $label }}</label>
+                                        {{-- Disabled throughout: there is nothing behind these to save to. --}}
+                                        <input type="{{ $type }}" placeholder="{{ $placeholder }}" disabled
+                                            class="mt-1.5 block w-full cursor-not-allowed rounded-lg border-gray-200 bg-gray-50 text-[13px] text-gray-400 placeholder-gray-300 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-500 dark:placeholder-slate-600">
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="mt-3.5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/25 dark:bg-amber-500/10">
+                                <svg class="mt-px h-3.5 w-3.5 flex-shrink-0 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.5m0 3.5h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                </svg>
+                                <p class="text-[11.5px] leading-relaxed text-amber-800 dark:text-amber-200/90">
+                                    This integration is currently in development and will be available on Clarix soon.
+                                </p>
+                            </div>
+
+                            <button type="button" disabled
+                                class="mt-3.5 w-full cursor-not-allowed rounded-lg bg-gray-100 px-4 py-2 text-[13px] font-semibold text-gray-400 dark:bg-slate-800 dark:text-slate-600">
+                                Save Setting
+                            </button>
+
+                        @endif
                     </div>
                 </div>
             @endforeach

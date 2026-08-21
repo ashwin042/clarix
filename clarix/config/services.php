@@ -98,7 +98,7 @@ return [
         'secret' => env('HERMES_SIGNING_SECRET'),
 
         // Only used to build the t.me deep link shown in the connect card.
-        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'ClarixHermesBot'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'Jarvis_clarix_assistant_bot'),
     ],
 
 ];
