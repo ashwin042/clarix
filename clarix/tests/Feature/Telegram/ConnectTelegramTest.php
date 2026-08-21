@@ -25,7 +25,7 @@ class ConnectTelegramTest extends TestCase
         parent::setUp();
         $this->seed(PermissionSeeder::class);
 
-        config()->set('services.hermes.bot_username', 'ClarixHermesBot');
+        config()->set('services.hermes.bot_username', 'Jarvis_clarix_assistant_bot');
 
         $this->org = $this->populate($this->makeOrganization('card-a', 'Agency A'), 'A');
         $this->subscribeOrganization($this->org['organization'], 'pro');
@@ -52,7 +52,7 @@ class ConnectTelegramTest extends TestCase
     {
         Livewire::actingAs($this->org['pm'])->test(ConnectTelegram::class)
             ->call('generate')
-            ->assertSee('https://t.me/ClarixHermesBot?start=', false);
+            ->assertSee('https://t.me/Jarvis_clarix_assistant_bot?start=', false);
     }
 
     public function test_generating_again_replaces_the_previous_code(): void
@@ -213,8 +213,9 @@ class ConnectTelegramTest extends TestCase
             }
 
             // The bot's @username is set in BotFather, not here, so the deep
-            // link is allowed to carry whatever handle it actually has.
-            $body = str_replace('ClarixHermesBot', '', file_get_contents($view->getPathname()));
+            // link is excused from this rule whatever handle it carries. The
+            // current one happens not to need the excuse; the next one might.
+            $body = str_replace('Jarvis_clarix_assistant_bot', '', file_get_contents($view->getPathname()));
 
             if (stripos($body, 'hermes') !== false) {
                 $offenders[] = $view->getPathname();
