@@ -17,7 +17,7 @@
     @if (! $planAllows)
 
         <p class="text-sm text-gray-600 dark:text-slate-400">
-            Link your Telegram account so Hermes knows who you are and can act on your tasks from your phone.
+            Link your Telegram account so AXOKAI knows who you are and can act on your tasks from your phone.
         </p>
         <p class="mt-2 text-xs font-medium text-gray-500 dark:text-slate-500">
             Not included in your plan. Upgrade to Pro to unlock Telegram linking.
@@ -25,19 +25,19 @@
 
     @elseif ($linked)
 
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-3">
             <div>
                 <p class="text-sm font-medium text-emerald-700 dark:text-emerald-400">Connected</p>
                 <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                    Linked {{ $linkedAt?->diffForHumans() }}. Hermes recognises you on Telegram.
+                    Linked {{ $linkedAt?->diffForHumans() }}. AXOKAI recognises you on Telegram.
                 </p>
             </div>
 
             <button
                 type="button"
                 wire:click="disconnect"
-                wire:confirm="Disconnect Telegram? Hermes will stop recognising you until you link again."
-                class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                wire:confirm="Disconnect Telegram? AXOKAI will stop recognising you until you link again."
+                class="self-start shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
                 Disconnect
             </button>
@@ -46,11 +46,11 @@
     @elseif ($code)
 
         <p class="text-sm text-gray-600 dark:text-slate-400">
-            Send this code to Hermes on Telegram. It works once, and lapses in {{ $ttlMinutes }} minutes.
+            Send this code to AXOKAI on Telegram. It works once, and lapses in {{ $ttlMinutes }} minutes.
         </p>
 
         <div class="mt-3 flex flex-wrap items-center gap-3">
-            <code class="px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-800 font-mono text-lg tracking-[0.3em] text-gray-900 dark:text-slate-100">{{ $code }}</code>
+            <code class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 font-mono text-base tracking-[0.2em] text-gray-900 dark:text-slate-100">{{ $code }}</code>
 
             <a
                 href="https://t.me/{{ $botUsername }}?start={{ $code }}"
@@ -77,7 +77,7 @@
     @else
 
         <p class="text-sm text-gray-600 dark:text-slate-400">
-            Link your Telegram account so Hermes knows who you are and can act on your tasks from your phone.
+            Link your Telegram account so AXOKAI knows who you are and can act on your tasks from your phone.
         </p>
 
         <button

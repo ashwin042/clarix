@@ -81,6 +81,46 @@ class McpPluginsTest extends TestCase
         }
     }
 
+    /**
+     * Telegram is the one live integration, and this page is now where it is
+     * connected. The card mounts the real component, so the mock bot-token form
+     * that used to stand in for it must be gone rather than merely disabled.
+     */
+    public function test_the_telegram_card_mounts_the_live_connect_flow(): void
+    {
+        $html = Livewire::actingAs(User::factory()->create(['role' => 'writer']))
+            ->test(McpPlugins::class)
+            ->html();
+
+        $this->assertStringContainsString('Generate code', $html);
+        $this->assertStringContainsString('Link your Telegram account', $html);
+
+        $this->assertStringNotContainsString('Bot token', $html);
+        $this->assertStringNotContainsString('Chat ID', $html);
+        $this->assertStringNotContainsString('123456789:AAE', $html);
+        $this->assertStringNotContainsString('-1001234567890', $html);
+    }
+
+    /** Every other card keeps its disabled form; only the live one loses it. */
+    public function test_only_the_live_plugin_drops_its_save_button(): void
+    {
+        $html = Livewire::actingAs(User::factory()->create(['role' => 'writer']))
+            ->test(McpPlugins::class)
+            ->html();
+
+        $live = count(array_filter(
+            McpPlugins::plugins(),
+            fn (array $plugin) => $plugin['connect'] ?? false
+        ));
+
+        $this->assertSame(1, $live, 'Telegram should be the only live plugin.');
+        $this->assertSame(
+            count(McpPlugins::plugins()) - $live,
+            substr_count($html, 'Save Setting'),
+            'A live card should not render a Save button.'
+        );
+    }
+
     public function test_every_plugin_in_the_library_has_a_categorised_tint(): void
     {
         foreach (McpPlugins::plugins() as $plugin) {

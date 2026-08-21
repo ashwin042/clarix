@@ -165,8 +165,12 @@ class ConnectTelegramTest extends TestCase
         $component->call('generate')->assertSee('Too many codes');
     }
 
-    /** The settings page must stay reachable for every plan. */
-    public function test_the_settings_page_still_renders_for_a_base_plan(): void
+    /**
+     * The settings page must stay reachable for every plan — and Telegram is no
+     * longer part of it. Linking moved to the Telegram card on MCP & Plugins,
+     * so a stray mention here would send people to a page that cannot do it.
+     */
+    public function test_the_settings_page_renders_without_telegram(): void
     {
         $base = $this->populate($this->makeOrganization('card-e', 'Base Four'), 'E');
         $this->subscribeOrganization($base['organization'], 'base');
@@ -175,6 +179,48 @@ class ConnectTelegramTest extends TestCase
             ->get('/settings')
             ->assertOk()
             ->assertSee('Danger Zone')
-            ->assertSee('Telegram');
+            ->assertDontSee('Telegram');
+    }
+
+    /**
+     * The one live integration is reachable where it now lives. Pro, because
+     * /ai/mcp is gated on the automation feature.
+     */
+    public function test_the_mcp_page_carries_the_connect_card(): void
+    {
+        $this->actingAs($this->org['pm'])
+            ->get('/ai/mcp')
+            ->assertOk()
+            ->assertSee('Generate code');
+    }
+
+    /**
+     * "Hermes" is the bot's internal name and stays in the wire protocol, the
+     * config keys and the class names. It must never reach a user, so this
+     * sweeps every rendered template rather than trusting a code review.
+     */
+    public function test_no_view_says_hermes(): void
+    {
+        $offenders = [];
+
+        $views = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(resource_path('views'))
+        );
+
+        foreach ($views as $view) {
+            if (! $view->isFile() || ! str_ends_with($view->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            // The bot's @username is set in BotFather, not here, so the deep
+            // link is allowed to carry whatever handle it actually has.
+            $body = str_replace('ClarixHermesBot', '', file_get_contents($view->getPathname()));
+
+            if (stripos($body, 'hermes') !== false) {
+                $offenders[] = $view->getPathname();
+            }
+        }
+
+        $this->assertSame([], $offenders, 'Views must say AXOKAI, never Hermes.');
     }
 }

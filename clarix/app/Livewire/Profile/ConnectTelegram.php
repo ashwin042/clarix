@@ -8,19 +8,20 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 /**
- * "Connect Telegram", in the Settings page.
+ * "Connect Telegram", in the Telegram card on MCP & Plugins.
  *
- * Unlike every other plan-gated component in the app, this one does not abort
- * in mount(). Those each own a whole gated route; this one is embedded in
- * /settings, which is where a user changes their password and closes their
- * account. Aborting here would 402 the entire page for every agency below Pro
- * and lock them out of their own account controls over a feature they never
- * asked for. So the plan decides what the card *renders*, and the actions
- * refuse on their own behalf — which is also what keeps a crafted POST to
- * /livewire/update from being a way round the lock.
+ * Lives in the Livewire\Profile namespace because what it edits is one person's
+ * account, not the agency's — the page it is mounted on has moved, the thing it
+ * binds has not.
  *
- * ProfileOverview settled this shape already: the page is never refused, and a
- * section the viewer may not use is replaced with a note rather than an error.
+ * It does not abort in mount(), unlike most plan-gated components. The page it
+ * sits on aborts for it: /ai/mcp carries plan:automation on the route and
+ * McpPlugins repeats the check in render(), so a viewer without the feature
+ * never reaches this component at all. The plan check below is therefore the
+ * belt to those braces rather than the only lock — it is what stops a crafted
+ * POST to /livewire/update mounting the component directly and minting a code
+ * without ever loading the page. That is also why it sets $refusal instead of
+ * aborting: an action refusing needs to say so inside the card.
  *
  * The plaintext code lives in a public property for as long as it is on screen,
  * so it travels in Livewire's component payload. That is the same trust
