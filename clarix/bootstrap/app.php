@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Sanctum's token-ability gate, so a token minted for one
             // integration cannot be replayed against a different endpoint.
             'ability'      => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+
+            // The Telegram bot's own handshake. Deliberately not Sanctum: a
+            // token would resolve to a user in one agency and silently confine
+            // the link-code lookup to it — see EnsureHermesRequest.
+            'hermes'       => \App\Http\Middleware\EnsureHermesRequest::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

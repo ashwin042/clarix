@@ -72,7 +72,11 @@ class McpPlugins extends Component
             ],
             [
                 'name' => 'Telegram', 'category' => 'Communication', 'colour' => '#26A5E4',
-                'blurb' => 'Notify your team through Telegram',
+                // The one entry in this library that is not hypothetical: per-user
+                // linking to Hermes is live, and it is configured in Settings
+                // rather than here, because it binds one person's account rather
+                // than the agency's. The fields below stay disabled like the rest.
+                'blurb' => 'Link your own account to Hermes in Settings, under Telegram',
                 'fields' => [
                     ['Bot token', '123456789:AAE...', 'text'],
                     ['Chat ID', '-1001234567890', 'text'],
