@@ -45,6 +45,11 @@ class User extends Authenticatable implements PlatformVisible
     protected $hidden = [
         'password',
         'remember_token',
+
+        // Never serialised. The hash is the only stored form of a live
+        // Telegram link code, and a resource that leaked it would hand a
+        // caller the means to complete somebody else's link.
+        'telegram_link_code_hash',
     ];
 
     protected function casts(): array
@@ -52,6 +57,9 @@ class User extends Authenticatable implements PlatformVisible
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'telegram_link_code_expires_at' => 'datetime',
+            'telegram_linked_at' => 'datetime',
+            'telegram_chat_id' => 'integer',
         ];
     }
 
@@ -177,6 +185,18 @@ class User extends Authenticatable implements PlatformVisible
     public function isWriter(): bool
     {
         return $this->role === 'writer';
+    }
+
+    /**
+     * Whether this person has bound a Telegram account to Clarix.
+     *
+     * Keyed on the chat id rather than on telegram_linked_at, because the chat
+     * id is the thing Hermes actually resolves against; a timestamp without one
+     * would be a link that cannot be used.
+     */
+    public function hasLinkedTelegram(): bool
+    {
+        return $this->telegram_chat_id !== null;
     }
 
     /**
