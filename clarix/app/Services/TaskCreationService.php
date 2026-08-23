@@ -19,12 +19,19 @@ use App\Rules\TenantExists;
  * the real flow moved. Both live callers now go through here, so there is one
  * definition to keep current.
  *
- * Deliberately covers only the PM-shaped create: the actor files work under
- * their own unit, as themselves, always at status 'pending'. The admin modals
- * in ManageTasks and AssignedTasks take unit_id, pm_id and status as input and
- * are a genuinely different operation; folding them in here would mean a
- * parameter that switches between two authority models, which is how this kind
- * of helper turns into the thing it replaced.
+ * Covers the PM-shaped create: the actor files work under their own unit, as
+ * themselves, always at status 'pending'. The admin modals in ManageTasks and
+ * AssignedTasks take unit_id, pm_id *and status* as input and are a genuinely
+ * different operation; folding them in here would mean a parameter that
+ * switches between two authority models, which is how this kind of helper turns
+ * into the thing it replaced.
+ *
+ * The one concession is $target on create(), which lets a caller say which unit
+ * and whose the task is while everything else — status, created_by, the
+ * organization stamp — stays exactly as above. It exists because an admin
+ * filing from Telegram has no unit of their own to fall back on, and it is
+ * narrow enough not to be the switch described in the previous paragraph:
+ * there is still one authority model here, and 'pending' is still not an input.
  */
 class TaskCreationService
 {
@@ -62,7 +69,23 @@ class TaskCreationService
         // Rule::unique(), so the composite ['unit_id', 'task_code'] index is
         // consulted exactly as before. task_code is unique per unit, never
         // globally — see the index on the tasks table.
-        $uniqueRule = "unique:tasks,task_code,NULL,id,unit_id,{$unitId}";
+        //
+        // The null case is spelled out rather than interpolated, and it matters
+        // now that a caller can genuinely reach here without a unit: the task
+        // bot asks an admin which unit to file into, and renders these rules
+        // before the answer has been validated. Interpolating null produced a
+        // trailing empty parameter — `unit_id,` — which reaches the driver as
+        // `where unit_id = ''`. sqlite quietly matches nothing and MySQL
+        // coerces to 0 with a truncation warning, so the two agree by accident
+        // rather than because the rule means anything. 'NULL' is the token
+        // Laravel turns into whereNull, and since tasks.unit_id is NOT NULL it
+        // is also the honest answer: a code filed against no unit collides with
+        // nothing. The request is refused on target_unit_id a moment later
+        // either way — this is about the rule being defined, not about the
+        // verdict.
+        $uniqueRule = $unitId === null
+            ? 'unique:tasks,task_code,NULL,id,unit_id,NULL'
+            : "unique:tasks,task_code,NULL,id,unit_id,{$unitId}";
 
         return [
             'title'           => 'required|string|max:255',
@@ -88,28 +111,45 @@ class TaskCreationService
      * File a validated task for $actor, with any attachments, and tell the
      * admins about it.
      *
-     * unit_id, pm_id and created_by are taken from $actor and never from
-     * $data. That is the security property this method exists to hold: the
-     * caller decides what the task says, the actor decides whose it is. status
-     * is likewise fixed at 'pending' — moving a task along is a separate,
-     * separately-authorized action.
+     * unit_id and pm_id are taken from $actor, never from $data, and
+     * created_by always is. That is the security property this method exists
+     * to hold: the caller decides what the task says, the actor decides whose
+     * it is. status is likewise fixed at 'pending' — moving a task along is a
+     * separate, separately-authorized action.
+     *
+     * $target is the one exception, and it is deliberately a separate argument
+     * rather than two more keys in $data. $data is the request's own validated
+     * payload; a unit id read out of it would be a field the caller can set,
+     * which is exactly what the paragraph above says it must not be. Passed
+     * separately, the ownership decision stays with whoever constructs the
+     * target — today only StoreN8nTaskRequest, and only for an admin, who
+     * belongs to no unit and so has nothing else to file against. A PM-shaped
+     * caller passes nothing and gets the old behaviour unchanged.
+     *
+     * created_by is outside the exception on purpose: the admin filed the task
+     * even when it is somebody else's, and the audit trail has to say so.
      *
      * organization_id is absent on purpose. It is stamped by the
      * BelongsToOrganization creating hook from the acting user, and is kept
-     * out of Task::$fillable so that no caller can set it at all.
+     * out of Task::$fillable so that no caller can set it at all. Note this is
+     * also why $target cannot cross agencies whatever it holds — the stamp
+     * comes from the actor, so a foreign unit id would produce a row whose unit
+     * and organization disagree, which is why the id is validated against the
+     * tenant scope before it ever reaches here.
      *
-     * @param  array<string, mixed>  $data   validated attributes
-     * @param  iterable<mixed>       $files  anything with a store()/getSize()
+     * @param  array<string, mixed>              $data    validated attributes
+     * @param  iterable<mixed>                   $files   anything with a store()/getSize()
+     * @param  array{unit_id: int, pm_id: ?int}|null  $target  whose it is, when not the actor's
      */
-    public function create(array $data, User $actor, iterable $files = []): Task
+    public function create(array $data, User $actor, iterable $files = [], ?array $target = null): Task
     {
         $task = Task::create([
             'title'             => $data['title'],
             'task_code'         => $data['task_code'],
             'task_type'         => ($data['task_type'] ?? null) ?: null,
             'important_notes'   => ($data['important_notes'] ?? null) ?: null,
-            'unit_id'           => $actor->unit_id,
-            'pm_id'             => $actor->getKey(),
+            'unit_id'           => $target === null ? $actor->unit_id : $target['unit_id'],
+            'pm_id'             => $target === null ? $actor->getKey() : ($target['pm_id'] ?? null),
             'assigned_admin_id' => ($data['assigned_admin_id'] ?? null) ?: null,
             'priority'          => $data['priority'],
             'status'            => 'pending',

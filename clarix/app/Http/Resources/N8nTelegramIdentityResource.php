@@ -9,18 +9,20 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Who a Telegram chat belongs to, as the task pipeline needs to know it.
  *
  * Narrower than TelegramIdentityResource, because this consumer needs less. A
- * task row needs a creator, a unit and an owning agency; the name and role the
- * AXOKAI bot uses to address someone are not part of filing work, so they are
- * not on the wire. Serialising the whole user would put the password hash's
+ * task row needs a creator, a unit and an owning agency, and the workflow needs
+ * the role to know which conversation to have; the display name the AXOKAI bot
+ * addresses someone by is not part of filing work, so it is not on the wire.
+ * Serialising the whole user would put the password hash's
  * neighbours, the link-code hash and every future column into a workflow's
  * execution log by default, which is a log that tends to be readable by more
  * people than the database is.
  *
- * All three values are read off the User at render time. Nothing here comes
+ * All four values are read off the User at render time. Nothing here comes
  * from the link row, which is the point of not storing them on it — see
  * N8nTelegramLinkService.
  *
- * $wrap is null so the body is exactly { user_id, organization_id, unit_id }.
+ * $wrap is null so the body is exactly { user_id, organization_id, unit_id,
+ * role }.
  * n8n addresses fields by path in a visual editor, and a 'data.' prefix is one
  * more thing for every node downstream to get wrong.
  *
@@ -40,6 +42,13 @@ class N8nTelegramIdentityResource extends JsonResource
             // Genuinely nullable: admins and superadmins belong to no unit.
             // The pipeline has to handle it rather than assume an integer.
             'unit_id'         => $this->unit_id === null ? null : (int) $this->unit_id,
+
+            // What the workflow branches its conversation on. A PM is asked for
+            // the task and nothing else; an admin has to be asked which unit
+            // and whose work it is first, because they belong to no unit. The
+            // pipeline could not infer that from a null unit_id — HR and
+            // supervisors carry none either, and neither files work.
+            'role'            => (string) $this->role,
         ];
     }
 }

@@ -82,6 +82,23 @@ class AppServiceProvider extends ServiceProvider
          * request is refused without it. Falling back to the IP covers the
          * malformed calls that never reach ResolveN8nActor.
          */
+        /*
+         * Directory reads, keyed on the chat like intake and for the same
+         * reason: every call arrives from the same n8n host, so an IP key would
+         * be one bucket shared by every agency on the platform.
+         *
+         * Higher than intake because a single admin conversation makes two of
+         * these before one write, and because they change nothing. Lower than
+         * resolve because resolve fires on every message including chatter,
+         * while these fire only on the admin branch.
+         */
+        RateLimiter::for('n8n-directory', function (Request $request) {
+            $chatId = $request->input('chat_id');
+
+            return Limit::perMinute(60)->by(
+                is_scalar($chatId) ? 'n8n-dir-chat:'.$chatId : 'n8n-dir-ip:'.$request->ip()
+            );
+        });
         RateLimiter::for('n8n-intake', function (Request $request) {
             $chatId = $request->input('chat_id');
 

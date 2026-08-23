@@ -3,6 +3,7 @@
 namespace Tests\Feature\TaskBot;
 
 use App\Models\OrganizationSubscription;
+use App\Models\User;
 use App\Services\N8nTelegramLinkService;
 use App\Services\TenantContext;
 use Database\Seeders\PermissionSeeder;
@@ -64,6 +65,7 @@ class N8nTelegramLinkApiTest extends TestCase
                 'user_id'         => (int) $user->id,
                 'organization_id' => (int) $user->organization_id,
                 'unit_id'         => (int) $user->unit_id,
+                'role'            => 'pm',
             ]);
     }
 
@@ -80,7 +82,7 @@ class N8nTelegramLinkApiTest extends TestCase
             ->assertOk()
             ->json();
 
-        $this->assertSame(['user_id', 'organization_id', 'unit_id'], array_keys($body));
+        $this->assertSame(['user_id', 'organization_id', 'unit_id', 'role'], array_keys($body));
     }
 
     /** Nothing about the credential may travel to the pipeline. */
@@ -258,6 +260,45 @@ class N8nTelegramLinkApiTest extends TestCase
         $this->hit('/api/v1/n8n/telegram/resolve', ['chat_id' => '7002'])
             ->assertOk()
             ->assertJsonPath('unit_id', null);
+    }
+
+    /**
+     * The role is on the envelope so the workflow can branch its conversation:
+     * a PM is asked for the task and nothing else, while an admin has to be
+     * asked which unit and whose work it is first. Inferring that branch from
+     * a null unit_id would be wrong — HR and supervisors carry none either.
+     */
+    public function test_the_envelope_carries_the_users_role(): void
+    {
+        $this->hit('/api/v1/n8n/telegram/verify', [
+            'code' => $this->service->issueCode($this->orgA['admin']), 'chat_id' => '7101',
+        ])->assertOk()->assertJsonPath('role', 'admin');
+
+        $this->hit('/api/v1/n8n/telegram/resolve', ['chat_id' => '7101'])
+            ->assertOk()
+            ->assertJsonPath('role', 'admin');
+    }
+
+    /**
+     * Read off the User at render time like the other three, not cached on the
+     * link row. Somebody promoted this morning must not still resolve as a
+     * writer this afternoon.
+     */
+    public function test_the_role_is_read_off_the_user_at_render_time(): void
+    {
+        $user = $this->orgB['writer'];
+
+        $this->hit('/api/v1/n8n/telegram/verify', [
+            'code' => $this->service->issueCode($user), 'chat_id' => '7102',
+        ])->assertOk()->assertJsonPath('role', 'writer');
+
+        TenantContext::runWithoutScope(
+            fn () => User::whereKey($user->id)->update(['role' => 'pm'])
+        );
+
+        $this->hit('/api/v1/n8n/telegram/resolve', ['chat_id' => '7102'])
+            ->assertOk()
+            ->assertJsonPath('role', 'pm');
     }
 
     public function test_resolve_reports_an_unknown_chat_id_as_not_found(): void

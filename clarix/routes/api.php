@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\N8nDirectoryController;
 use App\Http\Controllers\Api\N8nTaskController;
 use App\Http\Controllers\Api\N8nTelegramLinkController;
 use App\Http\Controllers\Api\TaskController;
@@ -134,6 +135,30 @@ Route::middleware('n8n')->prefix('v1/n8n/telegram')->name('api.v1.n8n.telegram.'
      * would be answered 404 without ever touching the limiter. Counting the
      * refusals is the point of having one.
      */
+    /*
+     * Directory. The two lookups an admin's conversation makes before it can
+     * file anything — which unit, then whose — and that a PM's never makes,
+     * their unit being on their own user row already. Both are shut to anybody
+     * but an admin in the form requests.
+     *
+     * Its own throttle rather than the intake one. These are reads, and a
+     * conversation makes two of them before the single write that follows;
+     * sharing intake's bucket would mean picking a unit spent part of the
+     * allowance for filing the task it was picked for.
+     *
+     * {unit} is deliberately not model-bound, for the same reason {task} below
+     * is not: implicit binding resolves before ResolveN8nActor has established
+     * who is acting, so the lookup would run with no tenant context and another
+     * agency's id would resolve happily. The form request loads it under the
+     * acting scope instead.
+     */
+    Route::middleware(['throttle:n8n-directory', 'n8n.actor'])->group(function () {
+        Route::get('/units', [N8nDirectoryController::class, 'units'])->name('units.index');
+
+        Route::get('/units/{unit}/pms', [N8nDirectoryController::class, 'unitPeople'])
+            ->whereNumber('unit')
+            ->name('units.pms.index');
+    });
     Route::middleware(['throttle:n8n-intake', 'n8n.actor'])->group(function () {
         Route::post('/tasks', [N8nTaskController::class, 'store'])->name('tasks.store');
 

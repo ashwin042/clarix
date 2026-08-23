@@ -276,16 +276,48 @@ class N8nTaskIntakeTest extends TestCase
         $this->file($this->payload(['task_code' => 'BOT_002']))->assertForbidden();
     }
 
-    /** Somebody with no unit has nowhere to file the work. */
+    /**
+     * Somebody with no unit has nowhere to file the work, and no way to say
+     * where it should go.
+     *
+     * A supervisor rather than an admin, which is what this asserted before the
+     * admin branch existed. Both are unitless and both hold tasks.create, but
+     * only an admin is offered the unit picker (see ListN8nUnitsRequest), so a
+     * supervisor's submission has no unit in it and none to fall back to.
+     * Letting the write in without the directory in front of it would be an
+     * endpoint reachable only by guessing unit ids.
+     */
     public function test_an_actor_without_a_unit_cannot_file(): void
     {
-        $admin = $this->orgA['admin'];
-        $this->link($admin, '5000004');
+        $supervisor = TenantContext::actingAsOrganization(
+            $this->orgA['organization']->id,
+            fn () => User::factory()->create([
+                'name'  => 'Supervisor A',
+                'email' => 'supervisor.a@example.test',
+                'role'  => 'supervisor',
+            ])
+        );
 
-        $this->assertNull($admin->unit_id);
+        $this->link($supervisor, '5000004');
+
+        $this->assertNull($supervisor->unit_id);
+        $this->assertTrue($supervisor->hasPermission('tasks.create'));
 
         $this->file($this->payload(['chat_id' => '5000004', 'task_code' => 'BOT_NOUNIT']))
             ->assertForbidden();
+    }
+
+    /**
+     * The admin branch, asserted here only as far as "no longer refused". What
+     * an admin may and may not name is N8nAdminTargetingTest's subject.
+     */
+    public function test_an_admin_is_asked_for_a_unit_rather_than_refused(): void
+    {
+        $this->link($this->orgA['admin'], '5000005');
+
+        $this->file($this->payload(['chat_id' => '5000005', 'task_code' => 'BOT_ADMIN']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('target_unit_id');
     }
 
     // ── Commercial gates ─────────────────────────────────────────────────────

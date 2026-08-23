@@ -48,9 +48,19 @@ class N8nTaskController extends Controller
     /**
      * File a task for the person behind the chat.
      *
-     * unit_id, pm_id and created_by are taken from the resolved user inside the
-     * service — never from the payload. The bot can say what the task is; it
-     * cannot say whose it is. status is fixed at 'pending' for the same reason.
+     * created_by is taken from the resolved user inside the service — never
+     * from the payload — and so, for a PM, are unit_id and pm_id. The bot can
+     * say what the task is; it cannot say whose it is. status is fixed at
+     * 'pending' for the same reason.
+     *
+     * An admin is the one exception, and it is handed over as a separate
+     * argument rather than left in the payload: they belong to no unit, so the
+     * conversation asks them which one, and StoreN8nTaskRequest turns that
+     * answer into a target only after checking the unit is their own agency's
+     * and the person is in it. For a PM target() is null and nothing changes —
+     * the two fields have no rule for them, so they never reach validated() at
+     * all. See StoreN8nTaskRequest for why that is structural rather than a
+     * check that has to keep being right.
      *
      * Replaying a captured create is answered by the schema rather than by the
      * transport: task_code is unique per unit, so the second attempt is a 422
@@ -60,7 +70,7 @@ class N8nTaskController extends Controller
      */
     public function store(StoreN8nTaskRequest $request): JsonResponse
     {
-        $task = $this->tasks->create($request->validated(), $request->user());
+        $task = $this->tasks->create($request->validated(), $request->user(), [], $request->target());
 
         return (new N8nTaskResource($task))
             ->response()
