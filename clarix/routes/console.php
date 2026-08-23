@@ -29,3 +29,11 @@ Schedule::command('storage:reconcile')
 Schedule::command('subscriptions:enforce')
     ->dailyAt('02:00')
     ->withoutOverlapping();
+
+// Clear out task bot idempotency keys past their window. Nothing depends on
+// this landing — claim() drops an expired row before taking the key, so a key
+// is reusable on time either way — so a missed night costs storage and nothing
+// else.
+Schedule::command('n8n:prune-idempotency-keys')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();

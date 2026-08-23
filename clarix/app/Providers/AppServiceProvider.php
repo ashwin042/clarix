@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Throttles for the Hermes endpoints.
+     * Throttles for the bot endpoints.
      *
      * Named here because the api middleware group carries no throttle at all —
      * the task API is protected by needing a bearer token, and nothing else in
@@ -50,6 +50,45 @@ class AppServiceProvider extends ServiceProvider
         // Resolve is not a guessing oracle — the caller already holds the chat
         // id — so this bounds abuse rather than protecting a secret.
         RateLimiter::for('hermes-resolve', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+
+        /*
+         * The task bot's own pair, with the same limits and the same reasoning.
+         * Separate buckets rather than shared ones, because the two pipelines
+         * run from different hosts and a busy n8n instance must not be able to
+         * spend the AXOKAI bot's allowance — sharing a limiter name would make
+         * one integration's load into the other's outage.
+         *
+         * Keyed on IP for the reason above, and because every request from this
+         * caller carries the same key by definition: keying on the key would be
+         * one global bucket that a single noisy workflow could exhaust for
+         * every agency at once.
+         */
+        RateLimiter::for('n8n-verify', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        RateLimiter::for('n8n-resolve', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+
+        /*
+         * Intake. Lower than resolve because there is a person typing behind
+         * every one of these — resolve fires on every message including the
+         * ones that turn out to be chatter, while a filed task is a deliberate
+         * act — and because unlike the other three this endpoint writes.
+         *
+         * Keyed on the chat rather than on the IP, which is the one place these
+         * limiters differ from the AXOKAI pair. Every intake call arrives from
+         * the same n8n host, so an IP key would be a single bucket shared by
+         * every agency: one busy team filing a morning's work would lock out
+         * everybody else on the platform. The chat id is the closest thing this
+         * request has to an actor, and it is present by definition — the
+         * request is refused without it. Falling back to the IP covers the
+         * malformed calls that never reach ResolveN8nActor.
+         */
+        RateLimiter::for('n8n-intake', function (Request $request) {
+            $chatId = $request->input('chat_id');
+
+            return Limit::perMinute(30)->by(
+                is_scalar($chatId) ? 'n8n-chat:'.$chatId : 'n8n-ip:'.$request->ip()
+            );
+        });
     }
 
     /**

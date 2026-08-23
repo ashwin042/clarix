@@ -18,8 +18,12 @@ use Livewire\Component;
  * type, and every input is disabled regardless.
  *
  * The exception is 'connect': an entry carrying it is already live, so its panel
- * drops the mock fields and the dead Save button and mounts the component that
- * really performs the connection. Telegram is the only one.
+ * drops the mock fields and the dead Save button and mounts the component named
+ * in 'component', which really performs the connection.
+ *
+ * 'component' rather than a branch on 'name', because the display name is copy
+ * and copy gets rewritten — renaming a card must not silently unmount the thing
+ * it exists to mount.
  */
 class McpPlugins extends Component
 {
@@ -76,16 +80,32 @@ class McpPlugins extends Component
             ],
             [
                 'name' => 'Telegram', 'category' => 'Communication', 'colour' => '#26A5E4',
-                // The one entry in this library that is not hypothetical: per-user
-                // linking to AXOKAI is live, and this card is where it happens.
-                // It binds one person's account rather than the agency's, so the
-                // panel mounts ConnectTelegram instead of collecting a shared
-                // token — there is no agency-wide credential to collect.
+                // Not hypothetical: per-user linking to AXOKAI is live, and this
+                // card is where it happens. It binds one person's account rather
+                // than the agency's, so the panel mounts ConnectTelegram instead
+                // of collecting a shared token — there is no agency-wide
+                // credential to collect.
                 'blurb' => 'Link your own account so AXOKAI knows you on Telegram',
 
-                'fields'  => [],
-                'connect' => true,
+                'fields'    => [],
+                'connect'   => true,
+                'component' => 'profile.connect-telegram',
                 'logo' => 'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z',
+            ],
+            [
+                'name' => 'Task Bot', 'category' => 'Productivity', 'colour' => '#7C3AED',
+                // The second live entry, and a second Telegram bot — a separate
+                // one, with its own handle and its own token, because it serves
+                // the task-intake pipeline rather than the assistant. Deliberately
+                // not filed under Communication and not given the Telegram mark:
+                // two identically branded cards on one page is how somebody links
+                // the wrong bot and wonders why nothing arrives.
+                'blurb' => 'File tasks from Telegram, straight into Clarix',
+
+                'fields'    => [],
+                'connect'   => true,
+                'component' => 'profile.connect-task-bot',
+                'logo' => 'M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.5 60.5 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.5 60.5 0 0 0 3.478 2.404Z',
             ],
             [
                 'name' => 'Gmail', 'category' => 'Communication', 'colour' => '#EA4335',

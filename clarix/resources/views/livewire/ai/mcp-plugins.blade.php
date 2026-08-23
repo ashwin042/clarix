@@ -82,14 +82,28 @@
                         x-transition:leave-end="opacity-0"
                         class="border-t border-gray-100 px-4 pb-4 pt-3.5 dark:border-slate-800/60">
 
-                        @if ($plugin['connect'] ?? false)
+                        @php $connect = ($plugin['connect'] ?? false) ? ($plugin['component'] ?? null) : null; @endphp
 
-                            {{-- The one live integration, so this panel holds the
-                                 real thing rather than a mock of it. Linking binds
-                                 one person, not the agency, which is why the card
-                                 is a component with its own state and not fields
-                                 on this page. --}}
+                        {{-- The live integrations, so these panels hold the real
+                             thing rather than a mock of it. Each binds one person,
+                             not the agency, which is why they are components with
+                             their own state and not fields on this page.
+
+                             Written out as a branch per component rather than as
+                             <livewire:dynamic-component>, so that the set of
+                             things this page can mount is visible here and a
+                             stray 'component' key in the library cannot mount
+                             something nobody reviewed. --}}
+                        @if ($connect === 'profile.connect-telegram')
+
                             <livewire:profile.connect-telegram wire:key="connect-telegram" />
+
+                        @elseif ($connect === 'profile.connect-task-bot')
+
+                            {{-- The task-submission bot. A separate link from the
+                                 one above: connecting one says nothing about the
+                                 other, and the cards can disagree. --}}
+                            <livewire:profile.connect-task-bot wire:key="connect-task-bot" />
 
                         @else
 

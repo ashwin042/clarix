@@ -101,4 +101,34 @@ return [
         'bot_username' => env('TELEGRAM_BOT_USERNAME', 'Jarvis_clarix_assistant_bot'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Task bot (n8n Telegram pipeline)
+    |--------------------------------------------------------------------------
+    |
+    | A second, separate Telegram bot: the one PMs file tasks through. It shares
+    | nothing with Hermes above — its own token, its own table, its own service
+    | and its own key — because it serves a different pipeline and a different
+    | set of users, and one shared credential would mean rotating one bot's key
+    | silently breaks the other.
+    |
+    | Authentication is a single static shared key rather than Hermes's signed
+    | request. That is a deliberate step down, taken because the caller is an
+    | n8n workflow assembled in a visual editor; see EnsureN8nRequest for what
+    | the trade costs and what it therefore demands of key handling.
+    |
+    | The key is required in any environment where the endpoints are reachable:
+    | the middleware refuses every request while it is unset, so a
+    | half-configured deploy is closed rather than open.
+    |
+    */
+    'n8n' => [
+        'key' => env('N8N_API_KEY'),
+
+        // Only used to build the t.me deep link shown in the connect card. A
+        // different handle from the AXOKAI bot's on purpose — they are two
+        // separate bots, registered separately in BotFather.
+        'bot_username' => env('N8N_TELEGRAM_BOT_USERNAME', 'clarix_task_bot'),
+    ],
+
 ];

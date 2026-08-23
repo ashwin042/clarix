@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\N8nTaskController;
+use App\Http\Controllers\Api\N8nTelegramLinkController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TaskFileController;
 use App\Http\Controllers\Api\TelegramLinkController;
@@ -74,4 +76,79 @@ Route::middleware('hermes')->prefix('v1/telegram')->name('api.v1.telegram.')->gr
     Route::post('/resolve', [TelegramLinkController::class, 'resolve'])
         ->middleware('throttle:hermes-resolve')
         ->name('resolve');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Task bot (n8n Telegram pipeline) routes
+|--------------------------------------------------------------------------
+|
+| The second Telegram bot, and a third kind of caller. It shares the group
+| above's reason for skipping Sanctum — the link lookup has to reach across
+| every agency, and a token that resolved to one agency's service account
+| would silently confine it — but not its handshake: this one presents a
+| static shared key instead of signing each request, because the caller is an
+| n8n workflow. See EnsureN8nRequest for the trade.
+|
+| Nothing here is shared with the Hermes group on purpose. Its own prefix, its
+| own middleware, its own throttles and its own controller, so that changing
+| one bot cannot alter the other — they answer to different pipelines and
+| different people.
+|
+| 'subscription' is absent for the same reason it is absent above: it reads
+| $request->user(), which is null here, so it would pass everything through
+| while looking like a guard. The controller asks the question itself, of the
+| person the chat resolves to, on both endpoints.
+|
+| Two kinds of route live here, and they differ by one middleware. The link
+| pair carries 'n8n' alone: verify() is how a chat becomes known, so it cannot
+| require the chat to already be known. The intake pair adds 'n8n.actor',
+| which turns the chat_id in the body into an acting person and runs the rest
+| of the request inside that person's organization — without which a filed
+| task would be stamped with no agency at all. See ResolveN8nActor.
+|
+*/
+Route::middleware('n8n')->prefix('v1/n8n/telegram')->name('api.v1.n8n.telegram.')->group(function () {
+    Route::post('/verify', [N8nTelegramLinkController::class, 'verify'])
+        ->middleware('throttle:n8n-verify')
+        ->name('verify');
+
+    Route::post('/resolve', [N8nTelegramLinkController::class, 'resolve'])
+        ->middleware('throttle:n8n-resolve')
+        ->name('resolve');
+
+    /*
+     * Intake. Two calls rather than one multipart create, matching the token
+     * API: the R2 put cannot join a database transaction, so a combined call
+     * that fails partway leaves a task the caller cannot retry — task_code is
+     * already taken. Split, each half retries on its own.
+     *
+     * {task} is deliberately not model-bound. Implicit binding resolves before
+     * anything has established who is acting, so the lookup would run with no
+     * tenant context and another agency's id would resolve happily; the form
+     * request loads it under the acting scope instead.
+     */
+    /*
+     * The throttle is listed before the actor middleware, and the order is
+     * load-bearing: behind it, a caller probing chat ids that are not linked
+     * would be answered 404 without ever touching the limiter. Counting the
+     * refusals is the point of having one.
+     */
+    Route::middleware(['throttle:n8n-intake', 'n8n.actor'])->group(function () {
+        Route::post('/tasks', [N8nTaskController::class, 'store'])->name('tasks.store');
+
+        /*
+         * The one endpoint carrying idempotency, and the only one that needs
+         * it. A replayed create is refused by the schema — task_code is unique
+         * per unit — but the same file posted twice is two perfectly valid
+         * attachments, and a static shared key leaves a captured request
+         * replayable. The caller supplies a key per submission instead of
+         * signing, which is a function an n8n workflow cannot perform without
+         * a code node. See EnsureN8nIdempotency.
+         */
+        Route::post('/tasks/{task}/files', [N8nTaskController::class, 'attachFiles'])
+            ->middleware('n8n.idempotent:tasks.files')
+            ->whereNumber('task')
+            ->name('tasks.files.store');
+    });
 });

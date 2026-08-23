@@ -101,8 +101,8 @@ class McpPluginsTest extends TestCase
         $this->assertStringNotContainsString('-1001234567890', $html);
     }
 
-    /** Every other card keeps its disabled form; only the live one loses it. */
-    public function test_only_the_live_plugin_drops_its_save_button(): void
+    /** Every other card keeps its disabled form; only the live ones lose it. */
+    public function test_only_the_live_plugins_drop_their_save_button(): void
     {
         $html = Livewire::actingAs(User::factory()->create(['role' => 'writer']))
             ->test(McpPlugins::class)
@@ -113,12 +113,77 @@ class McpPluginsTest extends TestCase
             fn (array $plugin) => $plugin['connect'] ?? false
         ));
 
-        $this->assertSame(1, $live, 'Telegram should be the only live plugin.');
+        // Two: the AXOKAI link and the Task Bot link. Asserted as a number
+        // rather than derived, so that marking a third card live is a decision
+        // somebody has to make here as well as in the library.
+        $this->assertSame(2, $live, 'Telegram and Task Bot should be the only live plugins.');
         $this->assertSame(
             count(McpPlugins::plugins()) - $live,
             substr_count($html, 'Save Setting'),
             'A live card should not render a Save button.'
         );
+    }
+
+    /**
+     * A live entry is mounted by the component it names, not by its display
+     * name. Every one of them must name a component the view actually has a
+     * branch for, or the card silently renders an empty panel.
+     */
+    public function test_every_live_plugin_names_a_component_the_view_can_mount(): void
+    {
+        $mountable = [
+            'profile.connect-telegram',
+            'profile.connect-task-bot',
+        ];
+
+        $view = file_get_contents(resource_path('views/livewire/ai/mcp-plugins.blade.php'));
+
+        foreach (McpPlugins::plugins() as $plugin) {
+            if (! ($plugin['connect'] ?? false)) {
+                $this->assertArrayNotHasKey('component', $plugin, "{$plugin['name']} names a component but is not live.");
+
+                continue;
+            }
+
+            $this->assertContains(
+                $plugin['component'] ?? null,
+                $mountable,
+                "{$plugin['name']} names a component nothing can mount."
+            );
+
+            $this->assertStringContainsString(
+                "<livewire:{$plugin['component']}",
+                $view,
+                "The view has no branch mounting {$plugin['component']}."
+            );
+        }
+    }
+
+    /**
+     * The task bot is a second, separate Telegram bot, and the card has to read
+     * that way. Two cards wearing the same mark is how somebody links the wrong
+     * bot and spends an afternoon wondering why nothing arrives.
+     */
+    public function test_the_task_bot_card_is_distinct_from_the_telegram_card(): void
+    {
+        $telegram = collect(McpPlugins::plugins())->firstWhere('name', 'Telegram');
+        $taskBot  = collect(McpPlugins::plugins())->firstWhere('name', 'Task Bot');
+
+        $this->assertNotNull($taskBot, 'The Task Bot card is missing from the library.');
+        $this->assertTrue($taskBot['connect']);
+        $this->assertNotSame($telegram['logo'], $taskBot['logo'], 'The two bots must not share a mark.');
+        $this->assertNotSame($telegram['colour'], $taskBot['colour'], 'The two bots must not share a colour.');
+        $this->assertNotSame($telegram['component'], $taskBot['component']);
+    }
+
+    public function test_the_task_bot_card_mounts_its_own_connect_flow(): void
+    {
+        $html = Livewire::actingAs(User::factory()->create(['role' => 'writer']))
+            ->test(McpPlugins::class)
+            ->html();
+
+        $this->assertStringContainsString('Generate Task Bot code', $html);
+        $this->assertStringContainsString('File tasks from Telegram', $html);
     }
 
     public function test_every_plugin_in_the_library_has_a_categorised_tint(): void
