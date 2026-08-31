@@ -1,4 +1,19 @@
 {
   "$schema": "https://schema.railpack.com",
-  "phpExtensions": ["gd"]
+  "phpExtensions": ["gd"],
+  "steps": {
+    "install:composer": {
+      "variables": {
+        "COMPOSER_FUND": "0",
+        "COMPOSER_CACHE_DIR": "/opt/cache/composer",
+        "COMPOSER_MAX_PARALLEL_HTTP": "4"
+      },
+      "commands": [
+        {
+          "customName": "composer install (retrying, then falling back to git source)",
+          "cmd": "i=0; ok=0; while [ $i -lt 4 ]; do i=$((i+1)); if composer install --optimize-autoloader --no-scripts --no-interaction; then ok=1; break; fi; echo \"composer install attempt $i failed; retrying in $((i*5))s\"; sleep $((i*5)); done; if [ $ok -eq 0 ]; then echo 'dist downloads kept failing; retrying from git source, which bypasses codeload zipballs'; composer install --optimize-autoloader --no-scripts --no-interaction --prefer-source; fi"
+        }
+      ]
+    }
+  }
 }
