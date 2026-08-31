@@ -556,8 +556,8 @@ in only one of the two places would make the bot a way around the other.
 ## 7. The Task Bot — the second live integration
 
 A **second Telegram bot**, serving a different pipeline and a different job.
-AXOKAI/Hermes (§5–6) answers "who is this person". The Task Bot **files work**,
-and that one difference — it writes — drives almost every decision below.
+AXOKAI/Hermes (§5–6) answers "who is this person". The Task Bot **files work and
+reads it back**, and the writing half drives almost every decision below.
 
 It shares *nothing* with §6 by design: its own bot token, its own table, its own
 key, its own middleware, its own throttles, its own controllers. One shared
@@ -571,6 +571,7 @@ credential would mean rotating one bot's key silently breaks the other.
 | Storage | 4 columns on `users` | Its own `n8n_telegram_links` table |
 | Prefix | `/api/v1/telegram` | `/api/v1/n8n/telegram` |
 | Writes? | No | **Yes** |
+| Reads task data? | No | **Yes** — see 7.4b for the scoping rule |
 
 ### 7.1 File map
 
@@ -579,16 +580,19 @@ credential would mean rotating one bot's key silently breaks the other.
 | `app/Services/N8nTelegramLinkService.php` | Issue / verify / resolve / unlink. The core |
 | `app/Services/N8nPipelineAccess.php` | The two commercial gates, returned as data |
 | `app/Services/N8nDirectory.php` | The admin's unit and PM lists, and who may be assigned |
+| `app/Services/N8nTaskQuery.php` | **The read ceiling.** Who may see which tasks — see 7.4b |
 | `app/Services/N8nIdempotencyStore.php` | Claim / complete / release, and the replay |
 | `app/Http/Middleware/EnsureN8nRequest.php` | Proves *the pipeline* is calling |
 | `app/Http/Middleware/ResolveN8nActor.php` | Proves *who it is calling for*. See 7.3 |
 | `app/Http/Middleware/EnsureN8nIdempotency.php` | Makes the attach retryable |
 | `app/Http/Controllers/Api/N8nTelegramLinkController.php` | verify + resolve |
 | `app/Http/Controllers/Api/N8nDirectoryController.php` | units + unit PMs |
-| `app/Http/Controllers/Api/N8nTaskController.php` | create + attach files |
+| `app/Http/Controllers/Api/N8nTaskController.php` | read + create + attach files |
 | `app/Http/Requests/Api/StoreN8nTaskRequest.php` | Intake shape, **and the admin branch** |
 | `app/Http/Requests/Api/ListN8nUnitsRequest.php` | Directory authorization |
 | `app/Http/Requests/Api/ListN8nUnitPeopleRequest.php` | Same, plus scoped unit resolution |
+| `app/Http/Requests/Api/ListN8nTasksRequest.php` | Read filters, and the `unit_id` **403** |
+| `app/Http/Resources/N8nTaskCollection.php` | The `tasks`/`count`/`truncated` envelope |
 | `app/Livewire/Profile/ConnectTaskBot.php` | The connect card — the second live plugin |
 | `app/Models/N8nTelegramLink.php` | Pointedly **not** `BelongsToOrganization` |
 | `database/migrations/2026_08_31_000001_*` | `n8n_telegram_links` |
@@ -597,7 +601,7 @@ credential would mean rotating one bot's key silently breaks the other.
 
 Wiring: middleware aliases `n8n`, `n8n.actor`, `n8n.idempotent` in
 `bootstrap/app.php`; rate limiters `n8n-verify`, `n8n-resolve`, `n8n-directory`,
-`n8n-intake` in `AppServiceProvider`; the `n8n` block in `config/services.php`;
+`n8n-read`, `n8n-intake` in `AppServiceProvider`; the `n8n` block in `config/services.php`;
 the route group at the foot of `routes/api.php`.
 
 ### 7.2 Authentication — `EnsureN8nRequest`
@@ -682,6 +686,7 @@ Prefix `/api/v1/n8n/telegram`, route names `api.v1.n8n.telegram.*`.
 | POST | `/resolve` | `n8n` | 60/min per IP |
 | GET | `/units` | `n8n` + `n8n.actor` | 60/min **per chat** |
 | GET | `/units/{unit}/pms` | `n8n` + `n8n.actor` | 60/min **per chat** |
+| GET | `/tasks` | `n8n` + `n8n.actor` | 60/min **per chat** |
 | POST | `/tasks` | `n8n` + `n8n.actor` | 30/min **per chat** |
 | POST | `/tasks/{task}/files` | + `n8n.idempotent:tasks.files` | 30/min **per chat** |
 
@@ -868,6 +873,105 @@ same quota rule. A file arriving from Telegram is no more trusted than one
 arriving from a script, and having two answers to "what may be uploaded" is how
 one of them ends up wrong.
 
+### 7.4b Reading tasks back — `GET /tasks`
+
+One endpoint for the three questions the bot asks, because they differ only in
+which optional filters they set:
+
+1. **Is this code already taken here?** — `task_code` + `unit_id`, before a create.
+2. **How is my work doing?** — a PM's own status query.
+3. **How much is pending?** — an admin's count, over a unit or the agency.
+
+Three routes would have been three copies of one scoping rule, and the copy that
+drifts is the one that leaks.
+
+| Param | Type | Meaning |
+|---|---|---|
+| `chat_id` | string | **Required.** Who is asking. Consumed by `ResolveN8nActor`, not a filter. |
+| `unit_id` | int | Narrow to one unit. **Authorized, not just validated — see below.** |
+| `task_code` | string | Exact match, never a prefix. |
+| `pm_id` | int | Narrow to one PM. |
+| `status` | string | One of `Task::STATUSES`. Anything else is a 422. |
+
+All filters are optional and combine with AND. Empty strings are treated as
+absent, so a workflow may send every field unconditionally — which is the shape
+n8n makes easiest to build.
+
+```json
+// GET /tasks?chat_id=…&status=pending -> 200
+{ "tasks": [ { "id": 448, "task_code": "abc_123", "title": "Example task",
+               "task_type": null, "important_notes": null, "unit_id": 43,
+               "pm_id": 85, "priority": "medium", "status": "pending",
+               "deadline": "2026-09-01", "credit_amount": "2.00",
+               "created_at": "2026-08-30T09:00:00+05:45" } ],
+  "count": 1, "truncated": false, "limit": 50 }
+```
+
+**`count` is the total that matched, not `tasks.length`.** The list stops at
+`limit` (50, newest first); the count does not, because "how many are pending" is
+one of the three questions and a count that stopped at the page size would answer
+it wrongly *while looking correct*. `truncated` is `count > tasks.length`,
+derived server-side because that comparison is easy to get wrong in an n8n
+expression — and getting it wrong tells someone with 213 pending tasks that they
+have 50.
+
+**No match is `200` with `"tasks": [], "count": 0` — never a 404.** A 404 here
+would be indistinguishable from a routing mistake or a bad deploy, so "there is
+no such task" and "this endpoint is broken" would read identically in an error
+branch.
+
+#### The scoping rule — why `pm_id` is safe to accept
+
+This is the part worth understanding before changing anything here.
+
+The pipeline authenticates with a **static shared key**, which names the *caller*
+and says nothing about the *person* — every request from n8n carries the same
+one. So the backend cannot take `pm_id` as a claim about who is asking. **It does
+not.** `ResolveN8nActor` has already turned `chat_id` into a real Clarix user row
+against Clarix's own records, and `N8nTaskQuery` derives a **ceiling** from that
+person's role. The query string can only ever narrow that ceiling:
+
+| Actor | Reaches |
+|---|---|
+| admin, supervisor | every task in their agency |
+| pm | **their whole unit** — not just their own `pm_id` |
+| writer | the tasks assigned to them |
+| anyone else | nothing (empty list, not an error) |
+
+These arms are `TaskPolicy::owns()`, deliberately. The bot is a second window
+onto the same data, and a PM told "4 pending" in Telegram while six cards sit on
+their board has been told one of those by a bug.
+
+**A PM's ceiling is the unit, which is the one place this diverges from how the
+endpoint was first specified.** On the board a PM already sees every task in
+their unit — a colleague's, and the ones nobody owns yet. Confining the bot to
+`pm_id` would have hidden their unit's unassigned work from the count while
+leaving it visible on screen. `pm_id` survives as a *filter*, so "just mine" is
+one query away; it is simply not the ceiling.
+
+**Consequence for the n8n side: a wrong `pm_id` shows a PM fewer tasks, never
+another person's.** `pm_id` cannot widen anything, so a bug in the workflow's
+user-mapping is a cosmetic fault rather than a disclosure.
+
+**`unit_id` is the exception, and is refused rather than ignored.** It is the one
+filter that could look like widening, so it is authorized: a PM may name only
+their own unit, everybody else only a unit their agency has. Out of reach is a
+**403**, not an empty list — an empty list is a truthful answer to a legitimate
+question ("that unit has no tasks"), so using it for a refusal would leave a
+workflow unable to tell the two apart. Another agency's unit and a unit that
+never existed give the *same* 403, which is what stops this reporting whether an
+id is in use anywhere on the platform.
+
+`tasks.view` is asked of the **person**, so switching it off for a role in the
+Authorization panel stops the bot for that role with no workflow change. HR is
+the live example — the role holds no task permissions by default and is refused.
+
+⚠️ **The residual risk, stated plainly: `chat_id` is bearer-equivalent.** Anyone
+holding `N8N_API_KEY` can send any linked chat's id and act fully as that person.
+That is already true of the create endpoint and is not new here, and a signed
+per-user assertion would not help because n8n would hold the signing secret too.
+Key secrecy and rotation remain the whole control. See 7.2.
+
 ### 7.5 Success responses
 
 Flat and unwrapped, for the reason given in 7.4.
@@ -891,9 +995,16 @@ and a test asserts it is not there.
 ⚠️ **`$wrap` does not travel the way it looks like it should.** Setting it to
 null on a *resource* governs a single resource, while `Resource::collection()`
 builds an `AnonymousResourceCollection` whose own static `$wrap` is still
-Laravel's `'data'`. That is why `N8nTaskFileCollection` and
-`N8nDirectoryCollection` are declared classes rather than inline collections.
+Laravel's `'data'`. That is why `N8nTaskFileCollection`, `N8nDirectoryCollection`
+and `N8nTaskCollection` are declared classes rather than inline collections.
 The mismatch is invisible until a workflow node reads null.
+
+⚠️ **The same trap has a second door: `with()` and `additional()`.**
+`ResourceResponse` wraps the payload in `'data'` whenever a resource has **no
+`$wrap` *and* returns anything from `with()`**. So adding one informational key
+via `with()` silently re-wraps the whole response. `N8nTaskCollection` hit this
+during development — `limit` was in `with()` and the entire envelope moved under
+`data`. Everything it publishes is assembled in `toArray()` for that reason.
 
 ### 7.6 Idempotency — `Idempotency-Key`
 
@@ -953,14 +1064,35 @@ taking the key — so a missed night costs storage and nothing else.
 | `402` | Agency suspended | Same message as §6.5 |
 | `402` | Agency below Pro | `The Task Bot is not included in this organization's plan.` |
 | `403` | Non-admin on a directory endpoint | Or actor lacks `tasks.create`, or has no unit and is not an admin |
+| `403` | Actor lacks `tasks.view` on `GET /tasks` | HR by default |
+| `403` | `unit_id` outside the actor's ceiling on `GET /tasks` | **Deliberately not 404 and not an empty list** — see 7.4b |
 | `404` | Another agency's task or unit | **Never 403** — see 7.4 |
 | `422` | Validation, incl. duplicate `task_code` | Messages written for a Telegram reply |
+| `422` | Unknown `status` on `GET /tasks` | Lists the accepted values in the message |
 | `409` | Idempotency claim in flight | Retry shortly |
 | `429` | Throttled | Laravel default |
 
+⚠️ **Every failure under `/api` is JSON, and that took a fix.** Laravel picks the
+shape of an error response from `expectsJson()`, which reads the `Accept` header
+— so a caller that omits it gets the *web* treatment on the failure path even on
+an API route. This was live and biting: `POST /tasks` with no `Accept` header and
+an invalid payload returned **`302` to the site homepage with an HTML body**
+instead of a 422, so n8n saw an unparseable response and the real validation
+error was invisible. An unauthenticated request was worse — it redirected to the
+login page rather than answering 401.
+
+The fix is `shouldRenderJsonWhen(fn ($r) => $r->is('api/*') || $r->expectsJson())`
+in `bootstrap/app.php`. It is deliberately **not** per-route: the next endpoint
+added to `routes/api.php` would otherwise inherit the same bug and nothing would
+say so. The path test scopes it, so the web routes still redirect, which is what
+a browser wants. `N8nTaskReadTest` pins all four outcomes — success, no results,
+bad auth, bad params — with the plain `get()` helper, which sends no `Accept`
+header at all.
+
 **Validation messages here are read in a Telegram reply by somebody who cannot
-see the API.** That is why `task_code.unique`, `deadline.date`, `priority.in` and
-`target_unit_id.*` are written out rather than left to Laravel's defaults.
+see the API.** That is why `task_code.unique`, `deadline.date`, `priority.in`,
+`target_unit_id.*` and `status.in` are written out rather than left to Laravel's
+defaults.
 
 The commercial gates live in `N8nPipelineAccess`, **shared** between the link
 endpoints and the intake endpoints — the two halves of one integration must not
@@ -1199,19 +1331,20 @@ product decision, deliberately left open.
 | `tests/Feature/TaskBot/N8nAdminTargetingTest.php` | 16 | `target_unit_id` / `assigned_pm_id`, and that a PM's are ignored |
 | `tests/Feature/TaskBot/N8nTaskFileIntakeTest.php` | 18 | Attach, quota, scoped task lookup |
 | `tests/Feature/TaskBot/N8nIdempotencyTest.php` | 26 | Claim, replay, in-flight, fingerprint mismatch, per-user scope |
+| `tests/Feature/TaskBot/N8nTaskReadTest.php` | 42 | `GET /tasks` — role ceilings, per-unit `task_code`, the cap, JSON-without-`Accept` |
 | `tests/Unit/Services/TaskCreationRulesTest.php` | 2 | The unique rule with and without a unit |
 
 Run the relevant slice:
 
 ```bash
 php artisan test tests/Feature/AI tests/Feature/Telegram tests/Feature/TaskBot
-# -> 321 passing
+# -> 363 passing
 ```
 
 ### ⚠️ Baseline failures — do not chase these
 
 **14 tests fail on a clean checkout** (measured 2026-08-23 on a full
-`php artisan test` — 1182 passing). None are in `tests/Feature/AI`,
+`php artisan test` — 1182 passing; re-confirmed 2026-08-31, same 14, 1224 passing). None are in `tests/Feature/AI`,
 `tests/Feature/Telegram` or `tests/Feature/TaskBot`, all three of which are
 fully green:
 
@@ -1245,6 +1378,46 @@ git stash && ./vendor/bin/phpunit <suites> > before.txt; git stash pop
 - Pint fails repo-wide on `binary_operator_spaces` (aligned `=>`) and
   `not_operator_with_successor_space` (`! $foo`). **That is house style.** Do not
   run `pint --fix` broadly; compare against the baseline for the files you touch.
+
+### Checks that run outside `php artisan test`
+
+Two things the sqlite suite structurally cannot prove, so both live outside it.
+
+**Against a clone of the production copy** —
+`tests/Manual/N8nTaskReadOnProductionCopyTest.php` (10 tests). Real units, real
+PMs, the agency's own permission rows and a **real MySQL enum**. It is what
+proves the page cap and `count` behave over 348 tasks rather than the two a
+fixture builds, and that every status the endpoint accepts is a status the
+column actually declares. Outside `tests/Feature` so `php artisan test` never
+picks it up, and without `RefreshDatabase` so the production-shaped data
+survives; everything it creates it removes in `tearDown`.
+
+```bash
+mysql -uroot -e "DROP DATABASE IF EXISTS clarix_supclone; CREATE DATABASE clarix_supclone"
+mysqldump -uroot --single-transaction clarix | mysql -uroot clarix_supclone
+DB_DATABASE=clarix_supclone php artisan migrate --force   # the copy predates the bot
+./vendor/bin/phpunit -c phpunit-clone.xml
+```
+
+⚠️ **Clone it; never point a test at `clarix` itself** — that database is a
+production copy. Confirm `.env`'s `DB_DATABASE` is back to `clarix` before you
+finish; it has drifted mid-session before.
+
+**Against a deployed Clarix** — `scripts/verify-n8n-task-read.sh` (21 checks).
+Tests prove the rules; this proves the *deploy*, which fails differently: a route
+that 404s on Railway, a key that does not match n8n's credential store, a proxy
+rewriting an error into HTML.
+
+```bash
+BASE_URL=https://<app>.up.railway.app N8N_KEY=<live key> \
+ADMIN_CHAT=<linked admin chat id> PM_CHAT=<linked pm chat id> \
+TASK_CODE=<a real code> UNIT_ID=<its unit> OTHER_UNIT_ID=<another unit> \
+./scripts/verify-n8n-task-read.sh
+```
+
+No `jq` dependency, exits non-zero on failure. The check worth reading twice is
+"same code, other unit": a match there means the endpoint is scoping `task_code`
+globally, and the bot will start refusing codes that are free.
 
 ---
 
