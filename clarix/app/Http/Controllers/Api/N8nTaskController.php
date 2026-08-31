@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\AttachN8nTaskFilesRequest;
+use App\Http\Requests\Api\ListN8nTasksRequest;
 use App\Http\Requests\Api\StoreN8nTaskRequest;
+use App\Http\Resources\N8nTaskCollection;
 use App\Http\Resources\N8nTaskFileCollection;
 use App\Http\Resources\N8nTaskResource;
+use App\Services\N8nTaskQuery;
 use App\Services\TaskCreationService;
 use App\Services\TaskFileUploader;
 use Illuminate\Http\JsonResponse;
@@ -42,7 +45,36 @@ class N8nTaskController extends Controller
     public function __construct(
         protected TaskCreationService $tasks,
         protected TaskFileUploader $uploader,
+        protected N8nTaskQuery $queries,
     ) {
+    }
+
+    /**
+     * Read back the tasks the person behind the chat may see.
+     *
+     * One endpoint for the three questions the bot asks — is this code already
+     * taken in this unit, how is my own work doing, how much is pending — because
+     * the three differ only in which optional filters they set. Three routes
+     * would have been three copies of the scoping rule below, and the copy that
+     * drifts is the one that leaks.
+     *
+     * The scoping is the part worth being careful about, and it is deliberately
+     * not in this method. N8nTaskQuery decides the ceiling from the *acting
+     * person* — resolved from the chat id by ResolveN8nActor, against Clarix's
+     * own records — and the query string may only narrow it. So although the
+     * pipeline authenticates with a shared key that says nothing about who is
+     * asking, a pm_id in the request is a filter and never a claim: a workflow
+     * bug that sent the wrong one shows a PM fewer tasks, never another
+     * person's.
+     *
+     * unit_id is the exception that proves it, and is refused rather than
+     * dropped when it falls outside that ceiling — see ListN8nTasksRequest.
+     */
+    public function index(ListN8nTasksRequest $request): JsonResponse
+    {
+        $result = $this->queries->run($request->user(), $request->filters());
+
+        return (new N8nTaskCollection($result['tasks'], $result['total']))->response();
     }
 
     /**

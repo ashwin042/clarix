@@ -99,6 +99,26 @@ class AppServiceProvider extends ServiceProvider
                 is_scalar($chatId) ? 'n8n-dir-chat:'.$chatId : 'n8n-dir-ip:'.$request->ip()
             );
         });
+        /*
+         * Reading tasks back, keyed on the chat like the two above and for the
+         * same reason: one n8n host means an IP key would be a single bucket
+         * shared by every agency on the platform.
+         *
+         * The same 60 as the directory, in a bucket of its own. These are the
+         * one call a conversation can repeat without anybody deciding anything
+         * — "how many are pending" invites being asked again a minute later,
+         * and the pre-create code check fires on every filing attempt including
+         * the ones that get abandoned — so sharing the directory's allowance
+         * would let a curious admin starve the pickers a filing conversation
+         * depends on.
+         */
+        RateLimiter::for('n8n-read', function (Request $request) {
+            $chatId = $request->input('chat_id');
+
+            return Limit::perMinute(60)->by(
+                is_scalar($chatId) ? 'n8n-read-chat:'.$chatId : 'n8n-read-ip:'.$request->ip()
+            );
+        });
         RateLimiter::for('n8n-intake', function (Request $request) {
             $chatId = $request->input('chat_id');
 

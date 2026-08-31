@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -52,5 +53,31 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        /*
+         * Everything under /api answers in JSON, whatever the caller asked for.
+         *
+         * Laravel decides the shape of an error response from expectsJson(),
+         * which reads the Accept header — so a caller that omits it gets the
+         * *web* treatment on the failure path even on an API route. That is not
+         * theoretical: the task bot's create endpoint was returning a 302 to
+         * the homepage instead of a 422, because a ValidationException with no
+         * Accept header redirects back. n8n cannot parse a redirect, so the
+         * workflow saw a success-shaped response with no fields in it and the
+         * real validation error was invisible.
+         *
+         * An unauthenticated request is the same story with a worse ending: it
+         * redirects to the login route, so a wrong X-N8n-Key would read as a
+         * login page rather than a 401.
+         *
+         * Fixed here rather than on each route, because the next endpoint added
+         * to routes/api.php would otherwise inherit the same bug and nothing
+         * would say so. The path test is what scopes it: the web routes still
+         * redirect, which is what a browser wants.
+         *
+         * expectsJson() is kept as the second arm so a caller that *does* ask
+         * for JSON on a non-api path still gets it, exactly as before.
+         */
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson()
+        );
     })->create();

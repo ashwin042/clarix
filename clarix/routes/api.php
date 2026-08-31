@@ -159,6 +159,33 @@ Route::middleware('n8n')->prefix('v1/n8n/telegram')->name('api.v1.n8n.telegram.'
             ->whereNumber('unit')
             ->name('units.pms.index');
     });
+    /*
+     * Reading tasks back. One route for the three questions the bot asks — is
+     * this code already taken in this unit, how is my own work doing, how much
+     * is pending — because they differ only in which optional filters they set.
+     * Three routes would have been three copies of one scoping rule.
+     *
+     * Its own throttle rather than the directory's or intake's, following the
+     * pattern already set here of a bucket per branch of the conversation. A
+     * status query is the one call a chat can make repeatedly without a person
+     * deciding anything — "how many are pending" invites being asked again a
+     * minute later — so sharing the directory's bucket would let a curious
+     * admin spend the allowance a filing conversation needs for its unit and PM
+     * pickers.
+     *
+     * Behind 'n8n.actor' like everything else that touches task data, and for
+     * the sharper reason here: the shared key names the pipeline and not the
+     * person, so without the actor there would be nothing to scope a read by
+     * and the pm_id in the query string would be the only thing deciding whose
+     * tasks came back. See N8nTaskQuery for what the actor buys.
+     *
+     * The throttle is listed first for the reason given above — a caller
+     * probing unlinked chat ids should be counted, not answered 404 for free.
+     */
+    Route::middleware(['throttle:n8n-read', 'n8n.actor'])->group(function () {
+        Route::get('/tasks', [N8nTaskController::class, 'index'])->name('tasks.index');
+    });
+
     Route::middleware(['throttle:n8n-intake', 'n8n.actor'])->group(function () {
         Route::post('/tasks', [N8nTaskController::class, 'store'])->name('tasks.store');
 
