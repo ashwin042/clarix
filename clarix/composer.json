@@ -9,6 +9,7 @@
         "php": "^8.2",
         "ext-gd": "*",
         "ext-mbstring": "*",
+        "ext-pdo_mysql": "*",
         "ext-xml": "*",
         "ext-zip": "*",
         "laravel/framework": "^12.0",
