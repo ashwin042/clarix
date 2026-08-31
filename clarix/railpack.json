@@ -10,8 +10,16 @@
       },
       "commands": [
         {
+          "image": "composer:latest",
+          "src": "/usr/bin/composer",
+          "dest": "/usr/bin/composer"
+        },
+        { "src": "composer.json", "dest": "composer.json" },
+        { "src": "composer.lock", "dest": "composer.lock" },
+        { "src": "artisan", "dest": "artisan" },
+        {
           "customName": "composer install (retries, then git source)",
-          "cmd": "sh -c 'composer install --optimize-autoloader --no-scripts --no-interaction || { echo retrying in 5s; sleep 5; composer install --optimize-autoloader --no-scripts --no-interaction; } || { echo retrying in 15s; sleep 15; composer install --optimize-autoloader --no-scripts --no-interaction; } || { echo dist downloads keep failing - falling back to git source; sleep 15; composer install --optimize-autoloader --no-scripts --no-interaction --prefer-source; }'"
+          "cmd": "sh -c 'command -v composer >/dev/null 2>&1 || { echo ERROR: no composer binary. The copy commands in railpack.json no longer match railpacks own install:composer step - compare them with core/providers/php/php.go in railwayapp/railpack.; exit 1; } && { composer install --optimize-autoloader --no-scripts --no-interaction || { echo retrying in 5s; sleep 5; composer install --optimize-autoloader --no-scripts --no-interaction; } || { echo retrying in 15s; sleep 15; composer install --optimize-autoloader --no-scripts --no-interaction; } || { echo dist downloads keep failing - falling back to git source; sleep 15; composer install --optimize-autoloader --no-scripts --no-interaction --prefer-source; }; }'"
         }
       ]
     }
