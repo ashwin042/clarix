@@ -48,8 +48,9 @@ class ManageTasksFilesColumnTest extends TestCase
     }
 
     /**
-     * The page defaults to the kanban board, so anything asserting on the
-     * table has to switch to it first.
+     * The table is the default view, but this asks for it explicitly rather
+     * than leaning on that — these assertions are about the table itself, not
+     * about which view happens to load first.
      */
     private function tableView(): \Livewire\Features\SupportTesting\Testable
     {

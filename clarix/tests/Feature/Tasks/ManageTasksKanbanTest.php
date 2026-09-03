@@ -49,9 +49,34 @@ class ManageTasksKanbanTest extends TestCase
 
     // ── View switcher ─────────────────────────────────────────────────────────
 
-    public function test_kanban_is_the_default_view(): void
+    public function test_table_is_the_default_view(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+        Livewire::test(ManageTasks::class)->assertSet('activeView', 'table');
+    }
+
+    public function test_kanban_is_still_reachable_from_the_switcher(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+        Livewire::test(ManageTasks::class)
+            ->call('setView', 'kanban')
+            ->assertSet('activeView', 'kanban');
+
+        $this->assertSame('kanban', session(ManageTasks::VIEW_SESSION_KEY));
+    }
+
+    /**
+     * The default is only what a user with no stored choice gets. Someone who
+     * has picked kanban keeps it, which is the half of this the flip must not
+     * take away.
+     */
+    public function test_a_remembered_kanban_choice_survives_the_table_default(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+        session([ManageTasks::VIEW_SESSION_KEY => 'kanban']);
 
         Livewire::test(ManageTasks::class)->assertSet('activeView', 'kanban');
     }
@@ -73,7 +98,7 @@ class ManageTasksKanbanTest extends TestCase
 
         Livewire::test(ManageTasks::class)
             ->call('setView', 'gantt')
-            ->assertSet('activeView', 'kanban');
+            ->assertSet('activeView', 'table');
     }
 
     public function test_the_switcher_offers_only_kanban_and_table(): void
@@ -94,18 +119,18 @@ class ManageTasksKanbanTest extends TestCase
 
         Livewire::test(ManageTasks::class)
             ->call('setView', 'list')
-            ->assertSet('activeView', 'kanban');
+            ->assertSet('activeView', 'table');
 
         $this->assertNotSame('list', session(ManageTasks::VIEW_SESSION_KEY));
     }
 
-    public function test_a_session_left_on_list_falls_back_to_kanban(): void
+    public function test_a_session_left_on_list_falls_back_to_the_default(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
         session([ManageTasks::VIEW_SESSION_KEY => 'list']);
 
-        Livewire::test(ManageTasks::class)->assertSet('activeView', 'kanban');
+        Livewire::test(ManageTasks::class)->assertSet('activeView', 'table');
     }
 
     // ── Board contents ────────────────────────────────────────────────────────
@@ -125,7 +150,7 @@ class ManageTasksKanbanTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        Livewire::test(ManageTasks::class)->assertViewHas('board', function ($board) {
+        Livewire::test(ManageTasks::class)->call('setView', 'kanban')->assertViewHas('board', function ($board) {
             $this->assertSame(
                 ['pending', 'on_hold', 'in_progress', 'sent_for_review', 'completed'],
                 array_keys($board),
@@ -151,7 +176,7 @@ class ManageTasksKanbanTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        Livewire::test(ManageTasks::class)->assertViewHas('board', function ($board) use ($first, $mid, $last) {
+        Livewire::test(ManageTasks::class)->call('setView', 'kanban')->assertViewHas('board', function ($board) use ($first, $mid, $last) {
             return $board['pending']['tasks']->pluck('id')->all()
                 === [$first->id, $mid->id, $last->id];
         });
@@ -170,7 +195,7 @@ class ManageTasksKanbanTest extends TestCase
 
         $this->actingAs($pm);
 
-        Livewire::test(ManageTasks::class)->assertViewHas('board', function ($board) use ($visible) {
+        Livewire::test(ManageTasks::class)->call('setView', 'kanban')->assertViewHas('board', function ($board) use ($visible) {
             return $board['pending']['tasks']->pluck('id')->all() === [$visible->id];
         });
     }
@@ -186,6 +211,7 @@ class ManageTasksKanbanTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
         Livewire::test(ManageTasks::class)
+            ->call('setView', 'kanban')
             ->set('filterPriority', 'high')
             ->assertViewHas('board', function ($board) use ($high) {
                 return $board['pending']['tasks']->pluck('id')->all() === [$high->id];
@@ -202,7 +228,7 @@ class ManageTasksKanbanTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        $html = Livewire::test(ManageTasks::class)->html();
+        $html = Livewire::test(ManageTasks::class)->call('setView', 'kanban')->html();
 
         $this->assertMatchesRegularExpression(
             '/wire:key="kanban-col-pending"\s+class="([^"]*\bflex-1\b[^"]*)"/',
@@ -225,7 +251,7 @@ class ManageTasksKanbanTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        $html = Livewire::test(ManageTasks::class)->html();
+        $html = Livewire::test(ManageTasks::class)->call('setView', 'kanban')->html();
 
         preg_match('/<div data-kanban-board\s+class="([^"]*)"/', $html, $m);
         $classes = $m[1] ?? '';
@@ -245,7 +271,7 @@ class ManageTasksKanbanTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        $html = Livewire::test(ManageTasks::class)->html();
+        $html = Livewire::test(ManageTasks::class)->call('setView', 'kanban')->html();
 
         preg_match('/data-status="pending"\s+class="([^"]*)"/s', $html, $m);
         $classes = $m[1] ?? '';
@@ -264,7 +290,7 @@ class ManageTasksKanbanTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-        $html = Livewire::test(ManageTasks::class)->html();
+        $html = Livewire::test(ManageTasks::class)->call('setView', 'kanban')->html();
 
         preg_match('/wire:key="kanban-col-pending"\s+class="([^"]*)"/', $html, $m);
 

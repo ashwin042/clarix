@@ -112,6 +112,7 @@ class OnHoldStatusTest extends TestCase
     {
         $board = Livewire::actingAs($this->a['admin'])
             ->test(ManageTasks::class)
+            ->call('setView', 'kanban')
             ->viewData('board');
 
         $this->assertArrayHasKey('on_hold', $board);
@@ -121,6 +122,7 @@ class OnHoldStatusTest extends TestCase
     {
         $board = Livewire::actingAs($this->a['admin'])
             ->test(ManageTasks::class)
+            ->call('setView', 'kanban')
             ->viewData('board');
 
         $this->assertTrue(

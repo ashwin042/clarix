@@ -110,6 +110,8 @@ class KanbanCardCountsTest extends TestCase
     {
         return Livewire::actingAs($this->a['admin'])
             ->test(ManageTasks::class)
+            // The page opens on the table now, so the board has to be asked for.
+            ->call('setView', 'kanban')
             ->html();
     }
 
@@ -148,6 +150,7 @@ class KanbanCardCountsTest extends TestCase
     {
         $board = Livewire::actingAs($this->a['admin'])
             ->test(ManageTasks::class)
+            ->call('setView', 'kanban')
             ->viewData('board');
 
         $cards = $board['pending']['tasks']->keyBy('task_code');

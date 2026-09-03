@@ -808,6 +808,14 @@
                 animation: 150,
                 draggable: '[data-task-id]',
                 filter: '[data-draggable="0"]',
+                // Filtering a card takes it out of the drag and nothing more.
+                // preventOnFilter defaults to true, which calls
+                // preventDefault() on the pointerdown that lands anywhere on a
+                // filtered card — including its title link — so the one group
+                // that cannot reorder also lost the ability to open a task.
+                // Cancelling the drag is the `return` below the filter check;
+                // it does not need the browser's default suppressed too.
+                preventOnFilter: false,
                 ghostClass: 'opacity-40',
                 dragClass: 'shadow-lg',
                 // On touch a plain swipe has to stay a swipe, or the board

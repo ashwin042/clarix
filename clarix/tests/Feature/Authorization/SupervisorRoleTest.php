@@ -272,8 +272,11 @@ class SupervisorRoleTest extends TestCase
 
     public function test_supervisor_sees_tasks_from_every_unit_on_the_task_board(): void
     {
+        // Explicitly the board: the table column renders task codes rather
+        // than titles, and this is about which units a supervisor reaches.
         Livewire::actingAs($this->supervisor)
             ->test(ManageTasks::class)
+            ->call('setView', 'kanban')
             ->assertSee('Task A')
             ->assertSee('Second Unit Task');
     }

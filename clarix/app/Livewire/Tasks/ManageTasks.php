@@ -19,8 +19,11 @@ class ManageTasks extends Component
 {
     use WithPagination, WithDeleteConfirmation;
 
-    /** The views the switcher offers. Kanban is the default. */
+    /** The views the switcher offers. Table is the default. */
     public const VIEWS = ['kanban', 'table'];
+
+    /** The view a user who has not chosen one yet lands on. */
+    public const DEFAULT_VIEW = 'table';
 
     /** Session key holding the view the user last looked at. */
     public const VIEW_SESSION_KEY = 'tasks.active_view';
@@ -32,7 +35,7 @@ class ManageTasks extends Component
      */
     public const COMPLETED_COLUMN_LIMIT = 50;
 
-    public string $activeView = 'kanban';
+    public string $activeView = self::DEFAULT_VIEW;
 
     public string $search = '';
     public string $filterStatus = '';
@@ -61,7 +64,7 @@ class ManageTasks extends Component
     {
         $remembered = session(self::VIEW_SESSION_KEY);
 
-        $this->activeView = in_array($remembered, self::VIEWS, true) ? $remembered : 'kanban';
+        $this->activeView = in_array($remembered, self::VIEWS, true) ? $remembered : self::DEFAULT_VIEW;
     }
 
     /**

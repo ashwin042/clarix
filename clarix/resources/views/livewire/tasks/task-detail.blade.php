@@ -168,13 +168,25 @@
                         Files
                         <span class="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 rounded-full">{{ $task->regularFiles->count() }}</span>
                     </h2>
-                    @can('uploadFiles', $task)
-                    <button wire:click="openUploadModal"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Upload Files
-                    </button>
-                    @endcan
+                    <div class="flex items-center gap-2">
+                        {{-- One file already has its own Download link, and none has nothing to zip. --}}
+                        @if($task->regularFiles->count() > 1)
+                        @can('downloadFile', [$task, $task->regularFiles->first()])
+                        <a href="{{ route('tasks.files.download-all', $task) }}"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download all
+                        </a>
+                        @endcan
+                        @endif
+                        @can('uploadFiles', $task)
+                        <button wire:click="openUploadModal"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            Upload Files
+                        </button>
+                        @endcan
+                    </div>
                 </div>
 
                 @if($task->regularFiles->count())
@@ -230,13 +242,25 @@
                         <span class="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">{{ $task->completedFiles->count() }}</span>
                         @endif
                     </h2>
-                    @can('uploadCompletedFile', $task)
-                    <button wire:click="openCompletedUploadModal"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-50 border border-green-200 rounded-lg transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Upload Completed
-                    </button>
-                    @endcan
+                    <div class="flex items-center gap-2">
+                        {{-- One file already has its own Download link, and none has nothing to zip. --}}
+                        @if($task->completedFiles->count() > 1)
+                        @can('downloadFile', [$task, $task->completedFiles->first()])
+                        <a href="{{ route('tasks.completed-files.download-all', $task) }}"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download all
+                        </a>
+                        @endcan
+                        @endif
+                        @can('uploadCompletedFile', $task)
+                        <button wire:click="openCompletedUploadModal"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-50 border border-green-200 rounded-lg transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            Upload Completed
+                        </button>
+                        @endcan
+                    </div>
                 </div>
 
                 @if($isPm && !$taskCompleted && $hasCompletedFiles)
