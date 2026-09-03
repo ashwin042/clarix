@@ -1,138 +1,10 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Clarix, one portal for agency work</title>
-    <meta name="description" content="Clarix is the portal where agencies run client work: brief a task, spend credits as it moves, keep every file attached, and give clients a live view.">
+<x-marketing.layout
+    title="Clarix, one portal for agency work"
+    description="Clarix is the portal where agencies run client work: brief a task, spend credits as it moves, keep every file attached, and give clients a live view."
+>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=fraunces:400,500,600|inter:400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet" />
-
-    @vite(['resources/css/app.css', 'resources/js/marketing.js'])
-
+@push('styles')
     <style>
-        /* ================================================================
-           Type roles
-           ================================================================ */
-        /* In-page anchors (nav "Book a demo", the pricing CTAs) glide rather
-           than jump. The header is static, so no scroll-margin is needed. */
-        html { scroll-behavior: smooth; }
-        @media (prefers-reduced-motion: reduce) {
-            html { scroll-behavior: auto; }
-        }
-
-        .font-display { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; }
-        .font-mono-ui { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
-
-        .clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        /* ================================================================
-           Nav — checkbox-driven mobile menu, no JS
-           ================================================================ */
-        #nav-toggle:checked ~ .nav-panel { display: block; }
-        #nav-toggle:checked ~ * .nav-icon-open  { display: none; }
-        #nav-toggle:checked ~ * .nav-icon-close { display: block; }
-        .nav-icon-close { display: none; }
-        @media (min-width: 1024px) { .nav-panel { display: none !important; } }
-
-        /* ================================================================
-           Scene: glow, window chrome, 3D stacking
-           ================================================================ */
-        .scene-glow {
-            background:
-                radial-gradient(38% 46% at 50% 30%, rgba(99,102,241,.55) 0%, rgba(99,102,241,0) 70%),
-                radial-gradient(32% 36% at 20% 44%, rgba(124,58,237,.40) 0%, rgba(124,58,237,0) 72%),
-                radial-gradient(34% 40% at 80% 40%, rgba(255,178,122,.52) 0%, rgba(255,178,122,0) 72%),
-                radial-gradient(52% 42% at 50% 66%, rgba(56,189,248,.22) 0%, rgba(56,189,248,0) 76%);
-            filter: blur(64px);
-        }
-
-        .win-shadow {
-            box-shadow:
-                0 42px 84px -24px rgba(14,17,38,.30),
-                0 12px 28px -12px rgba(14,17,38,.16),
-                0 1px 0 0 rgba(255,255,255,.60) inset;
-        }
-        .win-shadow-dark {
-            box-shadow:
-                0 42px 84px -24px rgba(14,17,38,.42),
-                0 12px 28px -12px rgba(14,17,38,.28);
-        }
-
-        @media (min-width: 1024px) {
-            /* The float animation owns translateY on the wrapper, so the board's
-               horizontal centering has to live here, on the inner element. */
-            .tilt-terminal { transform: perspective(2200px) rotateY(7deg)  rotateX(3deg)  rotate(-5deg); }
-            .tilt-board    { transform: translateX(-50%) perspective(2200px) rotateX(2deg) rotate(-1deg); }
-            .tilt-thread   { transform: perspective(2200px) rotateY(-8deg) rotateX(3deg)  rotate(5deg); }
-            .tilt-phone    { transform: perspective(2200px) rotateY(-5deg) rotate(4deg); }
-
-            .float   { animation: float 7s ease-in-out infinite; }
-            .float-2 { animation-delay: -2.3s; }
-            .float-3 { animation-delay: -4.6s; }
-            .float-4 { animation-delay: -1.2s; }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-12px); }
-        }
-
-        .rise   { animation: rise .8s cubic-bezier(.16,.84,.44,1) both; }
-        .rise-2 { animation-delay: .10s; }
-        .rise-3 { animation-delay: .18s; }
-        .rise-4 { animation-delay: .28s; }
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(18px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .scene-fade {
-            background: linear-gradient(to bottom, rgba(252,252,253,0) 0%, rgba(252,252,253,.85) 55%, #FCFCFD 100%);
-        }
-
-        /* ================================================================
-           Window 1 — terminal. 9s loop: type a prompt, then output lands.
-           ================================================================ */
-        .t-type {
-            display: inline-block;
-            overflow: hidden;
-            white-space: nowrap;
-            vertical-align: bottom;
-            width: 20ch;
-            animation: t-type 9s infinite;
-        }
-        @keyframes t-type {
-            0%   { width: 0;    opacity: 1; animation-timing-function: steps(20, end); }
-            20%  { width: 20ch; opacity: 1; }
-            93%  { width: 20ch; opacity: 1; }
-            97%  { width: 20ch; opacity: 0; }
-            100% { width: 0;    opacity: 0; }
-        }
-
-        .t-out1 { animation: t-out1 9s infinite both; }
-        @keyframes t-out1 {
-            0%, 27%   { opacity: 0; transform: translateY(3px); }
-            32%, 93%  { opacity: 1; transform: translateY(0); }
-            97%, 100% { opacity: 0; transform: translateY(0); }
-        }
-
-        .t-out2 { animation: t-out2 9s infinite both; }
-        @keyframes t-out2 {
-            0%, 40%   { opacity: 0; transform: translateY(3px); }
-            45%, 93%  { opacity: 1; transform: translateY(0); }
-            97%, 100% { opacity: 0; transform: translateY(0); }
-        }
-
-        .caret { animation: blink 1.15s steps(1) infinite; }
-        @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
-
         /* ================================================================
            Window 2 — task board. 11s loop:
              0.0–3.6s  pointer opens the unit filter, then closes it
@@ -420,22 +292,10 @@
         .price-btn--dark:focus-visible { outline-color: #221E5C; }
 
         /* ================================================================
-           Why Clarix — accordion + polaroid stack
+           Why Clarix — polaroid stack. The accordion this section also
+           uses is shared with the Help Center now, so its rules sit in the
+           layout rather than here.
            ================================================================ */
-
-        /* Height animates on grid-template-rows rather than max-height, so
-           the panel opens to its real height with no guessed ceiling. The
-           inner div is what actually clips. */
-        .acc-panel {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows .34s cubic-bezier(.2,.8,.25,1);
-        }
-        .acc-panel > div { overflow: hidden; }
-        .acc-panel--open { grid-template-rows: 1fr; }
-
-        .acc-chev { transition: transform .28s ease; }
-        .acc-chev--open { transform: rotate(180deg); }
 
         /* This section is outside <main>, which is what clips stray transforms
            everywhere else on the page. A thrown card travels 620px sideways,
@@ -492,10 +352,6 @@
             color: #8A8FA0;
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .acc-panel, .acc-chev { transition-duration: .01ms; }
-        }
-
         /* ================================================================
            Schedule a demo
            ================================================================ */
@@ -540,29 +396,6 @@
             outline: none;
             border-color: #4F46E5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, .14);
-        }
-
-        /* ================================================================
-           Footer
-
-           Diagonal indigo: washed out at the left edge, deepening across to
-           the right. The radial pass is what lifts the left end — a plain
-           linear ramp from a pale indigo reads as grey against white.
-           ================================================================ */
-        .site-footer {
-            background:
-                radial-gradient(115% 150% at 4% 46%, rgba(255,255,255,.17) 0%, rgba(255,255,255,0) 58%),
-                linear-gradient(107deg, #6F69E7 0%, #574FE2 27%, #4136CE 60%, #2C2496 100%);
-        }
-
-        select.demo-field {
-            appearance: none;
-            -webkit-appearance: none;
-            padding-right: 34px;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237A8092' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6.25 8 10.25 12 6.25'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 15px;
         }
 
         /* ================================================================
@@ -812,162 +645,18 @@
             .c-msg   { opacity: 1; transform: none; }
             .p-notif { opacity: 1; margin-top: 0; }
         }
+
+        select.demo-field {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 34px;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237A8092' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M4 6.25 8 10.25 12 6.25'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 15px;
+        }
     </style>
-</head>
-
-<body class="bg-[#FCFCFD] font-sans text-[#0F1222] antialiased">
-
-    @php
-        // ---- Nav dropdowns ----------------------------------------------
-        // [label, description, href]. A null description renders the row as a
-        // plain bold line, which is why Resources sits in a narrower panel.
-        // Every href is a placeholder except Pricing and AXOKAI; those pages
-        // don't exist. An href starting http is treated as leaving the site and
-        // renders with target="_blank" in both the desktop and mobile menus.
-        $navMenus = [
-            'Product' => ['width' => 'w-[332px]', 'items' => [
-                ['Task Boards',            'Plan and track work in one place',    '#'],
-                ['Client Portal',          'Give clients a live view of delivery', '#'],
-                ['AI Automation (AXOKAI)', 'Let AI handle the busywork',           'https://axokai.codesnextdoor.com/'],
-                ['File Management',        'Keep every file attached to its task', '#'],
-                ['Credits & Billing',      'Track spend as work moves',            '#'],
-            ]],
-            'Solutions' => ['width' => 'w-[300px]', 'items' => [
-                ['For Agencies',    'Manage multiple clients and teams',   '#'],
-                ['For Freelancers', 'Simplify solo project tracking',      '#'],
-                ['For Enterprises', 'Scale delivery across departments',   '#'],
-            ]],
-            'Resources' => ['width' => 'w-[210px]', 'items' => [
-                ['Blog',             null, '#'],
-                ['Documentation',    null, '#'],
-                ['Customer Stories', null, '#'],
-                ['Help Center',      null, '#'],
-            ]],
-        ];
-
-        // Nav entries with no menu behind them.
-        $navLinks = [['Pricing', '#pricing']];
-    @endphp
-
-    {{-- ============================ Header ============================ --}}
-    <header class="relative z-50">
-        <input type="checkbox" id="nav-toggle" class="peer sr-only" aria-label="Toggle navigation">
-
-        <div class="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-5">
-
-            {{-- logo --}}
-            <a href="{{ url('/home') }}" class="flex items-center justify-self-start">
-                <span class="text-[17px] font-semibold tracking-tight">Clarix</span>
-            </a>
-
-            {{-- centered links. One x-data for the whole bar so opening a
-                 second menu closes the first by construction. --}}
-            <nav class="hidden items-center lg:flex" aria-label="Main"
-                 x-data="{ open: null }" @keydown.escape.window="open = null">
-
-                @foreach ($navMenus as $label => $menu)
-                    <div class="relative"
-                         @mouseenter="open = '{{ $label }}'"
-                         @mouseleave="open = null"
-                         @click.outside="open === '{{ $label }}' && (open = null)">
-
-                        <button type="button" aria-haspopup="true" aria-expanded="false"
-                                @click="open = open === '{{ $label }}' ? null : '{{ $label }}'"
-                                :aria-expanded="open === '{{ $label }}'"
-                                class="flex items-center gap-1 rounded-full px-3.5 py-2 text-[14px] font-medium text-[#4A4F63] transition hover:bg-black/[.04] hover:text-[#0F1222] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                                :class="open === '{{ $label }}' && 'bg-black/[.04] text-[#0F1222]'">
-                            {{ $label }}
-                            <svg class="h-3 w-3 text-[#A1A6B4] transition-transform duration-200"
-                                 :class="{ 'rotate-180': open === '{{ $label }}' }"
-                                 viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"
-                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg>
-                        </button>
-
-                        <div x-show="open === '{{ $label }}'" x-cloak
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 -translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition ease-in duration-100"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-1"
-                             class="absolute left-1/2 top-full z-50 mt-1.5 -translate-x-1/2 rounded-2xl border border-black/[.07] bg-white p-2 shadow-[0_20px_44px_-18px_rgba(14,17,38,.34),0_2px_8px_-4px_rgba(14,17,38,.12)] {{ $menu['width'] }}">
-                            @foreach ($menu['items'] as [$name, $desc, $href])
-                                <a href="{{ $href }}" @if (str_starts_with($href, 'http')) target="_blank" rel="noopener noreferrer" @endif
-                                   class="block rounded-xl px-3 py-2.5 transition hover:bg-black/[.035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                    <span class="block text-[13.5px] font-semibold tracking-tight text-[#0F1222]">{{ $name }}</span>
-                                    @if ($desc)
-                                        <span class="mt-0.5 block text-[12.5px] leading-snug text-[#7A8092]">{{ $desc }}</span>
-                                    @endif
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-
-                @foreach ($navLinks as [$label, $href])
-                    <a href="{{ $href }}"
-                       class="flex items-center rounded-full px-3.5 py-2 text-[14px] font-medium text-[#4A4F63] transition hover:bg-black/[.04] hover:text-[#0F1222] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        {{ $label }}
-                    </a>
-                @endforeach
-            </nav>
-            <span class="lg:hidden"></span>
-
-            {{-- login + hamburger --}}
-            <div class="flex items-center gap-2 justify-self-end">
-                {{-- /home is public, so a signed-in visitor can land here. They
-                     get one way back into the app instead of a sign-in prompt
-                     and a sales CTA neither of which applies to them. --}}
-                @guest
-                    <a href="{{ route('login') }}"
-                       class="rounded-full bg-[#0F1222] px-4 py-2 text-[14px] font-medium text-white transition hover:bg-[#252a40] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Log in
-                    </a>
-                    {{-- Hidden on the narrowest screens, where it would crowd the
-                         hamburger; the mobile panel carries it instead. --}}
-                    <a href="#schedule-demo"
-                       class="hidden rounded-full border border-[#0F1222]/[.20] bg-white px-4 py-2 text-[14px] font-medium text-[#0F1222] transition hover:border-[#0F1222]/45 hover:bg-black/[.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:block">
-                        Book a demo
-                    </a>
-                @endguest
-
-                @auth
-                    <a href="{{ route('dashboard') }}"
-                       class="rounded-full bg-[#0F1222] px-4 py-2 text-[14px] font-medium text-white transition hover:bg-[#252a40] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Dashboard
-                    </a>
-                @endauth
-                <label for="nav-toggle"
-                       class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-[#4A4F63] transition hover:bg-black/[.04] lg:hidden">
-                    <svg class="nav-icon-open h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></svg>
-                    <svg class="nav-icon-close h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg>
-                    <span class="sr-only">Menu</span>
-                </label>
-            </div>
-        </div>
-
-        {{-- mobile panel --}}
-        <div class="nav-panel hidden border-y border-black/[.06] bg-white px-6 py-3 lg:hidden">
-            {{-- Flattened: every menu's items listed under its own heading,
-                 since there is no room for hover panels here. --}}
-            <nav class="flex flex-col" aria-label="Main, mobile">
-                @foreach ($navMenus as $label => $menu)
-                    <span class="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[.1em] text-[#A1A6B4]">{{ $label }}</span>
-                    @foreach ($menu['items'] as [$name, $desc, $href])
-                        <a href="{{ $href }}" @if (str_starts_with($href, 'http')) target="_blank" rel="noopener noreferrer" @endif class="rounded-lg px-2 py-2 text-[14.5px] font-medium text-[#4A4F63] transition hover:bg-black/[.04] hover:text-[#0F1222]">{{ $name }}</a>
-                    @endforeach
-                @endforeach
-
-                <span class="mt-3 border-t border-black/[.06]"></span>
-                @foreach ($navLinks as [$label, $href])
-                    <a href="{{ $href }}" class="mt-2 rounded-lg px-2 py-2.5 text-[15px] font-medium text-[#4A4F63] transition hover:bg-black/[.04] hover:text-[#0F1222]">{{ $label }}</a>
-                @endforeach
-                @guest
-                    <a href="#schedule-demo" class="mt-2 rounded-lg px-2 py-2.5 text-[15px] font-medium text-[#0F1222] transition hover:bg-black/[.04] sm:hidden">Book a demo</a>
-                @endguest
-            </nav>
-        </div>
-    </header>
+@endpush
 
     {{-- ============================== Hero ============================= --}}
     <main class="relative overflow-hidden pb-4">
@@ -1739,129 +1428,14 @@
         ];
 
         // ---- Pricing ---------------------------------------------------
-        // A feature line ending in ':' is a lead-in ("Everything in Pro,
-        // plus:") rather than a feature, and renders without a checkmark.
-        //
-        // 'priceAnnual' is the same plan at 20% off, quoted as a per-month
-        // figure because that is what the card compares against. A plan
-        // without the key ignores the billing toggle entirely — which is how
-        // Base and Enterprise behave, Base carrying no annual discount and
-        // Enterprise no list price at all.
-        $plans = [
-            [
-                'name'  => 'Base',
-                'price' => 'Rs 1,250',
-                // No 'priceAnnual': Base is not discounted annually, and a plan
-                // without the key ignores the billing toggle rather than
-                // showing the same figure struck through against itself.
-                'period' => 'per month',
-                'blurb' => 'For small teams getting organized',
-                'cta'   => 'Get Started with Base',
-                'href'  => route('login'),
-                'features' => [
-                    'Unlimited Teams/Units',
-                    'Task boards & file attachments',
-                    'Upload/download files',
-                    '5GB file storage',
-                    'Email support',
-                ],
-            ],
-            [
-                'name'  => 'Standard',
-                'price' => 'Rs 2,000',
-                'priceAnnual' => 'Rs 1,600',
-                'period' => 'per month',
-                'blurb' => 'For growing agencies with real client load',
-                'cta'   => 'Get Started with Standard',
-                'href'  => route('login'),
-                'popular' => true,
-                'features' => [
-                    'Unlimited Teams/Units',
-                    'Everything in Base, plus:',
-                    'Full ERP access (Attendance, Leave, Payroll)',
-                    'AI Chatbot',
-                    'Gantt charts',
-                    '50GB file storage',
-                    'Priority email support',
-                ],
-            ],
-            [
-                'name'  => 'Pro',
-                'price' => 'Rs 3,500',
-                'priceAnnual' => 'Rs 2,800',
-                'period' => 'per month',
-                'blurb' => 'For agencies running multiple teams and clients',
-                'cta'   => 'Get Started with Pro',
-                'href'  => route('login'),
-                'features' => [
-                    'Unlimited Teams/Units',
-                    'Everything in Standard, plus:',
-                    'MCP & Plugins / Automation (full access)',
-                    '100GB file storage (+Rs 1,000 per extra 100GB on request)',
-                    'Priority chat support',
-                ],
-            ],
-            [
-                'name'  => 'Enterprise',
-                'price' => 'Let\'s talk',
-                'period' => 'Custom pricing',
-                'blurb' => 'For agencies at scale',
-                'cta'   => 'Talk to Sales',
-                'href'  => '#schedule-demo',
-                'dark'  => true,
-                'features' => [
-                    'Unlimited Teams/Units',
-                    'Everything in Pro, plus:',
-                    'Dedicated account manager',
-                    'Custom integrations & API access',
-                    'SLA-backed uptime guarantee',
-                    'Onboarding & migration support',
-                ],
-            ],
-        ];
-
-        // ---- Plan comparison -------------------------------------------
-        // Column order matches $plans, so the table reads left to right in
-        // the same order as the cards above it.
-        $compareHeads = [
-            ['name' => 'Base',       'cta' => 'Get Started',       'href' => route('login')],
-            ['name' => 'Standard',   'cta' => 'Get Started',       'href' => route('login')],
-            ['name' => 'Pro',        'cta' => 'Talk to an expert', 'href' => '#schedule-demo'],
-            ['name' => 'Enterprise', 'cta' => 'Talk to an expert', 'href' => '#schedule-demo'],
-        ];
-
-        // [label, [4 values], hint?]. A value of true renders a check, false
-        // an X, and a string renders as-is. The optional third element is
-        // tooltip copy for the '?' beside the label.
-        $compare = [
-            'Core' => [
-                ['Teams/Units', ['Unlimited', 'Unlimited', 'Unlimited', 'Unlimited']],
-                ['Task boards', [true, true, true, true]],
-                ['Create projects/tasks', [true, true, true, true]],
-                ['Upload/download files', [true, true, true, true]],
-                ['Seats', ['10', '25', '50', 'Unlimited']],
-            ],
-            'Storage' => [
-                ['File storage', ['5GB', '50GB', '100GB (+Rs 1,000/extra 100GB)', 'Custom']],
-            ],
-            'Support' => [
-                ['Support type', ['Email', 'Priority email', 'Priority chat', 'Dedicated manager']],
-                ['SLA guarantee', [false, false, false, true],
-                 'A contractual uptime commitment with agreed response times.'],
-                ['Onboarding & migration support', [false, false, false, true]],
-            ],
-            'Advanced' => [
-                ['ERP (Attendance/Leave/Payroll)', [false, 'Full access', 'Full access', 'Full access']],
-                ['AI Chatbot', [false, true, true, true]],
-                ['Gantt charts', [false, true, true, true]],
-                ['MCP & Plugins / Automation', [false, false, 'Full access', 'Full access'],
-                 'Connect Clarix to Excel, Google Sheets and your own tools.'],
-                ['API access', [false, false, false, true],
-                 'Programmatic access to your Clarix data for custom tooling.'],
-                ['Custom integrations', [false, false, false, true]],
-            ],
-        ];
-
+        // The plans, the comparison headers and the comparison rows all moved
+        // to App\Support\Pricing when /pricing was built. Two pages quoting
+        // prices from two copies of the same array is a drift waiting to
+        // happen, so both read this one source and PricingPageTest asserts
+        // they agree.
+        $plans        = \App\Support\Pricing::plans();
+        $compareHeads = \App\Support\Pricing::compareHeads();
+        $compare      = \App\Support\Pricing::comparison();
         // ---- Orbit backdrop ------------------------------------------------
         // The ring diagram above is drawn around a centre that lands exactly on
         // this block's top edge, so these trails reuse that centre and the
@@ -1983,42 +1557,6 @@
              'placeholder' => 'A colleague, search, an event…'],
         ];
 
-        // ---- Footer -----------------------------------------------------
-        // Pricing is the only link with a destination that exists today.
-        // The rest are placeholders waiting on pages still to be built.
-        $footerNav = [
-            'Product' => [
-                ['Task Boards', '#'],
-                ['Client Portal', '#'],
-                ['AI Automation', '#'],
-                ['File Management', '#'],
-                ['Pricing', '#pricing'],
-                ['Changelog', '#'],
-            ],
-            'Learn' => [
-                ['Blog', '#'],
-                ['Customer Stories', '#'],
-                ['Documentation', '#'],
-                ['Alternatives', '#'],
-                ['Community', '#'],
-            ],
-            'Company' => [
-                ['Legal', '#'],
-                ['Privacy Policy', '#'],
-                ['Security & Compliance', '#'],
-                ['Careers', '#'],
-                ['Status', '#'],
-            ],
-        ];
-
-        // Brand glyphs on a 24x24 viewBox, filled rather than stroked.
-        $footerSocial = [
-            ['name' => 'LinkedIn', 'href' => '#', 'path' => 'M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0Z'],
-            ['name' => 'X',        'href' => '#', 'path' => 'M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93Zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41Z'],
-            ['name' => 'Facebook', 'href' => '#', 'path' => 'M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07Z'],
-            ['name' => 'YouTube',  'href' => '#', 'path' => 'M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81ZM9.55 15.57V8.43L15.82 12l-6.27 3.57Z'],
-            ['name' => 'Slack',    'href' => '#', 'path' => 'M5.04 15.17a2.53 2.53 0 0 1-2.52 2.52A2.53 2.53 0 0 1 0 15.17a2.53 2.53 0 0 1 2.52-2.52h2.52v2.52Zm1.27 0a2.53 2.53 0 0 1 2.52-2.52 2.53 2.53 0 0 1 2.52 2.52v6.31A2.53 2.53 0 0 1 8.83 24a2.53 2.53 0 0 1-2.52-2.52v-6.31ZM8.83 5.04a2.53 2.53 0 0 1-2.52-2.52A2.53 2.53 0 0 1 8.83 0a2.53 2.53 0 0 1 2.52 2.52v2.52H8.83Zm0 1.27a2.53 2.53 0 0 1 2.52 2.52 2.53 2.53 0 0 1-2.52 2.52H2.52A2.53 2.53 0 0 1 0 8.83a2.53 2.53 0 0 1 2.52-2.52h6.31ZM18.96 8.83a2.53 2.53 0 0 1 2.52-2.52A2.53 2.53 0 0 1 24 8.83a2.53 2.53 0 0 1-2.52 2.52h-2.52V8.83Zm-1.27 0a2.53 2.53 0 0 1-2.52 2.52 2.53 2.53 0 0 1-2.52-2.52V2.52A2.53 2.53 0 0 1 15.17 0a2.53 2.53 0 0 1 2.52 2.52v6.31ZM15.17 18.96a2.53 2.53 0 0 1 2.52 2.52A2.53 2.53 0 0 1 15.17 24a2.53 2.53 0 0 1-2.52-2.52v-2.52h2.52Zm0-1.27a2.53 2.53 0 0 1-2.52-2.52 2.53 2.53 0 0 1 2.52-2.52h6.31A2.53 2.53 0 0 1 24 15.17a2.53 2.53 0 0 1-2.52 2.52h-6.31Z'],
-        ];
     @endphp
 
     {{-- ---- top half: white, with the colour rising out of the core ---- --}}
@@ -2360,6 +1898,15 @@
     {{-- ---- plan comparison ---- --}}
     <section id="compare" class="relative bg-white px-6 pb-20 sm:pb-24">
         <div class="mx-auto max-w-6xl">
+            {{-- This table is the preview. The dedicated pricing page carries
+                 the same plans with the billing questions alongside them. --}}
+            <p class="mb-8 text-center text-[13.5px] text-[#7A8092]">
+                Comparing in detail?
+                <a href="{{ route('marketing.pricing') }}"
+                   class="font-semibold text-indigo-600 underline-offset-2 hover:underline">See the full pricing page</a>
+                &mdash; same plans, with billing answered.
+            </p>
+
             <div class="cmp-scroll">
                 <table class="cmp">
                     <colgroup>
@@ -2690,55 +2237,4 @@
         </div>
     </section>
 
-    {{-- ---- footer ---- --}}
-    <footer class="site-footer relative z-10 text-white">
-        <div class="mx-auto max-w-7xl px-6 py-14 sm:py-16">
-            {{-- The dividers are the columns' own left borders, so they only
-                 appear at lg where the four columns actually sit side by side. --}}
-            <div class="grid gap-y-12 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-x-0">
-
-                <div class="lg:pr-12">
-                    <span class="text-[19px] font-semibold tracking-tight text-white">Clarix</span>
-
-                    <ul class="mt-6 flex flex-wrap gap-2.5">
-                        @foreach ($footerSocial as $social)
-                            <li>
-                                <a href="{{ $social['href'] }}" aria-label="Clarix on {{ $social['name'] }}"
-                                   class="flex h-9 w-9 items-center justify-center rounded-full bg-white/[.13] text-white transition hover:bg-white/[.26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                                    <svg class="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path d="{{ $social['path'] }}"/>
-                                    </svg>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-
-                    <p class="mt-8 text-[12.5px] text-white/70">
-                        &copy; {{ date('Y') }} Clarix Tech. All rights reserved.
-                    </p>
-                    <p class="mt-1.5 text-[11.5px] text-white/55">
-                        Built by Code Next Door
-                    </p>
-                </div>
-
-                @foreach ($footerNav as $heading => $links)
-                    <div class="lg:border-l lg:border-white/[.14] lg:pl-8 xl:pl-12">
-                        <h2 class="text-[13px] font-semibold tracking-tight text-white">{{ $heading }}</h2>
-                        <ul class="mt-5 flex flex-col gap-3.5">
-                            @foreach ($links as [$label, $href])
-                                <li>
-                                    <a href="{{ $href }}"
-                                       class="text-[13.5px] text-white/65 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                                        {{ $label }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </footer>
-
-</body>
-</html>
+</x-marketing.layout>

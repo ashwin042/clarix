@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Marketing\BlogController;
 use App\Http\Controllers\TaskAssignmentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CreditExportController;
@@ -57,6 +58,45 @@ Route::get('/', function () {
 
 // Public marketing homepage.
 Route::view('/home', 'marketing.home')->name('home');
+
+// The rest of the public marketing site. These are the destinations behind the
+// header's Product, Solutions and Resources menus; config/marketing.php points
+// at them by route name, and MarketingNavTest fails if a menu item ever names
+// one of these that does not exist.
+Route::name('marketing.')->group(function () {
+    Route::prefix('product')->name('product.')->group(function () {
+        Route::view('/task-boards', 'marketing.product.boards')->name('boards');
+        Route::view('/client-portal', 'marketing.product.portal')->name('portal');
+        Route::view('/ai-automation', 'marketing.product.ai')->name('ai');
+        Route::view('/file-management', 'marketing.product.files')->name('files');
+        Route::view('/credits-billing', 'marketing.product.credits')->name('credits');
+    });
+
+    Route::prefix('solutions')->name('solutions.')->group(function () {
+        Route::view('/agencies', 'marketing.solutions.agencies')->name('agencies');
+        Route::view('/freelancers', 'marketing.solutions.freelancers')->name('freelancers');
+        Route::view('/enterprises', 'marketing.solutions.enterprises')->name('enterprises');
+    });
+
+    // Pricing has its own page rather than an anchor into the homepage:
+    // it is the page a visitor comparing plans actually spends time on.
+    Route::view('/pricing', 'marketing.pricing')->name('pricing');
+
+    // The Resources menu. These four sit at the top level of the marketing
+    // site rather than under a /resources prefix — /blog and /docs are the
+    // paths people type, and nesting them would only lengthen the url.
+    // The one marketing page whose content is not in the repository: it
+    // lists third-party tech headlines fetched and cached by TechNewsFeed.
+    Route::get('/blog', BlogController::class)->name('blog');
+    Route::view('/docs', 'marketing.resources.docs')->name('docs');
+    // Customer Stories is built but unpublished: the page ships only
+    // invented examples, and we would rather have no stories than
+    // fictional ones standing in for real ones. The view and
+    // App\Support\CustomerStories are intact — restoring the page is
+    // this route plus its two config/marketing.php entries.
+    // Route::view('/customers', 'marketing.resources.customers')->name('customers');
+    Route::view('/help', 'marketing.resources.help')->name('help');
+});
 
 // The ordinary application. 'subscription' blocks every route in here while
 // the organization is suspended; it is deliberately absent from the superadmin
@@ -155,6 +195,8 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::post('tasks/{task}/files', [TaskFileController::class, 'store'])->name('tasks.files.store');
     Route::post('tasks/{task}/completed-files', [TaskFileController::class, 'storeCompleted'])->name('tasks.completed-files.store');
     Route::get('tasks/{task}/files/{file}/download', [TaskFileController::class, 'download'])->name('tasks.files.download');
+    Route::get('tasks/{task}/files/download-all', [TaskFileController::class, 'downloadAll'])->name('tasks.files.download-all');
+    Route::get('tasks/{task}/completed-files/download-all', [TaskFileController::class, 'downloadAllCompleted'])->name('tasks.completed-files.download-all');
     Route::delete('tasks/{task}/files/{file}', [TaskFileController::class, 'destroy'])->name('tasks.files.destroy');
 
     Route::post('tasks/{task}/notes', [TaskNoteController::class, 'store'])->name('tasks.notes.store');

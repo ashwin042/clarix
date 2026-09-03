@@ -23,6 +23,9 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!-- The test suite never reaches a third-party API. Tests that exercise
+             the tech news feed set a key themselves and fake the HTTP client. -->
+        <env name="NEWSDATA_API_KEY" value=""/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

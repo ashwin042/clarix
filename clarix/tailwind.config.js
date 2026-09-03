@@ -11,6 +11,9 @@ export default {
         // Livewire components hold class strings of their own (the category and
         // model tints), and those never reach a Blade file as literals.
         './app/Livewire/**/*.php',
+        // The marketing nav config carries the dropdown panel widths, which are
+        // arbitrary values and so exist nowhere else for Tailwind to find.
+        './config/marketing.php',
     ],
 
     theme: {

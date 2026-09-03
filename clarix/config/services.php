@@ -131,4 +131,35 @@ return [
         'bot_username' => env('N8N_TELEGRAM_BOT_USERNAME', 'clarix_task_bot'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | NewsData.io
+    |--------------------------------------------------------------------------
+    |
+    | The curated tech news on the public /blog page. These are other people's
+    | articles, linked out to — Clarix stores nothing but a short-lived cache
+    | of headlines and the snippets the API itself returns.
+    |
+    | The free tier allows 200 credits a day and 30 credits per 15 minutes, and
+    | one call is one credit. A 30 minute cache is 48 calls a day, roughly a
+    | quarter of the daily allowance, which leaves room for the key to be used
+    | elsewhere without the blog being what exhausts it.
+    |
+    | An unset key is a supported state, not a broken one: the feed returns
+    | nothing and the page renders its "couldn't load" panel.
+    |
+    */
+    'newsdata' => [
+        'key' => env('NEWSDATA_API_KEY'),
+
+        'endpoint' => env('NEWSDATA_ENDPOINT', 'https://newsdata.io/api/1/latest'),
+
+        // Minutes. Tunable without a deploy if the allowance ever gets tight.
+        'cache_minutes' => (int) env('NEWSDATA_CACHE_MINUTES', 30),
+
+        // 10 is the free tier's ceiling per call, and one call is one credit —
+        // so asking for fewer would cost exactly the same.
+        'size' => (int) env('NEWSDATA_SIZE', 10),
+    ],
+
 ];
