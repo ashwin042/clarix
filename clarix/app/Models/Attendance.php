@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * One person's attendance for one day.
@@ -41,6 +42,21 @@ class Attendance extends Model
         'on_leave' => 'On leave',
     ];
 
+    /**
+     * The timezone attendance is read and dated in.
+     *
+     * The app runs on UTC and the columns keep it — an instant is an instant,
+     * and every other timestamp in the system is stored the same way. But
+     * nobody clocks in at an instant: they clock in at nine in the morning in
+     * Kathmandu, and that is what the record has to say back to them.
+     *
+     * So the conversion lives here, on the boundary between what is stored and
+     * what is shown, rather than in each of the screens that shows it. Nepal
+     * is UTC+05:45 year-round with no daylight saving, which is why a whole
+     * agency can share one constant.
+     */
+    public const TIMEZONE = 'Asia/Kathmandu';
+
     protected $fillable = ['date', 'clock_in', 'clock_out', 'status', 'notes'];
 
     protected function casts(): array
@@ -58,6 +74,66 @@ class Attendance extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // ── Nepal time ───────────────────────────────────────────────────────────
+
+    /**
+     * The current moment, in the timezone the agency works in.
+     *
+     * Used wherever "now" has to be read as a wall clock rather than as an
+     * instant — dating a card, opening a table on today.
+     */
+    public static function localNow(): Carbon
+    {
+        return Carbon::now(self::TIMEZONE);
+    }
+
+    /**
+     * Today's date in Nepal, as the `date` column spells it.
+     *
+     * The distinction is not academic. Between 18:15 and 23:59 UTC it is
+     * already tomorrow in Kathmandu, so a night shift starting at half past
+     * midnight was filing itself under the previous day — and then reading
+     * back as a second, impossible clock-in against the unique index.
+     */
+    public static function localToday(): string
+    {
+        return self::localNow()->toDateString();
+    }
+
+    /**
+     * Clock-in as a Carbon in Nepal time, or null if it was never recorded.
+     *
+     * The stored value is untouched: setTimezone only changes how the same
+     * instant is read.
+     */
+    public function getClockInLocalAttribute(): ?Carbon
+    {
+        return $this->clock_in?->copy()->setTimezone(self::TIMEZONE);
+    }
+
+    public function getClockOutLocalAttribute(): ?Carbon
+    {
+        return $this->clock_out?->copy()->setTimezone(self::TIMEZONE);
+    }
+
+    /**
+     * "09:00", or a dash on a day with no clock-in — an absence, a leave day,
+     * or a day still ahead of the person.
+     *
+     * Every screen showing a clock time goes through this rather than
+     * formatting the column itself, because a view that reaches for clock_in
+     * directly gets UTC and no error to say so.
+     */
+    public function clockInForHumans(): string
+    {
+        return $this->clock_in_local?->format('H:i') ?? '—';
+    }
+
+    public function clockOutForHumans(): string
+    {
+        return $this->clock_out_local?->format('H:i') ?? '—';
     }
 
     /**

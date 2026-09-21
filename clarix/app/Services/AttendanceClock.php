@@ -26,7 +26,7 @@ class AttendanceClock
     public function today(User $user): ?Attendance
     {
         return Attendance::where('user_id', $user->id)
-            ->whereDate('date', today())
+            ->whereDate('date', Attendance::localToday())
             ->first();
     }
 
@@ -63,8 +63,14 @@ class AttendanceClock
             return $existing;
         }
 
+        /*
+         * The day is Nepal's, the instant is UTC. Those are two different
+         * questions and the answers come from two different places: `date`
+         * says which working day this is to the person, and `clock_in` records
+         * when it happened, stored like every other timestamp in the app.
+         */
         $attendance = new Attendance([
-            'date'     => today()->toDateString(),
+            'date'     => Attendance::localToday(),
             'clock_in' => now(),
             'status'   => 'present',
         ]);

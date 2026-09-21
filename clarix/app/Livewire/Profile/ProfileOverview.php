@@ -99,10 +99,15 @@ class ProfileOverview extends Component
          * sides, which also covers the rows written as full timestamps that
          * the Attendance model warns about.
          */
+        /*
+         * The month is Nepal's too. The rows are dated by the Nepali day they
+         * belong to, so bounding them with a UTC month starts the window a day
+         * late on the 1st — the hours between Kathmandu midnight and UTC's.
+         */
         $counts = Attendance::query()
             ->where('user_id', auth()->id())
-            ->whereDate('date', '>=', now()->startOfMonth()->toDateString())
-            ->whereDate('date', '<=', now()->endOfMonth()->toDateString())
+            ->whereDate('date', '>=', Attendance::localNow()->startOfMonth()->toDateString())
+            ->whereDate('date', '<=', Attendance::localNow()->endOfMonth()->toDateString())
             ->select('status')
             ->selectRaw('count(*) as aggregate')
             ->groupBy('status')

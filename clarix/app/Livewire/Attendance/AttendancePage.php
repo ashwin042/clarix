@@ -43,7 +43,10 @@ class AttendancePage extends Component
 
     public function mount(): void
     {
-        $this->date = today()->toDateString();
+        // The Nepali date, not UTC's. Opening the table on yesterday because
+        // the server has not reached midnight yet is the same bug as showing
+        // a clock time five and three quarter hours early.
+        $this->date = Attendance::localToday();
     }
 
     public function updatingDate(): void

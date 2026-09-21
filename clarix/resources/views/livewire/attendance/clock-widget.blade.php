@@ -2,7 +2,7 @@
     <div class="flex items-start justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-slate-500">Attendance</p>
-            <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">{{ now()->format('l, j M Y') }}</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">{{ $localDate->format('l, j M Y') }}</p>
         </div>
 
         @if($today)
@@ -24,11 +24,11 @@
     <div class="mt-4 grid grid-cols-3 gap-3 text-sm">
         <div>
             <p class="text-xs text-gray-400 dark:text-slate-500">In</p>
-            <p class="font-medium text-gray-900 dark:text-slate-100">{{ $today?->clock_in?->format('H:i') ?? '—' }}</p>
+            <p class="font-medium text-gray-900 dark:text-slate-100">{{ $today?->clockInForHumans() ?? '—' }}</p>
         </div>
         <div>
             <p class="text-xs text-gray-400 dark:text-slate-500">Out</p>
-            <p class="font-medium text-gray-900 dark:text-slate-100">{{ $today?->clock_out?->format('H:i') ?? '—' }}</p>
+            <p class="font-medium text-gray-900 dark:text-slate-100">{{ $today?->clockOutForHumans() ?? '—' }}</p>
         </div>
         <div>
             <p class="text-xs text-gray-400 dark:text-slate-500">Worked</p>

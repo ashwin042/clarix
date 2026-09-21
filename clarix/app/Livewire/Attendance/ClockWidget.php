@@ -73,6 +73,10 @@ class ClockWidget extends Component
         return view('livewire.attendance.clock-widget', [
             'canClockIn'  => $this->today === null || $this->today->clock_in === null,
             'canClockOut' => $this->today !== null && $this->today->isOpen(),
+
+            // The card is headed with the day it is recording, which is the
+            // Nepali one — the same day clockIn() would file under.
+            'localDate'   => Attendance::localNow(),
         ]);
     }
 }

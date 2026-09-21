@@ -34,8 +34,8 @@
                             <td class="px-5 py-2.5">
                                 <x-attendance-status :status="$record->status" />
                             </td>
-                            <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record->clock_in?->format('H:i') ?? '—' }}</td>
-                            <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record->clock_out?->format('H:i') ?? '—' }}</td>
+                            <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record->clockInForHumans() }}</td>
+                            <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record->clockOutForHumans() }}</td>
                             <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record->workedForHumans() }}</td>
                             <td class="px-5 py-2.5 text-gray-500 dark:text-slate-400">{{ $record->notes ?: '—' }}</td>
                         </tr>
@@ -94,8 +94,8 @@
                                         <span class="text-xs text-gray-400 dark:text-slate-500">Not recorded</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record?->clock_in?->format('H:i') ?? '—' }}</td>
-                                <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record?->clock_out?->format('H:i') ?? '—' }}</td>
+                                <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record?->clockInForHumans() ?? '—' }}</td>
+                                <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record?->clockOutForHumans() ?? '—' }}</td>
                                 <td class="px-5 py-2.5 text-gray-600 dark:text-slate-300">{{ $record?->workedForHumans() ?? '—' }}</td>
                                 @if($this->canManage)
                                     <td class="px-5 py-2.5 text-right whitespace-nowrap">
