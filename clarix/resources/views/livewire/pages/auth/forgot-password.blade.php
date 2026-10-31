@@ -37,25 +37,23 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-    </div>
+    <x-auth.heading :title="__('Reset your password')" :subtitle="__('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.')" />
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth.notice class="auth-rise mb-6" style="--i:2" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink">
+    <form wire:submit="sendPasswordResetLink" class="space-y-5">
         <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="auth-rise" style="--i:2">
+            <x-auth.input id="email" :label="__('Email')" error-key="email" wire:model="email" type="email" name="email" required autofocus />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
+        <div class="auth-rise space-y-5" style="--i:3">
+            <x-auth.button target="sendPasswordResetLink" loading="Sending link">{{ __('Email Password Reset Link') }}</x-auth.button>
+
+            <p class="text-center">
+                <a class="auth-link !text-sm" href="{{ route('login') }}" wire:navigate>Back to sign in</a>
+            </p>
         </div>
     </form>
 </div>
