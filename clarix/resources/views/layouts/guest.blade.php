@@ -9,13 +9,11 @@
     <link href="https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
-    <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
+    <meta name="color-scheme" content="light">
     <style>
         /* Auth screens only. Every rule is scoped under .auth-* so nothing here reaches the rest of the app. */
+        /* Auth pages are light-only: keeps checkbox, autofill and scrollbars light even if the app set a theme class on <html>. */
+        :root:root { color-scheme: light; }
         :root {
             --auth-bg: #fafafa;
             --auth-text: #18181b;
@@ -33,27 +31,11 @@
             --auth-ok-bg: #f0fdf4;
             --auth-ease: cubic-bezier(.23, 1, .32, 1);
         }
-        .dark {
-            --auth-bg: #09090b;
-            --auth-text: #fafafa;
-            --auth-muted: #a1a1aa;
-            --auth-faint: #8b8b94;
-            --auth-line: #3f3f46;
-            --auth-field: #111113;
-            --auth-accent: #6366f1;
-            --auth-accent-hover: #818cf8;
-            --auth-accent-text: #a5b4fc;
-            --auth-ring: rgba(129, 140, 248, .3);
-            --auth-danger: #fca5a5;
-            --auth-danger-bg: rgba(127, 29, 29, .25);
-            --auth-ok: #86efac;
-            --auth-ok-bg: rgba(20, 83, 45, .3);
-        }
 
         .auth-body { font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--auth-bg); color: var(--auth-text); }
         .auth-mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-        /* ---- brand panel (always dark, in both themes) ---- */
+        /* ---- brand panel (dark by design) ---- */
         .auth-panel { position: relative; isolation: isolate; overflow: hidden; background: #09090b; color: #fafafa; }
         .auth-panel::before { /* indigo glow, top-left */
             content: ''; position: absolute; z-index: -2; inset: -20% auto auto -15%; width: 70%; aspect-ratio: 1;
@@ -92,6 +74,16 @@
         .auth-input:disabled { opacity: .55; cursor: not-allowed; background-color: color-mix(in srgb, var(--auth-line) 25%, var(--auth-field)); }
         .auth-input:-webkit-autofill { -webkit-text-fill-color: var(--auth-text); -webkit-box-shadow: 0 0 0 1000px var(--auth-field) inset; }
 
+        /* app.css restyles every <input> with !important when the app theme is dark. These rules out-rank it so the
+           auth form never follows that theme. They repeat the control states above at higher specificity. */
+        .auth-body input.auth-input, .auth-body .auth-check input { background-color: var(--auth-field) !important; border-color: var(--auth-line) !important; color: var(--auth-text) !important; }
+        .auth-body input.auth-input::placeholder { color: var(--auth-faint) !important; }
+        .auth-body input.auth-input:focus, .auth-body .auth-check input:focus { border-color: var(--auth-accent) !important; }
+        .auth-body input.auth-input.is-invalid { border-color: var(--auth-danger) !important; }
+        .auth-body input.auth-input:disabled { background-color: color-mix(in srgb, var(--auth-line) 25%, var(--auth-field)) !important; color: var(--auth-faint) !important; }
+        .auth-body .auth-check input:checked { background-color: var(--auth-accent) !important; border-color: var(--auth-accent) !important; }
+        @media (hover: hover) and (pointer: fine) { .auth-body input.auth-input:hover:not(:disabled):not(:focus) { border-color: var(--auth-faint) !important; } }
+
         .auth-toggle { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; color: var(--auth-faint); background: transparent; transition: color 160ms var(--auth-ease); }
         .auth-toggle:hover { color: var(--auth-text); }
         .auth-toggle:focus-visible { outline: 2px solid var(--auth-accent); outline-offset: -2px; }
@@ -115,8 +107,7 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 1px 2px rgba(49, 46, 129, .35);
             transition: background-color 160ms var(--auth-ease), transform 160ms var(--auth-ease), opacity 160ms var(--auth-ease);
         }
-        .dark .auth-btn { background: #4f46e5; }
-        @media (hover: hover) and (pointer: fine) { .auth-btn:hover:not(:disabled) { background: var(--auth-accent-hover); } .dark .auth-btn:hover:not(:disabled) { background: #6366f1; } }
+        @media (hover: hover) and (pointer: fine) { .auth-btn:hover:not(:disabled) { background: var(--auth-accent-hover); } }
         .auth-btn:active:not(:disabled) { transform: scale(.98); }
         .auth-btn:focus-visible { outline: 2px solid var(--auth-accent); outline-offset: 3px; }
         .auth-btn:disabled { cursor: progress; opacity: .8; }
